@@ -129,14 +129,17 @@ export const actualizarReporte = async (reporteId, estado, notasAdmin = null) =>
  */
 export const buscarDuplicados = async (nombreProfesor) => {
   try {
-    const { data, error } = await supabase.rpc('buscar_duplicados_profesores', {
-      nombre_buscar: nombreProfesor
-    });
+    // Búsqueda directa sin RPC - buscar por nombre similar
+    const { data, error } = await supabase
+      .from('profesores')
+      .select('id, nombre_completo, escuela_id, total_evaluaciones')
+      .ilike('nombre_completo', `%${nombreProfesor}%`)
+      .limit(20);
 
     if (error) throw error;
 
-    console.log('🔍 Duplicados encontrados:', data?.length || 0);
-    return handleSupabaseSuccess(data, 'Búsqueda completada');
+    console.log('🔍 Posibles duplicados encontrados:', data?.length || 0);
+    return handleSupabaseSuccess(data || [], 'Búsqueda completada');
   } catch (error) {
     return handleSupabaseError(error, 'buscarDuplicados');
   }
