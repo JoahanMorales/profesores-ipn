@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug } from '../services/supabaseService';
 import { crearReporte } from '../services/adminService';
-import { generarFingerprint } from '../lib/browserFingerprint';
+import { getBrowserFingerprint } from '../lib/browserFingerprint';
 
 const ProfesorProfile = () => {
   const { slug } = useParams();
@@ -64,7 +64,8 @@ const ProfesorProfile = () => {
       return;
     }
 
-    const fingerprint = await generarFingerprint();
+    const fingerprintData = getBrowserFingerprint();
+    const fingerprint = fingerprintData.fingerprint;
     const result = await crearReporte(
       evaluacionId,
       formReporte.tipo,
