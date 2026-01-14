@@ -1,0 +1,330 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug } from '../services/supabaseService';
+
+const ProfesorProfile = () => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const { user, logout, monedas } = useAuth();
+  const [profesor, setProfesor] = useState(null);
+  const [evaluaciones, setEvaluaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (slug) {
+      cargarProfesor();
+    }
+  }, [slug]);
+
+  const cargarProfesor = async () => {
+    setLoading(true);
+    
+    // Cargar datos del profesor por slug
+    const profesorResult = await obtenerProfesorPorSlug(slug);
+    
+    if (profesorResult.success && profesorResult.data) {
+      setProfesor(profesorResult.data);
+      
+      // Cargar evaluaciones
+      const evalResult = await obtenerEvaluacionesProfesor(profesorResult.data.id);
+      if (evalResult.success) {
+        setEvaluaciones(evalResult.data || []);
+      }
+    }
+    
+    setLoading(false);
+  };
+
+  const formatearFecha = (fecha) => {
+    return new Date(fecha).toLocaleDateString('es-MX', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!profesor) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Profesor no encontrado
+          </h2>
+          <button
+            onClick={() => navigate('/buscar')}
+            className="px-6 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+          >
+            Volver a búsqueda
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Mock evaluaciones para demostración
+  const mockEvaluaciones = [
+    {
+      id: 1,
+      calificacion: 9.5,
+      recomendado: true,
+      asistenciaObligatoria: true,
+      calificacionObtenida: '10',
+      opinion: 'Excelente profesor, explica muy bien los temas y siempre está dispuesto a resolver dudas. Sus clases son dinámicas y aprende uno mucho.',
+      fecha: '2025-12-15'
+    },
+    {
+      id: 2,
+      calificacion: 8.5,
+      recomendado: true,
+      asistenciaObligatoria: true,
+      calificacionObtenida: '9',
+      opinion: 'Buen profesor, domina la materia. A veces va un poco rápido pero si le preguntas te explica con paciencia.',
+      fecha: '2025-11-28'
+    },
+    {
+      id: 3,
+      calificacion: 9.0,
+      recomendado: true,
+      asistenciaObligatoria: false,
+      calificacionObtenida: '9',
+      opinion: 'Muy recomendado, las tareas son justas y los exámenes evalúan lo visto en clase. No pasa lista siempre.',
+      fecha: '2025-11-10'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 
+              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate('/buscar')}
+            >
+              <span className="text-ipn-guinda-900">i</span>
+              <span className="text-gray-900">p</span>
+            </h1>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+              {user && (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 rounded-full shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer opacity-40" />
+                    <span className="text-xl relative z-10">💎</span>
+                    <span className="font-bold text-gray-900 relative z-10">{monedas}</span>
+                  </div>
+                  <span className="hidden sm:inline text-sm text-gray-600">
+                    Hola, <span className="font-medium">{user.username}</span>
+                  </span>
+                </>
+              )}
+              <button
+                onClick={() => navigate('/buscar')}
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                Buscar
+              </button>
+              <button
+                onClick={logout}
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors whitespace-nowrap"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/buscar')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm font-medium">Volver a resultados</span>
+        </button>
+
+        {/* Professor Info Card */}
+        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                {profesor.nombre_completo}
+              </h2>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                  </svg>
+                  <span className="text-lg">{profesor.total_evaluaciones || 0} evaluaciones</span>
+                </div>
+
+                <div className="flex items-center gap-3 text-gray-700">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>{profesor.total_evaluadores || 0} {profesor.total_evaluadores === 1 ? 'persona' : 'personas'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rating Box */}
+            <div className="bg-gray-50 rounded-lg p-6 text-center md:min-w-[200px]">
+              <div className="text-5xl font-bold text-gray-900 mb-2">
+                {profesor.calificacion_promedio?.toFixed(1) || 'N/A'}
+              </div>
+              <div className="text-sm text-gray-600 mb-4">de 10</div>
+              {profesor.porcentaje_recomendacion !== null && (
+                <div className="text-xs text-gray-500">
+                  {profesor.porcentaje_recomendacion}% lo recomienda
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <button
+              onClick={() => {
+                const params = new URLSearchParams({
+                  nombre: profesor.nombre_completo,
+                  slug: profesor.slug
+                });
+                navigate(`/evaluar?${params.toString()}`);
+              }}
+              className="w-full md:w-auto px-6 py-3 text-base font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+            >
+              Evaluar a este profesor
+            </button>
+          </div>
+        </div>
+
+        {/* Evaluations Section */}
+        <section>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+            Evaluaciones ({evaluaciones.length})
+          </h3>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : evaluaciones.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">
+                Aún no hay evaluaciones
+              </h4>
+              <p className="text-gray-600 mb-4">
+                Sé el primero en evaluar a este profesor
+              </p>
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    nombre: profesor.nombre_completo,
+                    slug: profesor.slug
+                  });
+                  navigate(`/evaluar?${params.toString()}`);
+                }}
+                className="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+              >
+                Evaluar ahora
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {evaluaciones.map((evaluacion) => (
+                <div
+                  key={evaluacion.id}
+                  className="bg-white border border-gray-200 rounded-lg p-6"
+                >
+                  {/* Header con calificación y badges */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-gray-900">
+                          {evaluacion.calificacion}
+                        </span>
+                        <span className="text-sm text-gray-500">/10</span>
+                      </div>
+                      
+                      <div className="flex gap-2 flex-wrap">
+                        {evaluacion.recomendado && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✓ Recomendado
+                          </span>
+                        )}
+                        {evaluacion.asistencia_obligatoria && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Asistencia obligatoria
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium text-gray-700">Calificación obtenida:</span> {evaluacion.calificacion_obtenida}
+                    </div>
+                  </div>
+
+                  {/* Información de la materia */}
+                  <div className="mb-4 text-sm">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      <span><span className="font-medium">Materia:</span> {evaluacion.materia}</span>
+                    </div>
+                  </div>
+
+                  {/* Opinión */}
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    {evaluacion.opinion}
+                  </p>
+
+                  {/* Mini-perfil del evaluador */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        {evaluacion.usuario_nombre.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {evaluacion.usuario_nombre}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {evaluacion.escuela?.abreviatura || 'IPN'} • {evaluacion.carrera?.nombre || 'Carrera'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {formatearFecha(evaluacion.created_at)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default ProfesorProfile;

@@ -1,0 +1,6 @@
+<svg id="logo" width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="200" cy="200" r="200" fill="white"/>
+  <text x="140" y="240" font-family="'SF Pro Display', -apple-system, sans-serif" font-size="160" font-weight="700" fill="#6C1458" text-anchor="middle">i</text>
+  <text x="230" y="240" font-family="'SF Pro Display', -apple-system, sans-serif" font-size="160" font-weight="700" fill="#1a1a1a" text-anchor="middle">p</text>
+  <circle cx="305" cy="215" r="18" fill="#1a1a1a"/>
+</svg>

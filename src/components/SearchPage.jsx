@@ -1,0 +1,235 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { buscarProfesores } from '../services/supabaseService';
+
+const SearchPage = () => {
+  const navigate = useNavigate();
+  const { user, logout, monedas } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [profesores, setProfesores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Cargar profesores desde Supabase
+  useEffect(() => {
+    cargarProfesores();
+  }, []);
+
+  // Buscar cuando cambia el query
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      cargarProfesores(searchQuery);
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  const cargarProfesores = async (query = '') => {
+    setLoading(true);
+    setError(null);
+    
+    const resultado = await buscarProfesores(query);
+    
+    if (resultado.success) {
+      setProfesores(resultado.data || []);
+    } else {
+      setError(resultado.error);
+      console.error('Error al cargar profesores:', resultado.error);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleProfesorClick = (profesor) => {
+    console.log('🔍 Profesor seleccionado:', {
+      id: profesor.id,
+      nombre: profesor.nombre_completo,
+      slug: profesor.slug
+    });
+    navigate(`/profesor/${profesor.slug}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 
+              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate('/buscar')}
+            >
+              <span className="text-ipn-guinda-900">i</span>
+              <span className="text-gray-900">p</span>
+            </h1>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+              {user && (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 rounded-full shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer opacity-40" />
+                    <span className="text-xl relative z-10">💎</span>
+                    <span className="font-bold text-gray-900 relative z-10">{monedas}</span>
+                  </div>
+                  <span className="hidden sm:inline text-sm text-gray-600">
+                    Hola, <span className="font-medium">{user.username}</span>
+                  </span>
+                </>
+              )}
+              <button
+                onClick={() => navigate('/evaluar')}
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 bg-white border-2 border-gray-900 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                Evaluar Profesor
+              </button>
+              <button
+                onClick={logout}
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors whitespace-nowrap"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Search Section */}
+        <section className="mb-12">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
+              Buscar Profesor
+            </h2>
+            <p className="text-gray-600 text-center mb-8">
+              Escribe el nombre del profesor, materia, carrera o escuela
+            </p>
+
+            {/* Search Input */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg 
+                  className="h-5 w-5 text-gray-400" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por nombre, materia, carrera o escuela..."
+                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Results Count */}
+            <div className="mt-4 text-sm text-gray-600">
+              {loading ? 'Buscando...' : `${profesores.length} ${profesores.length === 1 ? 'resultado' : 'resultados'}`}
+              {searchQuery && !loading && ` para "${searchQuery}"`}
+            </div>
+          </div>
+        </section>
+
+        {/* Results Section */}
+        <section>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-red-600 font-medium">Error al cargar profesores</p>
+              <p className="text-sm text-red-500 mt-2">{error}</p>
+              <button
+                onClick={() => cargarProfesores(searchQuery)}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : profesores.length === 0 ? (
+            <div className="text-center py-12">
+              <svg 
+                className="mx-auto h-12 w-12 text-gray-400" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron resultados</h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Intenta con otro término de búsqueda
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {profesores.map((profesor) => (
+                <div
+                  key={profesor.id}
+                  onClick={() => handleProfesorClick(profesor)}
+                  className="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                        {profesor.nombre_completo}
+                      </h3>
+                    </div>
+                    <div className="flex flex-col items-end ml-4">
+                      <span className="text-3xl font-bold text-gray-900">
+                        {profesor.calificacion_promedio || 'N/A'}
+                      </span>
+                      <span className="text-sm text-gray-500">/10</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-gray-500 text-xs pt-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                      </svg>
+                      <span>{profesor.total_evaluaciones || 0} evaluaciones</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>{profesor.total_evaluadores || 0} {profesor.total_evaluadores === 1 ? 'persona' : 'personas'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default SearchPage;
