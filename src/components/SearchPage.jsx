@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
@@ -10,12 +10,11 @@ const SearchPage = () => {
   const navigate = useNavigate();
   const { user, logout, monedas } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [profesores, setProfesores] = useState([]);
+  const [todosLosProfesores, setTodosLosProfesores] = useState([]); // Lista completa
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actualizando, setActualizando] = useState(false);
   const searchInputRef = useRef(null);
-  const isTypingRef = useRef(false);
   
   // SEO dinámico para búsqueda
   useSEO(
@@ -28,114 +27,92 @@ const SearchPage = () => {
   
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const [cargandoMas, setCargandoMas] = useState(false);
-  const [hayMasResultados, setHayMasResultados] = useState(true);
   const RESULTADOS_POR_PAGINA = 20;
 
-  // Cargar profesores desde Supabase
+  // 🔍 FILTRADO LOCAL - Sin requests a Supabase mientras escribes
+  const profesoresFiltrados = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return todosLosProfesores;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    return todosLosProfesores.filter(profesor => 
+      profesor.nombre_completo?.toLowerCase().includes(query)
+    );
+  }, [todosLosProfesores, searchQuery]);
+
+  // Profesores a mostrar (con paginación)
+  const profesoresPaginados = useMemo(() => {
+    const fin = paginaActual * RESULTADOS_POR_PAGINA;
+    return profesoresFiltrados.slice(0, fin);
+  }, [profesoresFiltrados, paginaActual]);
+
+  const hayMasResultados = profesoresPaginados.length < profesoresFiltrados.length;
+
+  // Cargar TODOS los profesores UNA SOLA VEZ al inicio
   useEffect(() => {
-    cargarProfesores();
+    cargarTodosLosProfesores();
   }, []);
 
-  // Buscar cuando cambia el query
+  // Reset paginación cuando cambia la búsqueda
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      setPaginaActual(1); // Reset a página 1 cuando cambia búsqueda
-      // NO limpiar profesores aquí - esto causa re-render que pierde el foco
-      cargarProfesores(searchQuery, 1).then(() => {
-        // Restaurar foco si el usuario estaba escribiendo
-        if (isTypingRef.current && searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      });
-    }, 300); // Debounce de 300ms
-
-    return () => clearTimeout(delayDebounce);
+    setPaginaActual(1);
   }, [searchQuery]);
 
-  // Manejar cambio de input preservando foco
+  // Manejar cambio de input
   const handleSearchChange = useCallback((e) => {
-    isTypingRef.current = true;
     setSearchQuery(e.target.value);
   }, []);
 
-  // Manejar blur del input
-  const handleSearchBlur = useCallback(() => {
-    isTypingRef.current = false;
-  }, []);
-
-  const cargarProfesores = async (query = '', pagina = 1) => {
-    if (pagina === 1) {
-      setLoading(true);
-    } else {
-      setCargandoMas(true);
-    }
+  const cargarTodosLosProfesores = async () => {
+    setLoading(true);
     setError(null);
     
-    // 💾 Intentar cargar desde caché si es búsqueda específica (página 1)
-    if (query && pagina === 1) {
-      const cacheKey = `${CACHE_KEYS.SEARCH_QUERY}${query.toLowerCase().trim()}`;
-      const datosCache = CacheManager.get(cacheKey);
-      
-      // Validar que datosCache sea un array
-      if (datosCache && Array.isArray(datosCache)) {
-        console.log('💾 Búsqueda cargada desde caché:', query);
-        setProfesores(datosCache.slice(0, RESULTADOS_POR_PAGINA));
-        setHayMasResultados(datosCache.length > RESULTADOS_POR_PAGINA);
-        setLoading(false);
-        return;
-      }
+    // 💾 Intentar cargar desde caché primero
+    const cacheKey = CACHE_KEYS.PROFESORES_POPULARES;
+    const datosCache = CacheManager.get(cacheKey);
+    
+    if (datosCache && Array.isArray(datosCache)) {
+      console.log('💾 Lista completa cargada desde caché:', datosCache.length, 'profesores');
+      setTodosLosProfesores(datosCache);
+      setLoading(false);
+      return;
     }
     
-    const resultado = await buscarProfesores(query);
+    // Si no hay caché, cargar de Supabase
+    const resultado = await buscarProfesores(''); // Query vacía = todos
     
     if (resultado.success) {
-      // Asegurar que siempre sea un array
-      const todosLosProfesores = Array.isArray(resultado.data) ? resultado.data : [];
+      const profesores = Array.isArray(resultado.data) ? resultado.data : [];
+      setTodosLosProfesores(profesores);
       
-      // 💾 Guardar en caché búsquedas específicas
-      if (query && pagina === 1) {
-        const cacheKey = `${CACHE_KEYS.SEARCH_QUERY}${query.toLowerCase().trim()}`;
-        CacheManager.set(cacheKey, todosLosProfesores, CACHE_EXPIRATION.SEARCH_QUERY);
-        console.log('💾 Búsqueda guardada en caché:', query);
-      }
-      
-      const inicio = (pagina - 1) * RESULTADOS_POR_PAGINA;
-      const fin = inicio + RESULTADOS_POR_PAGINA;
-      const profesoresPagina = todosLosProfesores.slice(inicio, fin);
-      
-      if (pagina === 1) {
-        setProfesores(profesoresPagina);
-      } else {
-        setProfesores(prev => [...prev, ...profesoresPagina]);
-      }
-      
-      setHayMasResultados(fin < todosLosProfesores.length);
+      // 💾 Guardar en caché por 1 hora
+      CacheManager.set(cacheKey, profesores, CACHE_EXPIRATION.PROFESORES_POPULARES);
+      console.log('💾 Lista completa guardada en caché:', profesores.length, 'profesores');
     } else {
       setError(resultado.error);
       console.error('Error al cargar profesores:', resultado.error);
     }
     
     setLoading(false);
-    setCargandoMas(false);
   };
 
   const cargarMasResultados = () => {
-    const nuevaPagina = paginaActual + 1;
-    setPaginaActual(nuevaPagina);
-    cargarProfesores(searchQuery, nuevaPagina);
+    setPaginaActual(prev => prev + 1);
   };
 
   const actualizarDatos = async () => {
     setActualizando(true);
     console.log('🔄 Actualizando datos de profesores...');
     
+    // Limpiar caché y recargar
+    CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
+    
     const resultado = await actualizarCacheProfesores();
     
     if (resultado.success) {
-      // Recargar profesores con datos frescos
-      setPaginaActual(1);
-      await cargarProfesores(searchQuery, 1);
+      // Recargar lista completa
+      await cargarTodosLosProfesores();
       console.log('✅ Datos actualizados');
     } else {
       console.error('❌ Error al actualizar:', resultado.error);
@@ -230,7 +207,6 @@ const SearchPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onBlur={handleSearchBlur}
                 placeholder="Buscar profesor por nombre..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-all"
                 autoComplete="off"
@@ -253,8 +229,8 @@ const SearchPage = () => {
 
             {/* Results Count */}
             <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {loading ? 'Buscando...' : `${profesores.length} ${profesores.length === 1 ? 'resultado' : 'resultados'}`}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {loading ? 'Cargando...' : `${profesoresFiltrados.length} ${profesoresFiltrados.length === 1 ? 'resultado' : 'resultados'}`}
                 {searchQuery && !loading && ` para "${searchQuery}"`}
               </div>
               <button
@@ -287,13 +263,13 @@ const SearchPage = () => {
               <p className="text-red-600 font-medium">Error al cargar profesores</p>
               <p className="text-sm text-red-500 mt-2">{error}</p>
               <button
-                onClick={() => cargarProfesores(searchQuery)}
+                onClick={cargarTodosLosProfesores}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Reintentar
               </button>
             </div>
-          ) : (profesores && profesores.length === 0) ? (
+          ) : (profesoresFiltrados.length === 0) ? (
             <div className="text-center py-12">
               <svg 
                 className="mx-auto h-12 w-12 text-gray-400" 
@@ -315,7 +291,7 @@ const SearchPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.isArray(profesores) && profesores.map((profesor) => (
+              {profesoresPaginados.map((profesor) => (
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
@@ -369,35 +345,25 @@ const SearchPage = () => {
           )}
 
           {/* Botón Cargar Más */}
-          {!loading && hayMasResultados && profesores.length > 0 && (
+          {!loading && hayMasResultados && profesoresPaginados.length > 0 && (
             <div className="mt-8 flex justify-center">
               <button
                 onClick={cargarMasResultados}
-                disabled={cargandoMas}
-                className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium flex items-center gap-2"
               >
-                {cargandoMas ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Cargando...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    Cargar más profesores
-                  </>
-                )}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                Cargar más profesores ({profesoresFiltrados.length - profesoresPaginados.length} restantes)
               </button>
             </div>
           )}
 
           {/* Indicador de fin de resultados */}
-          {!loading && !hayMasResultados && profesores.length > RESULTADOS_POR_PAGINA && (
+          {!loading && !hayMasResultados && profesoresPaginados.length > RESULTADOS_POR_PAGINA && (
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-500">
-                ✓ Has visto todos los resultados ({profesores.length} profesores)
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                ✓ Has visto todos los resultados ({profesoresFiltrados.length} profesores)
               </p>
             </div>
           )}
