@@ -14,6 +14,7 @@ const ProfesorProfile = () => {
   const [loading, setLoading] = useState(true);
   const [reportando, setReportando] = useState(null); // ID de evaluación siendo reportada
   const [formReporte, setFormReporte] = useState({ tipo: '', descripcion: '' });
+  const [notificacion, setNotificacion] = useState(null); // { tipo: 'exito'|'error', mensaje: '' }
 
   useEffect(() => {
     if (slug) {
@@ -59,8 +60,8 @@ const ProfesorProfile = () => {
   };
 
   const handleEnviarReporte = async (evaluacionId) => {
-    if (!formReporte.tipo || !formReporte.descripcion.trim()) {
-      alert('Por favor completa todos los campos');
+    ifsetNotificacion({ tipo: 'error', mensaje: 'Por favor completa todos los campos' });
+      setTimeout(() => setNotificacion(null), 3000);
       return;
     }
 
@@ -74,9 +75,12 @@ const ProfesorProfile = () => {
     );
 
     if (result.success) {
-      alert('✅ Reporte enviado correctamente. Gracias por ayudarnos a mantener la plataforma segura.');
+      setNotificacion({ tipo: 'exito', mensaje: '✅ Reporte enviado. Gracias por ayudarnos a mantener la plataforma segura.' });
+      setTimeout(() => setNotificacion(null), 4000);
       handleCancelarReporte();
     } else {
+      setNotificacion({ tipo: 'error', mensaje: '❌ Error al enviar el reporte. Inténtalo de nuevo.' });
+      setTimeout(() => setNotificacion(null), 3000
       alert('❌ Error al enviar el reporte. Inténtalo de nuevo.');
     }
   };
@@ -458,6 +462,30 @@ const ProfesorProfile = () => {
           )}
         </section>
       </main>
+
+      {/* Notificación Toast */}
+      {notificacion && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in-down">
+          <div className={`max-w-md rounded-lg shadow-lg p-4 ${
+            notificacion.tipo === 'exito' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center gap-3">
+              {notificacion.tipo === 'exito' ? (
+                <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+              <p className="text-sm font-medium">{notificacion.mensaje}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
