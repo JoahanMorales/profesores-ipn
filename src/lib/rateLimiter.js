@@ -82,19 +82,4 @@ export const useRateLimit = (key, maxAttempts = 5, windowMs = 60000) => {
   return { ...status, checkLimit, reset };
 };
 
-// HOC for rate-limited components
-export const withRateLimit = (Component, config = {}) => {
-  return (props) => {
-    const {
-      key = 'default',
-      maxAttempts = 5,
-      windowMs = 60000,
-    } = config;
-    
-    const rateLimit = useRateLimit(key, maxAttempts, windowMs);
-    
-    return <Component {...props} rateLimit={rateLimit} />;
-  };
-};
-
 export default rateLimiter;
