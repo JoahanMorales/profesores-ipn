@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
@@ -14,6 +14,8 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actualizando, setActualizando] = useState(false);
+  const searchInputRef = useRef(null);
+  const isTypingRef = useRef(false);
   
   // SEO dinámico para búsqueda
   useSEO(
@@ -39,12 +41,28 @@ const SearchPage = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       setPaginaActual(1); // Reset a página 1 cuando cambia búsqueda
-      setProfesores([]); // Limpiar resultados anteriores
-      cargarProfesores(searchQuery, 1);
+      // NO limpiar profesores aquí - esto causa re-render que pierde el foco
+      cargarProfesores(searchQuery, 1).then(() => {
+        // Restaurar foco si el usuario estaba escribiendo
+        if (isTypingRef.current && searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      });
     }, 300); // Debounce de 300ms
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
+
+  // Manejar cambio de input preservando foco
+  const handleSearchChange = useCallback((e) => {
+    isTypingRef.current = true;
+    setSearchQuery(e.target.value);
+  }, []);
+
+  // Manejar blur del input
+  const handleSearchBlur = useCallback(() => {
+    isTypingRef.current = false;
+  }, []);
 
   const cargarProfesores = async (query = '', pagina = 1) => {
     if (pagina === 1) {
@@ -206,15 +224,18 @@ const SearchPage = () => {
                 </svg>
               </div>
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                onBlur={handleSearchBlur}
                 placeholder="Buscar profesor por nombre..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-all"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck="false"
+                enterKeyHint="search"
               />
               {searchQuery && (
                 <button
