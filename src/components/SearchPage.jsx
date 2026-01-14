@@ -306,40 +306,40 @@ const SearchPage = () => {
                 </div>
               ))}
             </div>
+          )}
 
-            {/* Botón Cargar Más */}
-            {!loading && hayMasResultados && profesores.length > 0 && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={cargarMasResultados}
-                  disabled={cargandoMas}
-                  className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {cargandoMas ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Cargando...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                      Cargar más profesores
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+          {/* Botón Cargar Más */}
+          {!loading && hayMasResultados && profesores.length > 0 && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={cargarMasResultados}
+                disabled={cargandoMas}
+                className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {cargandoMas ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Cargando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    Cargar más profesores
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
-            {/* Indicador de fin de resultados */}
-            {!loading && !hayMasResultados && profesores.length > RESULTADOS_POR_PAGINA && (
-              <div className="mt-8 text-center">
-                <p className="text-sm text-gray-500">
-                  ✓ Has visto todos los resultados ({profesores.length} profesores)
-                </p>
-              </div>
-            )}
+          {/* Indicador de fin de resultados */}
+          {!loading && !hayMasResultados && profesores.length > RESULTADOS_POR_PAGINA && (
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-500">
+                ✓ Has visto todos los resultados ({profesores.length} profesores)
+              </p>
+            </div>
           )}
         </section>
       </main>
