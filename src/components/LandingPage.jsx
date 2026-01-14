@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Footer from './Footer';
+import DisclaimerBanner from './DisclaimerBanner';
 import { obtenerEstadisticasGlobales } from '../services/supabaseService';
 
 const LandingPage = () => {
@@ -26,7 +27,10 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">{/* Header */}
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Disclaimer Banner */}
+      <DisclaimerBanner />
+      
       {/* Header */}
       <header className="border-b border-gray-200">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

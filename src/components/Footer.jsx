@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import PrivacyPolicy from './PrivacyPolicy';
 
 const Footer = () => {
@@ -8,8 +9,11 @@ const Footer = () => {
           {/* Columna 1: Info de la empresa */}
           <div>
             <h3 className="text-lg font-bold mb-4 text-ipn-guinda-400">Axocode</h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm mb-4">
               Desarrollando soluciones tecnológicas para la comunidad estudiantil del IPN.
+            </p>
+            <p className="text-gray-500 text-xs">
+              Proyecto estudiantil independiente. <strong className="text-gray-400">No afiliado al IPN</strong>.
             </p>
           </div>
 
@@ -18,7 +22,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4 text-ipn-guinda-400">Acerca de</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <span className="block">Plataforma 100% anónima</span>
+                <span className="block">Publicación sin mostrar tu identidad</span>
               </li>
               <li>
                 <span className="block">Desarrollado por estudiantes</span>
@@ -61,16 +65,40 @@ const Footer = () => {
         </div>
 
         {/* Barra inferior */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} <span className="font-semibold text-white">Axocode</span>. Todos los derechos reservados.
-          </p>
-          <p className="text-gray-500 text-xs mt-2">
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-400 text-sm order-2 md:order-1">
+              © {new Date().getFullYear()} <span className="font-semibold text-white">Axocode</span>. Todos los derechos reservados.
+            </p>
+            
+            {/* Links legales */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm order-1 md:order-2">
+              <Link 
+                to="/terminos" 
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Términos de Servicio
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link 
+                to="/privacidad" 
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Política de Privacidad
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link 
+                to="/reportar" 
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Reportar Contenido
+              </Link>
+            </div>
+          </div>
+          
+          <p className="text-gray-500 text-xs mt-4 text-center">
             ip - Plataforma estudiantil independiente. Respetamos tu privacidad 🔒
           </p>
-          <div className="mt-3">
-            <PrivacyPolicy />
-          </div>
         </div>
       </div>
     </footer>

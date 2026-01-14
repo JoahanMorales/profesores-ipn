@@ -9,6 +9,10 @@ const LoginPage = lazy(() => import('./components/LoginPage'));
 const SearchPage = lazy(() => import('./components/SearchPage'));
 const ProfesorProfile = lazy(() => import('./components/ProfesorProfile'));
 const EvaluationForm = lazy(() => import('./components/EvaluationForm'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const ReportPage = lazy(() => import('./components/ReportPage'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const NotFound = lazy(() => import('./components/NotFound'));
 
 // Componente para proteger rutas
@@ -38,6 +42,9 @@ function App() {
             {/* Rutas públicas */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/terminos" element={<TermsOfService />} />
+            <Route path="/privacidad" element={<PrivacyPolicy />} />
+            <Route path="/reportar" element={<ReportPage />} />
             
             {/* Rutas protegidas */}
             <Route 
@@ -63,6 +70,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <EvaluationForm />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
                 </ProtectedRoute>
               } 
             />

@@ -14,6 +14,7 @@ import {
   agregarMonedasUsuario,
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
+import { buscarDuplicados } from '../services/adminService';
 
 const EvaluationForm = () => {
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ const EvaluationForm = () => {
   const [escuelas, setEscuelas] = useState([]);
   const [carreras, setCarreras] = useState([]);
   const [profesoresSugeridos, setProfesoresSugeridos] = useState([]);
+  const [duplicadosPotenciales, setDuplicadosPotenciales] = useState([]);
+  const [mostrarAlertaDuplicados, setMostrarAlertaDuplicados] = useState(false);
 
   // Cargar datos del profesor desde URL params o location.state
   useEffect(() => {
@@ -121,6 +124,18 @@ const EvaluationForm = () => {
     if (resultado.success) {
       setProfesoresSugeridos(resultado.data);
       setShowAutocomplete(resultado.data.length > 0);
+    }
+    
+    // Buscar duplicados potenciales
+    if (query.length >= 3) {
+      const duplicados = await buscarDuplicados(query);
+      if (duplicados.success && duplicados.data.length > 0) {
+        setDuplicadosPotenciales(duplicados.data.filter(d => d.similitud > 0.3));
+        setMostrarAlertaDuplicados(duplicados.data.some(d => d.similitud > 0.3));
+      } else {
+        setDuplicadosPotenciales([]);
+        setMostrarAlertaDuplicados(false);
+      }
     }
   };
 
@@ -435,6 +450,51 @@ const EvaluationForm = () => {
               />
               {errors.nombreProfesor && (
                 <p className="mt-1 text-xs text-red-600">{errors.nombreProfesor}</p>
+              )}
+
+              {/* Alerta de duplicados potenciales */}
+              {mostrarAlertaDuplicados && duplicadosPotenciales.length > 0 && (
+                <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-800 mb-1">
+                        ⚠️ ¿Te refieres a alguno de estos profesores?
+                      </p>
+                      <p className="text-xs text-yellow-700 mb-2">
+                        Encontramos profesores con nombres similares. Evita crear duplicados:
+                      </p>
+                      <div className="space-y-1">
+                        {duplicadosPotenciales.slice(0, 3).map((profesor) => (
+                          <button
+                            key={profesor.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, nombreProfesor: profesor.nombre_completo }));
+                              setMostrarAlertaDuplicados(false);
+                              setDuplicadosPotenciales([]);
+                            }}
+                            className="block w-full text-left px-3 py-2 bg-white border border-yellow-300 rounded text-sm hover:bg-yellow-50 transition-colors"
+                          >
+                            <span className="font-medium text-gray-900">{profesor.nombre_completo}</span>
+                            <span className="text-xs text-gray-600 ml-2">
+                              ({profesor.total_evaluaciones} evaluaciones, {profesor.calificacion_promedio?.toFixed(1)}/5)
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setMostrarAlertaDuplicados(false)}
+                        className="text-xs text-yellow-700 hover:text-yellow-900 mt-2 underline"
+                      >
+                        No, es un profesor diferente
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Autocomplete Dropdown */}

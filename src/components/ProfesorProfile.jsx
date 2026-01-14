@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug } from '../services/supabaseService';
+import { crearReporte } from '../services/adminService';
+import { generarFingerprint } from '../lib/browserFingerprint';
 
 const ProfesorProfile = () => {
   const { slug } = useParams();
@@ -10,6 +12,8 @@ const ProfesorProfile = () => {
   const [profesor, setProfesor] = useState(null);
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reportando, setReportando] = useState(null); // ID de evaluación siendo reportada
+  const [formReporte, setFormReporte] = useState({ tipo: '', descripcion: '' });
 
   useEffect(() => {
     if (slug) {
@@ -42,6 +46,38 @@ const ProfesorProfile = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleReportar = (evaluacionId) => {
+    setReportando(evaluacionId);
+    setFormReporte({ tipo: '', descripcion: '' });
+  };
+
+  const handleCancelarReporte = () => {
+    setReportando(null);
+    setFormReporte({ tipo: '', descripcion: '' });
+  };
+
+  const handleEnviarReporte = async (evaluacionId) => {
+    if (!formReporte.tipo || !formReporte.descripcion.trim()) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    const fingerprint = await generarFingerprint();
+    const result = await crearReporte(
+      evaluacionId,
+      formReporte.tipo,
+      formReporte.descripcion,
+      fingerprint
+    );
+
+    if (result.success) {
+      alert('✅ Reporte enviado correctamente. Gracias por ayudarnos a mantener la plataforma segura.');
+      handleCancelarReporte();
+    } else {
+      alert('❌ Error al enviar el reporte. Inténtalo de nuevo.');
+    }
   };
 
   if (loading) {
@@ -161,9 +197,24 @@ const ProfesorProfile = () => {
         <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8 overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="flex-1 min-w-0">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 break-words">
-                {profesor.nombre_completo}
-              </h2>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-3xl font-bold text-gray-900 break-words">
+                  {profesor.nombre_completo}
+                </h2>
+                {/* Badge de Verificado si tiene 3+ evaluaciones */}
+                {profesor.total_evaluaciones >= 3 && (
+                  <div className="flex-shrink-0" title="Profesor verificado con múltiples evaluaciones">
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg animate-pulse">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="absolute inset-0 rounded-full bg-purple-400 animate-ping opacity-75"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-700">
@@ -313,10 +364,93 @@ const ProfesorProfile = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {formatearFecha(evaluacion.created_at)}
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-gray-400">
+                        {formatearFecha(evaluacion.created_at)}
+                      </div>
+                      <button
+                        onClick={() => handleReportar(evaluacion.id)}
+                        className="text-gray-400 hover:text-red-600 transition-colors"
+                        title="Reportar contenido inapropiado"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
+
+                  {/* Modal de Reporte */}
+                  {reportando === evaluacion.id && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                      <div className="bg-white rounded-lg max-w-md w-full p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-gray-900">Reportar Evaluación</h3>
+                          <button
+                            onClick={handleCancelarReporte}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Motivo del reporte *
+                            </label>
+                            <select
+                              value={formReporte.tipo}
+                              onChange={(e) => setFormReporte({ ...formReporte, tipo: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-ipn-guinda-900 focus:border-transparent"
+                            >
+                              <option value="">Selecciona una opción</option>
+                              <option value="contenido-ofensivo">Contenido ofensivo</option>
+                              <option value="informacion-falsa">Información falsa</option>
+                              <option value="spam">Spam</option>
+                              <option value="acoso">Acoso</option>
+                              <option value="privacidad">Violación de privacidad</option>
+                              <option value="otro">Otro</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Descripción *
+                            </label>
+                            <textarea
+                              value={formReporte.descripcion}
+                              onChange={(e) => setFormReporte({ ...formReporte, descripcion: e.target.value })}
+                              rows={4}
+                              maxLength={500}
+                              placeholder="Describe por qué reportas esta evaluación..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-ipn-guinda-900 focus:border-transparent resize-y"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formReporte.descripcion.length}/500 caracteres
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleCancelarReporte}
+                              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleEnviarReporte(evaluacion.id)}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+                            >
+                              Enviar Reporte
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

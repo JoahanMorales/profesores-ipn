@@ -12,6 +12,12 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actualizando, setActualizando] = useState(false);
+  
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [cargandoMas, setCargandoMas] = useState(false);
+  const [hayMasResultados, setHayMasResultados] = useState(true);
+  const RESULTADOS_POR_PAGINA = 20;
 
   // Cargar profesores desde Supabase
   useEffect(() => {
@@ -21,26 +27,50 @@ const SearchPage = () => {
   // Buscar cuando cambia el query
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      cargarProfesores(searchQuery);
+      setPaginaActual(1); // Reset a página 1 cuando cambia búsqueda
+      setProfesores([]); // Limpiar resultados anteriores
+      cargarProfesores(searchQuery, 1);
     }, 300); // Debounce de 300ms
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
 
-  const cargarProfesores = async (query = '') => {
-    setLoading(true);
+  const cargarProfesores = async (query = '', pagina = 1) => {
+    if (pagina === 1) {
+      setLoading(true);
+    } else {
+      setCargandoMas(true);
+    }
     setError(null);
     
     const resultado = await buscarProfesores(query);
     
     if (resultado.success) {
-      setProfesores(resultado.data || []);
+      const todosLosProfesores = resultado.data || [];
+      const inicio = (pagina - 1) * RESULTADOS_POR_PAGINA;
+      const fin = inicio + RESULTADOS_POR_PAGINA;
+      const profesoresPagina = todosLosProfesores.slice(inicio, fin);
+      
+      if (pagina === 1) {
+        setProfesores(profesoresPagina);
+      } else {
+        setProfesores(prev => [...prev, ...profesoresPagina]);
+      }
+      
+      setHayMasResultados(fin < todosLosProfesores.length);
     } else {
       setError(resultado.error);
       console.error('Error al cargar profesores:', resultado.error);
     }
     
     setLoading(false);
+    setCargandoMas(false);
+  };
+
+  const cargarMasResultados = () => {
+    const nuevaPagina = paginaActual + 1;
+    setPaginaActual(nuevaPagina);
+    cargarProfesores(searchQuery, nuevaPagina);
   };
 
   const actualizarDatos = async () => {
@@ -51,7 +81,8 @@ const SearchPage = () => {
     
     if (resultado.success) {
       // Recargar profesores con datos frescos
-      await cargarProfesores(searchQuery);
+      setPaginaActual(1);
+      await cargarProfesores(searchQuery, 1);
       console.log('✅ Datos actualizados');
     } else {
       console.error('❌ Error al actualizar:', resultado.error);
@@ -232,9 +263,23 @@ const SearchPage = () => {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0 mr-4">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 break-words">
-                        {profesor.nombre_completo}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 break-words">
+                          {profesor.nombre_completo}
+                        </h3>
+                        {/* Badge de Verificado si tiene 3+ evaluaciones */}
+                        {profesor.total_evaluaciones >= 3 && (
+                          <div className="flex-shrink-0" title="Profesor verificado con múltiples evaluaciones">
+                            <div className="relative">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-md">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col items-end ml-4">
                       <span className="text-3xl font-bold text-gray-900">
@@ -261,6 +306,40 @@ const SearchPage = () => {
                 </div>
               ))}
             </div>
+
+            {/* Botón Cargar Más */}
+            {!loading && hayMasResultados && profesores.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={cargarMasResultados}
+                  disabled={cargandoMas}
+                  className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {cargandoMas ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      Cargar más profesores
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Indicador de fin de resultados */}
+            {!loading && !hayMasResultados && profesores.length > RESULTADOS_POR_PAGINA && (
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-500">
+                  ✓ Has visto todos los resultados ({profesores.length} profesores)
+                </p>
+              </div>
+            )}
           )}
         </section>
       </main>

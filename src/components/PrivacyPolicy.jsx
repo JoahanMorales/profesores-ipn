@@ -1,39 +1,30 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const PrivacyPolicy = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="text-sm text-gray-500 hover:text-ipn-guinda-900 underline"
-      >
-        Política de Privacidad
-      </button>
-    );
-  }
+  const navigate = useNavigate();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-ipn-guinda-900">
-            Política de Privacidad
-          </h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <nav className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
-            onClick={() => setIsOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
+            <span className="text-sm font-medium">Volver</span>
           </button>
-        </div>
+        </nav>
+      </header>
 
-        {/* Content */}
+      {/* Content */}
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Política de Privacidad</h1>
+        
         <div className="prose prose-sm max-w-none">
           <p className="text-sm text-gray-500 mb-6">
             Última actualización: {new Date().toLocaleDateString('es-MX')}
@@ -226,7 +217,8 @@ const PrivacyPolicy = () => {
             Entendido
           </button>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
