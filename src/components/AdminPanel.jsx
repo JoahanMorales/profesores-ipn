@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   obtenerReportes, 
   toggleOcultarEvaluacion, 
   eliminarEvaluacion,
-  actualizarReporte,
-  verificarAdmin 
+  actualizarReporte
 } from '../services/adminService';
 
-// ⚠️ Admin configurado por email - Cambia este email al tuyo
-const ADMIN_EMAIL = 'tu-email@ejemplo.com'; // CAMBIAR ESTO
+// ⚠️ Admin configurado para username: Yojan
+const ADMIN_USERNAME = 'Yojan';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('pendiente');
@@ -21,7 +22,7 @@ const AdminPanel = () => {
 
   useEffect(() => {
     verificarAcceso();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (esAdmin) {
@@ -29,13 +30,15 @@ const AdminPanel = () => {
     }
   }, [filtroEstado, esAdmin]);
 
-  const verificarAcceso = async () => {
-    const result = await verificarAdmin(ADMIN_EMAIL);
-    setEsAdmin(result.esAdmin);
-    setVerificando(false);
-    
-    if (!result.esAdmin) {
+  const verificarAcceso = () => {
+    // Verificar si el usuario está logueado y tiene username 'Yojan'
+    if (!user || user.username !== ADMIN_USERNAME) {
+      setEsAdmin(false);
+      setVerificando(false);
       setTimeout(() => navigate('/'), 2000);
+    } else {
+      setEsAdmin(true);
+      setVerificando(false);
     }
   };
 
