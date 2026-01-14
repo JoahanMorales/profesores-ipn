@@ -228,11 +228,11 @@ const SearchPage = () => {
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
-                  className="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all cursor-pointer"
+                  className="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                    <div className="flex-1 min-w-0 mr-4">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 break-words">
                         {profesor.nombre_completo}
                       </h3>
                     </div>
