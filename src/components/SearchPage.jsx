@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
 import { actualizarCacheProfesores } from '../services/cacheUpdateService';
 import { useSEO } from '../hooks/useSEO';
-import { CacheManager } from '../lib/cacheManager';
+import { CacheManager, CACHE_KEYS, CACHE_EXPIRATION } from '../lib/cacheManager';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -74,10 +74,11 @@ const SearchPage = () => {
     
     // 💾 Intentar cargar desde caché si es búsqueda específica (página 1)
     if (query && pagina === 1) {
-      const cacheKey = `search_${query.toLowerCase().trim()}`;
-      const datosCache = CacheManager.get('SEARCH_QUERY', cacheKey);
+      const cacheKey = `${CACHE_KEYS.SEARCH_QUERY}${query.toLowerCase().trim()}`;
+      const datosCache = CacheManager.get(cacheKey);
       
-      if (datosCache) {
+      // Validar que datosCache sea un array
+      if (datosCache && Array.isArray(datosCache)) {
         console.log('💾 Búsqueda cargada desde caché:', query);
         setProfesores(datosCache.slice(0, RESULTADOS_POR_PAGINA));
         setHayMasResultados(datosCache.length > RESULTADOS_POR_PAGINA);
@@ -89,12 +90,13 @@ const SearchPage = () => {
     const resultado = await buscarProfesores(query);
     
     if (resultado.success) {
-      const todosLosProfesores = resultado.data || [];
+      // Asegurar que siempre sea un array
+      const todosLosProfesores = Array.isArray(resultado.data) ? resultado.data : [];
       
       // 💾 Guardar en caché búsquedas específicas
       if (query && pagina === 1) {
-        const cacheKey = `search_${query.toLowerCase().trim()}`;
-        CacheManager.set('SEARCH_QUERY', cacheKey, todosLosProfesores);
+        const cacheKey = `${CACHE_KEYS.SEARCH_QUERY}${query.toLowerCase().trim()}`;
+        CacheManager.set(cacheKey, todosLosProfesores, CACHE_EXPIRATION.SEARCH_QUERY);
         console.log('💾 Búsqueda guardada en caché:', query);
       }
       
@@ -291,7 +293,7 @@ const SearchPage = () => {
                 Reintentar
               </button>
             </div>
-          ) : profesores.length === 0 ? (
+          ) : (profesores && profesores.length === 0) ? (
             <div className="text-center py-12">
               <svg 
                 className="mx-auto h-12 w-12 text-gray-400" 
@@ -313,7 +315,7 @@ const SearchPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {profesores.map((profesor) => (
+              {Array.isArray(profesores) && profesores.map((profesor) => (
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
