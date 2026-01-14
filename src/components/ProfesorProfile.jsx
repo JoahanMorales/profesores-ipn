@@ -60,7 +60,8 @@ const ProfesorProfile = () => {
   };
 
   const handleEnviarReporte = async (evaluacionId) => {
-    ifsetNotificacion({ tipo: 'error', mensaje: 'Por favor completa todos los campos' });
+    if (!formReporte.tipo || !formReporte.descripcion.trim()) {
+      setNotificacion({ tipo: 'error', mensaje: 'Por favor completa todos los campos' });
       setTimeout(() => setNotificacion(null), 3000);
       return;
     }
@@ -80,8 +81,7 @@ const ProfesorProfile = () => {
       handleCancelarReporte();
     } else {
       setNotificacion({ tipo: 'error', mensaje: '❌ Error al enviar el reporte. Inténtalo de nuevo.' });
-      setTimeout(() => setNotificacion(null), 3000
-      alert('❌ Error al enviar el reporte. Inténtalo de nuevo.');
+      setTimeout(() => setNotificacion(null), 3000);
     }
   };
 
