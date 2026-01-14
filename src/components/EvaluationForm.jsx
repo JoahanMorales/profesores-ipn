@@ -358,7 +358,7 @@ const EvaluationForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen-safe bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -466,6 +466,10 @@ const EvaluationForm = () => {
                   errors.nombreProfesor ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ej: Dr. Juan Pérez García"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck="false"
               />
               {errors.nombreProfesor && (
                 <p className="mt-1 text-xs text-red-600">{errors.nombreProfesor}</p>
@@ -599,6 +603,10 @@ const EvaluationForm = () => {
                   errors.materia ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ej: Estructura de Datos"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck="false"
               />
               {errors.materia && (
                 <p className="mt-1 text-xs text-red-600">{errors.materia}</p>
@@ -686,6 +694,8 @@ const EvaluationForm = () => {
                   errors.calificacionObtenida ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ej: 9, 10, 8.5"
+                autoComplete="off"
+                inputMode="decimal"
               />
               {errors.calificacionObtenida && (
                 <p className="mt-1 text-xs text-red-600">{errors.calificacionObtenida}</p>
@@ -709,6 +719,10 @@ const EvaluationForm = () => {
                   errors.opinion ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Comparte tu experiencia con este profesor: metodología, exámenes, tareas, etc."
+                autoComplete="off"
+                autoCorrect="on"
+                autoCapitalize="sentences"
+                spellCheck="true"
               />
               <div className="flex justify-between items-center mt-1">
                 {errors.opinion ? (
