@@ -8,6 +8,7 @@ const CACHE_KEYS = {
   PROFESORES_POPULARES: 'ipn_profesores_populares',
   SEARCH_RESULTS: 'ipn_search_',
   PROFESOR_PROFILE: 'ipn_profesor_',
+  SEARCH_QUERY: 'ipn_search_query_', // Nuevo: cachear por query específica
 };
 
 const CACHE_EXPIRATION = {
@@ -16,6 +17,7 @@ const CACHE_EXPIRATION = {
   PROFESORES_POPULARES: 1 * 60 * 60 * 1000, // 1 hora
   SEARCH_RESULTS: 5 * 60 * 1000, // 5 minutos
   PROFESOR_PROFILE: 10 * 60 * 1000, // 10 minutos
+  SEARCH_QUERY: 15 * 60 * 1000, // 15 minutos para búsquedas específicas
 };
 
 class CacheManager {

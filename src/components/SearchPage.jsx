@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
 import { actualizarCacheProfesores } from '../services/cacheUpdateService';
+import { useSEO } from '../hooks/useSEO';
+import CacheManager from '../lib/cacheManager';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -12,6 +14,15 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actualizando, setActualizando] = useState(false);
+  
+  // SEO dinámico para búsqueda
+  useSEO(
+    `${searchQuery ? `Resultados: ${searchQuery}` : 'Buscar Profesores'} | ip`,
+    searchQuery 
+      ? `Encuentra información sobre "${searchQuery}" en nuestra base de datos de profesores del IPN. Calificaciones, opiniones y recomendaciones de estudiantes.`
+      : 'Busca y compara profesores del IPN. Encuentra los mejores docentes según evaluaciones de estudiantes reales de ESCOM, UPIICSA, ESIME y más.',
+    'buscar profesores IPN, calificaciones docentes, opiniones estudiantes, mejores profesores'
+  );
   
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -43,10 +54,32 @@ const SearchPage = () => {
     }
     setError(null);
     
+    // 💾 Intentar cargar desde caché si es búsqueda específica (página 1)
+    if (query && pagina === 1) {
+      const cacheKey = `search_${query.toLowerCase().trim()}`;
+      const datosCache = CacheManager.get('SEARCH_QUERY', cacheKey);
+      
+      if (datosCache) {
+        console.log('💾 Búsqueda cargada desde caché:', query);
+        setProfesores(datosCache.slice(0, RESULTADOS_POR_PAGINA));
+        setHayMasResultados(datosCache.length > RESULTADOS_POR_PAGINA);
+        setLoading(false);
+        return;
+      }
+    }
+    
     const resultado = await buscarProfesores(query);
     
     if (resultado.success) {
       const todosLosProfesores = resultado.data || [];
+      
+      // 💾 Guardar en caché búsquedas específicas
+      if (query && pagina === 1) {
+        const cacheKey = `search_${query.toLowerCase().trim()}`;
+        CacheManager.set('SEARCH_QUERY', cacheKey, todosLosProfesores);
+        console.log('💾 Búsqueda guardada en caché:', query);
+      }
+      
       const inicio = (pagina - 1) * RESULTADOS_POR_PAGINA;
       const fin = inicio + RESULTADOS_POR_PAGINA;
       const profesoresPagina = todosLosProfesores.slice(inicio, fin);

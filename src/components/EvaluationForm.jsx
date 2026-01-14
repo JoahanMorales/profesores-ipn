@@ -15,6 +15,8 @@ import {
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
+import { checkRateLimit } from '../lib/rateLimiter';
+import { useSEO } from '../hooks/useSEO';
 
 const EvaluationForm = () => {
   const navigate = useNavigate();
@@ -47,6 +49,13 @@ const EvaluationForm = () => {
   const [profesoresSugeridos, setProfesoresSugeridos] = useState([]);
   const [duplicadosPotenciales, setDuplicadosPotenciales] = useState([]);
   const [mostrarAlertaDuplicados, setMostrarAlertaDuplicados] = useState(false);
+
+  // SEO dinámico
+  useSEO(
+    'Evaluar Profesor | ip - Comparte tu experiencia',
+    'Evalúa a un profesor del IPN de forma anónima. Comparte tu experiencia y ayuda a otros estudiantes a elegir a los mejores profesores.',
+    'evaluar profesor IPN, opiniones profesores, calificar docente, evaluación anónima'
+  );
 
   // Cargar datos del profesor desde URL params o location.state
   useEffect(() => {
@@ -219,6 +228,16 @@ const EvaluationForm = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    // ⏱️ RATE LIMITING: Máximo 2 evaluaciones por minuto
+    const rateLimitKey = `evaluacion_${user.username}_${user.deviceId}`;
+    const rateLimit = checkRateLimit(rateLimitKey, 2, 60000); // 2 intentos por 60 segundos
+
+    if (!rateLimit.allowed) {
+      const segundosRestantes = Math.ceil(rateLimit.resetIn / 1000);
+      alert(`⏱️ Límite de evaluaciones alcanzado.\n\nPara prevenir spam, solo puedes enviar 2 evaluaciones por minuto.\n\nEspera ${segundosRestantes} segundos e intenta nuevamente.`);
       return;
     }
 

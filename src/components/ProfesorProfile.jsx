@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug } from '../services/supabaseService';
 import { crearReporte } from '../services/adminService';
 import { getBrowserFingerprint } from '../lib/browserFingerprint';
+import { useSEO } from '../hooks/useSEO';
 
 const ProfesorProfile = () => {
   const { slug } = useParams();
@@ -15,6 +16,17 @@ const ProfesorProfile = () => {
   const [reportando, setReportando] = useState(null); // ID de evaluación siendo reportada
   const [formReporte, setFormReporte] = useState({ tipo: '', descripcion: '' });
   const [notificacion, setNotificacion] = useState(null); // { tipo: 'exito'|'error', mensaje: '' }
+
+  // SEO dinámico basado en el profesor
+  useSEO(
+    profesor 
+      ? `${profesor.nombre} - Calificación ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 | ip`
+      : 'Cargando perfil... | ip',
+    profesor
+      ? `Evaluaciones y opiniones de ${profesor.nombre}. Calificación promedio: ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 basada en ${profesor.total_evaluaciones || 0} evaluaciones de estudiantes del IPN.`
+      : 'Cargando información del profesor...',
+    profesor ? `${profesor.nombre}, profesor IPN, calificaciones, evaluaciones, opiniones estudiantes` : ''
+  );
 
   useEffect(() => {
     if (slug) {

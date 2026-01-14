@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from './Footer';
 import DisclaimerBanner from './DisclaimerBanner';
 import { obtenerEstadisticasGlobales } from '../services/supabaseService';
+import { useSEO } from '../hooks/useSEO';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,13 @@ const LandingPage = () => {
     totalEvaluaciones: 0
   });
   const [loading, setLoading] = useState(true);
+
+  // SEO para landing page
+  useSEO(
+    'ip - Evalúa Profesores Anónimamente | Plataforma Estudiantil IPN',
+    'Plataforma 100% anónima para evaluar profesores del IPN. Descubre las mejores opciones de profesores según estudiantes reales. Gana monedas premium por tus evaluaciones.',
+    'IPN, profesores IPN, evaluar profesores, ESCOM, UPIICSA, ESIME, calificaciones profesores, opiniones estudiantes, politécnico'
+  );
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
