@@ -8,6 +8,20 @@
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   }
 
+  /* Fix para viewport en móviles - prevenir desaparición de contenido al abrir teclado */
+  html, body {
+    height: 100%;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Asegurar que el contenido principal use toda la altura disponible */
+  #root {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Scrollbar personalizado */
   ::-webkit-scrollbar {
     width: 12px;
