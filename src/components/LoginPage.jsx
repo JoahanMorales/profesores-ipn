@@ -168,7 +168,7 @@ const LoginPage = () => {
                   className={`w-full px-3 py-2 pr-10 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-white ${
                     errors.favoriteSong ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Ejemplo: BohemianRhapsody"
+                  placeholder="Ejemplo: NuncaEstoy"
                 />
                 <button
                   type="button"
