@@ -530,7 +530,7 @@ const EvaluationForm = () => {
                 type="range"
                 min="1"
                 max="10"
-                step="0.5"
+                step="1"
                 value={formData.calificacion}
                 onChange={handleChange}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"

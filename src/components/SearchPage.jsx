@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
+import { actualizarCacheProfesores } from '../services/cacheUpdateService';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const SearchPage = () => {
   const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actualizando, setActualizando] = useState(false);
 
   // Cargar profesores desde Supabase
   useEffect(() => {
@@ -39,6 +41,23 @@ const SearchPage = () => {
     }
     
     setLoading(false);
+  };
+
+  const actualizarDatos = async () => {
+    setActualizando(true);
+    console.log('🔄 Actualizando datos de profesores...');
+    
+    const resultado = await actualizarCacheProfesores();
+    
+    if (resultado.success) {
+      // Recargar profesores con datos frescos
+      await cargarProfesores(searchQuery);
+      console.log('✅ Datos actualizados');
+    } else {
+      console.error('❌ Error al actualizar:', resultado.error);
+    }
+    
+    setActualizando(false);
   };
 
   const handleProfesorClick = (profesor) => {
@@ -142,9 +161,26 @@ const SearchPage = () => {
             </div>
 
             {/* Results Count */}
-            <div className="mt-4 text-sm text-gray-600">
-              {loading ? 'Buscando...' : `${profesores.length} ${profesores.length === 1 ? 'resultado' : 'resultados'}`}
-              {searchQuery && !loading && ` para "${searchQuery}"`}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {loading ? 'Buscando...' : `${profesores.length} ${profesores.length === 1 ? 'resultado' : 'resultados'}`}
+                {searchQuery && !loading && ` para "${searchQuery}"`}
+              </div>
+              <button
+                onClick={actualizarDatos}
+                disabled={actualizando}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-ipn-guinda-900 bg-ipn-guinda-50 border border-ipn-guinda-200 rounded-md hover:bg-ipn-guinda-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg 
+                  className={`w-4 h-4 ${actualizando ? 'animate-spin' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {actualizando ? 'Actualizando...' : 'Actualizar'}
+              </button>
             </div>
           </div>
         </section>

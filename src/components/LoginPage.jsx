@@ -50,7 +50,7 @@ const LoginPage = () => {
     return Validator.loginForm(formData);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -70,8 +70,16 @@ const LoginPage = () => {
     const sanitizedUsername = Validator.sanitize(formData.username);
     const sanitizedSong = Validator.sanitize(formData.favoriteSong);
 
-    login(sanitizedUsername, sanitizedSong);
-    navigate('/buscar');
+    // Realizar login con validación de usuario y contraseña
+    const success = await login(sanitizedUsername, sanitizedSong);
+    
+    if (success) {
+      navigate('/buscar');
+    } else {
+      setErrors({ 
+        favoriteSong: 'Usuario existente pero la canción no coincide. Verifica tu canción o usa otro nombre de usuario.' 
+      });
+    }
   };
 
   return (
@@ -166,6 +174,15 @@ const LoginPage = () => {
               <p className="mt-1 text-xs text-gray-500">
                 Escribe el nombre de tu canción favorita sin espacios (mínimo {LIMITS.FAVORITE_SONG.MIN} caracteres)
               </p>
+              <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-base">⚠️</span>
+                  <div className="text-xs text-gray-700">
+                    <p className="font-semibold text-yellow-900 mb-1">La canción funciona como contraseña</p>
+                    <p className="text-gray-600">Si el nombre de usuario ya existe, necesitas la canción correcta para acceder. <strong>Las cuentas NO son recuperables</strong> si olvidas tu canción.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getAnonymousUserInfo, getDeviceId, generateAnonymousUsername } from '../lib/browserFingerprint';
+import { crearOObtenerUsuario } from '../services/supabaseService';
 
 const AuthContext = createContext(null);
 
@@ -39,33 +40,69 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (username, favoriteSong) => {
-    const deviceData = deviceInfo || getAnonymousUserInfo();
-    
-    const userData = {
-      username,
-      favoriteSong,
-      monedas: 0,
-      deviceId: deviceData.deviceId,
-      fingerprint: deviceData.fingerprint,
-      sessionId: deviceData.sessionId,
-      browserInfo: deviceData.browser,
-      loginTime: new Date().toISOString()
-    };
-    
-    sessionStorage.setItem('ipn_user', JSON.stringify(userData));
-    setUser(userData);
-    setMonedas(0);
-    
-    console.log('🔐 Login exitoso (trackeable):', {
-      username,
-      deviceId: userData.deviceId.substring(0, 15) + '...',
-      fingerprint: userData.fingerprint.substring(0, 12) + '...',
-      browser: `${userData.browserInfo.name} ${userData.browserInfo.version}`,
-      os: userData.browserInfo.os,
-      isMobile: userData.browserInfo.isMobile,
-      timestamp: userData.loginTime
-    });
+  const login = async (username, favoriteSong) => {
+    try {
+      const deviceData = deviceInfo || getAnonymousUserInfo();
+      
+      // Intentar crear o obtener usuario desde la base de datos
+      const resultado = await crearOObtenerUsuario(
+        username, 
+        favoriteSong, 
+        null, // escuelaId se configura después
+        null, // carreraId se configura después
+        {
+          deviceId: deviceData.deviceId,
+          fingerprint: deviceData.fingerprint,
+          sessionId: deviceData.sessionId,
+          browser: deviceData.browser
+        }
+      );
+
+      if (!resultado.success) {
+        console.error('❌ Error al verificar usuario:', resultado.error);
+        return false;
+      }
+
+      const dbUser = resultado.data;
+
+      // Verificar si el usuario ya existe y la canción coincide
+      if (dbUser.cancion_favorita && dbUser.cancion_favorita !== favoriteSong) {
+        console.log('🚫 Canción incorrecta para usuario existente');
+        return false;
+      }
+
+      // Usuario válido o nuevo - crear sesión
+      const userData = {
+        id: dbUser.id,
+        username: dbUser.username,
+        favoriteSong,
+        monedas: dbUser.monedas || 0,
+        totalEvaluaciones: dbUser.total_evaluaciones || 0,
+        deviceId: deviceData.deviceId,
+        fingerprint: deviceData.fingerprint,
+        sessionId: deviceData.sessionId,
+        browserInfo: deviceData.browser,
+        loginTime: new Date().toISOString()
+      };
+      
+      sessionStorage.setItem('ipn_user', JSON.stringify(userData));
+      setUser(userData);
+      setMonedas(userData.monedas);
+      
+      console.log('🔐 Login exitoso:', {
+        username,
+        userId: dbUser.id,
+        monedas: userData.monedas,
+        evaluaciones: userData.totalEvaluaciones,
+        deviceId: userData.deviceId.substring(0, 15) + '...',
+        browser: `${userData.browserInfo.name} ${userData.browserInfo.version}`
+      });
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error en login:', error);
+      return false;
+    }
   };
 
   const updateMonedas = (nuevasMonedas) => {

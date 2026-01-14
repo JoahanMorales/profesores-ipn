@@ -23,6 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_device_last_seen ON usuarios(device_id, 
 CREATE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(username);
 
 -- 3. FUNCIÓN: Buscar usuario por device
+DROP FUNCTION IF EXISTS buscar_usuario_por_device(TEXT);
 CREATE OR REPLACE FUNCTION buscar_usuario_por_device(p_device_id TEXT)
 RETURNS TABLE (
   id INTEGER,
@@ -61,6 +62,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 4. FUNCIÓN: Registrar nueva sesión
+DROP FUNCTION IF EXISTS registrar_sesion(INTEGER, TEXT, JSONB);
 CREATE OR REPLACE FUNCTION registrar_sesion(
   p_user_id INTEGER,
   p_session_id TEXT,
