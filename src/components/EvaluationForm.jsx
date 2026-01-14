@@ -358,34 +358,34 @@ const EvaluationForm = () => {
   };
 
   return (
-    <div className="min-h-screen-safe bg-gray-50">
+    <div className="min-h-screen-safe bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 
               className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate('/buscar')}
             >
-              <span className="text-ipn-guinda-900">i</span>
-              <span className="text-gray-900">p</span>
+              <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
+              <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
               {user && (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 rounded-full shadow-lg relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer opacity-40" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
                     <span className="text-xl relative z-10">💎</span>
-                    <span className="font-bold text-gray-900 relative z-10">{monedas}</span>
+                    <span className="font-bold text-gray-900 dark:text-white relative z-10">{monedas}</span>
                   </div>
-                  <span className="hidden sm:inline text-sm text-gray-600">
+                  <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
                     Hola, <span className="font-medium">{user.username}</span>
                   </span>
                 </>
               )}
               <button
                 onClick={() => navigate('/buscar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
               >
                 Buscar
               </button>
@@ -405,7 +405,7 @@ const EvaluationForm = () => {
         {/* Back Button */}
         <button
           onClick={() => navigate('/buscar')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -414,33 +414,33 @@ const EvaluationForm = () => {
         </button>
 
         {/* Form Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-ipn-guinda-900 mb-2">
+            <h2 className="text-3xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-2">
               Evaluar Profesor
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Comparte tu experiencia para ayudar a otros estudiantes
             </p>
             
             {/* Mensaje de monedas y privacidad */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              <div className="bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3">
+              <div className="bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-purple-900/30 dark:to-pink-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
                 <div className="flex items-start gap-2">
                   <span className="text-lg">💎</span>
                   <div className="text-xs">
-                    <p className="font-semibold text-purple-900 mb-1">Gana 5 Monedas Premium</p>
-                    <p className="text-gray-600">Por cada evaluación ganas monedas que podrás usar para funciones exclusivas como generación automática de horarios con los mejores profesores.</p>
+                    <p className="font-semibold text-purple-900 dark:text-purple-300 mb-1">Gana 5 Monedas Premium</p>
+                    <p className="text-gray-600 dark:text-gray-400">Por cada evaluación ganas monedas que podrás usar para funciones exclusivas como generación automática de horarios con los mejores profesores.</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
                 <div className="flex items-start gap-2">
                   <span className="text-lg">🔒</span>
                   <div className="text-xs">
-                    <p className="font-semibold text-blue-900 mb-1">Tu Privacidad es Sagrada</p>
-                    <p className="text-gray-600">Tus datos están protegidos. Respetamos completamente la integridad y privacidad de tu información.</p>
+                    <p className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Tu Privacidad es Sagrada</p>
+                    <p className="text-gray-600 dark:text-gray-400">Tus datos están protegidos. Respetamos completamente la integridad y privacidad de tu información.</p>
                   </div>
                 </div>
               </div>
@@ -450,7 +450,7 @@ const EvaluationForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Nombre del Profesor con Autocomplete */}
             <div className="relative">
-              <label htmlFor="nombreProfesor" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="nombreProfesor" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Nombre del Profesor *
               </label>
               <input
@@ -462,8 +462,8 @@ const EvaluationForm = () => {
                 onChange={handleChange}
                 onFocus={() => setShowAutocomplete(formData.nombreProfesor.length > 0)}
                 onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors ${
-                  errors.nombreProfesor ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
+                  errors.nombreProfesor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Ej: Dr. Juan Pérez García"
                 autoComplete="off"
@@ -522,15 +522,15 @@ const EvaluationForm = () => {
 
               {/* Autocomplete Dropdown */}
               {showAutocomplete && profesoresSugeridos.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
                   {profesoresSugeridos.map((profesor) => (
                     <button
                       key={profesor.id}
                       type="button"
                       onClick={() => handleProfesorSelect(profesor)}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
                     >
-                      <div className="font-medium text-gray-900">{profesor.nombre_completo}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{profesor.nombre_completo}</div>
                     </button>
                   ))}
                 </div>
@@ -539,7 +539,7 @@ const EvaluationForm = () => {
 
             {/* Escuela con buscador */}
             <div>
-              <label htmlFor="escuelaId" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="escuelaId" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Escuela *
               </label>
               <SearchableSelect
@@ -560,7 +560,7 @@ const EvaluationForm = () => {
 
             {/* Carrera (Dinámico basado en Escuela) */}
             <div>
-              <label htmlFor="carreraId" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="carreraId" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Carrera *
               </label>
               <select
@@ -569,8 +569,8 @@ const EvaluationForm = () => {
                 value={formData.carreraId}
                 onChange={handleChange}
                 disabled={!formData.escuelaId}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.carreraId ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed ${
+                  errors.carreraId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
                 <option value="">
@@ -589,7 +589,7 @@ const EvaluationForm = () => {
 
             {/* Materia */}
             <div>
-              <label htmlFor="materia" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="materia" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Materia *
               </label>
               <input
@@ -599,8 +599,8 @@ const EvaluationForm = () => {
                 maxLength="150"
                 value={formData.materia}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors ${
-                  errors.materia ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
+                  errors.materia ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Ej: Estructura de Datos"
                 autoComplete="off"
@@ -615,7 +615,7 @@ const EvaluationForm = () => {
 
             {/* Calificación (Slider) */}
             <div>
-              <label htmlFor="calificacion" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="calificacion" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Calificación del Profesor: <span className="text-2xl font-bold">{formData.calificacion}</span>/10
               </label>
               <input
@@ -627,25 +627,25 @@ const EvaluationForm = () => {
                 step="1"
                 value={formData.calificacion}
                 onChange={handleChange}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-400"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <span>1 (Muy malo)</span>
                 <span>10 (Excelente)</span>
               </div>
             </div>
 
             {/* Toggles */}
-            <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <div className="space-y-4 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
               <div className="flex items-center justify-between">
-                <label htmlFor="recomendado" className="text-sm font-medium text-gray-900">
+                <label htmlFor="recomendado" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   ¿Recomendarías este profesor?
                 </label>
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, recomendado: !prev.recomendado }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.recomendado ? 'bg-ipn-guinda-900' : 'bg-gray-300'
+                    formData.recomendado ? 'bg-ipn-guinda-900 dark:bg-ipn-guinda-700' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 >
                   <span
@@ -657,14 +657,14 @@ const EvaluationForm = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <label htmlFor="asistenciaObligatoria" className="text-sm font-medium text-gray-900">
+                <label htmlFor="asistenciaObligatoria" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   ¿La asistencia es obligatoria?
                 </label>
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, asistenciaObligatoria: !prev.asistenciaObligatoria }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.asistenciaObligatoria ? 'bg-ipn-guinda-900' : 'bg-gray-300'
+                    formData.asistenciaObligatoria ? 'bg-ipn-guinda-900 dark:bg-ipn-guinda-700' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 >
                   <span
@@ -678,7 +678,7 @@ const EvaluationForm = () => {
 
             {/* Calificación Obtenida */}
             <div>
-              <label htmlFor="calificacionObtenida" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="calificacionObtenida" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Calificación que obtuviste * (1-10)
               </label>
               <input
@@ -690,8 +690,8 @@ const EvaluationForm = () => {
                 step="0.1"
                 value={formData.calificacionObtenida}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors ${
-                  errors.calificacionObtenida ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
+                  errors.calificacionObtenida ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Ej: 9, 10, 8.5"
                 autoComplete="off"
@@ -700,12 +700,12 @@ const EvaluationForm = () => {
               {errors.calificacionObtenida && (
                 <p className="mt-1 text-xs text-red-600">{errors.calificacionObtenida}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">Solo valores numéricos entre 1 y 10</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Solo valores numéricos entre 1 y 10</p>
             </div>
 
             {/* Opinión */}
             <div>
-              <label htmlFor="opinion" className="block text-sm font-medium text-gray-900 mb-2">
+              <label htmlFor="opinion" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 Tu opinión * (mínimo 20 caracteres, máximo 2000)
               </label>
               <textarea
@@ -715,8 +715,8 @@ const EvaluationForm = () => {
                 maxLength="2000"
                 value={formData.opinion}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors resize-y ${
-                  errors.opinion ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors resize-y ${
+                  errors.opinion ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Comparte tu experiencia con este profesor: metodología, exámenes, tareas, etc."
                 autoComplete="off"
@@ -728,7 +728,7 @@ const EvaluationForm = () => {
                 {errors.opinion ? (
                   <p className="text-xs text-red-600">{errors.opinion}</p>
                 ) : (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formData.opinion.length} / 2000 caracteres
                   </p>
                 )}

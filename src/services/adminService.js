@@ -125,23 +125,45 @@ export const actualizarReporte = async (reporteId, estado, notasAdmin = null) =>
 };
 
 /**
- * Buscar profesores duplicados
+ * Buscar profesores duplicados (con manejo graceful de errores)
  */
 export const buscarDuplicados = async (nombreProfesor) => {
   try {
+    // Sanitizar el nombre para evitar errores con caracteres especiales
+    const nombreSanitizado = nombreProfesor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Quitar acentos para búsqueda
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Solo alfanuméricos
+      .trim();
+    
+    if (nombreSanitizado.length < 2) {
+      return handleSupabaseSuccess([], 'Búsqueda muy corta');
+    }
+
     // Búsqueda directa sin RPC - buscar por nombre similar
     const { data, error } = await supabase
       .from('profesores')
-      .select('id, nombre_completo, escuela_id, total_evaluaciones')
-      .ilike('nombre_completo', `%${nombreProfesor}%`)
-      .limit(20);
+      .select('id, nombre_completo, total_evaluaciones, calificacion_promedio')
+      .ilike('nombre_completo', `%${nombreSanitizado}%`)
+      .limit(10);
 
-    if (error) throw error;
+    if (error) {
+      // Fallar silenciosamente - no es crítico
+      console.warn('⚠️ Error buscando duplicados (no crítico):', error.message);
+      return handleSupabaseSuccess([], 'Búsqueda no disponible');
+    }
 
-    console.log('🔍 Posibles duplicados encontrados:', data?.length || 0);
-    return handleSupabaseSuccess(data || [], 'Búsqueda completada');
+    // Agregar campo de similitud aproximada
+    const resultadosConSimilitud = (data || []).map(profesor => ({
+      ...profesor,
+      similitud: nombreProfesor.toLowerCase().includes(profesor.nombre_completo?.toLowerCase()?.substring(0, 5)) ? 0.8 : 0.5
+    }));
+
+    return handleSupabaseSuccess(resultadosConSimilitud, 'Búsqueda completada');
   } catch (error) {
-    return handleSupabaseError(error, 'buscarDuplicados');
+    // Nunca fallar - solo retornar vacío
+    console.warn('⚠️ buscarDuplicados error (ignorado):', error);
+    return handleSupabaseSuccess([], 'Búsqueda no disponible');
   }
 };
 
