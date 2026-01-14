@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import LoadingSpinner from './components/LoadingSpinner';
 import ThemeToggle from './components/ThemeToggle';
+import { useMobileKeyboard } from './hooks/useMobileKeyboard';
 
 // Lazy load components for better performance
 const LandingPage = lazy(() => import('./components/LandingPage'));
@@ -35,64 +36,45 @@ function ProtectedRoute({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
 }
 
+// Componente wrapper para aplicar el hook de teclado móvil
+function AppContent() {
+  // Hook para prevenir bugs de teclado en móviles
+  useMobileKeyboard();
+  
+  return (
+    <>
+      <ThemeToggle />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Rutas públicas */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/terminos" element={<TermsOfService />} />
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
+          <Route path="/reportar" element={<ReportPage />} />
+
+          {/* Rutas protegidas */}
+          <Route path="/buscar" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+          <Route path="/profesor/:slug" element={<ProtectedRoute><ProfesorProfile /></ProtectedRoute>} />
+          <Route path="/evaluar" element={<ProtectedRoute><EvaluationForm /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+
+          {/* Ruta 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <ThemeToggle />
-          <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            {/* Rutas públicas */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/terminos" element={<TermsOfService />} />
-            <Route path="/privacidad" element={<PrivacyPolicy />} />
-            <Route path="/reportar" element={<ReportPage />} />
-            
-            {/* Rutas protegidas */}
-            <Route 
-              path="/buscar" 
-              element={
-                <ProtectedRoute>
-                  <SearchPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/profesor/:slug" 
-              element={
-                <ProtectedRoute>
-                  <ProfesorProfile />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/evaluar" 
-              element={
-                <ProtectedRoute>
-                  <EvaluationForm />
-                </ProtectedRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <AdminPanel />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* 404 Page */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </AuthProvider>
-    </ThemeProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

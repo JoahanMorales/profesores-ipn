@@ -48,12 +48,15 @@
   /* Asegurar que inputs y textareas no causen zoom en móviles */
   input, textarea, select {
     font-size: 16px;
+    /* Prevenir pérdida de foco en móviles */
+    touch-action: manipulation;
   }
 
-  /* Prevenir comportamientos extraños en elementos con position fixed */
+  /* Prevenir comportamientos extraños con touch en móviles */
   @media (max-width: 768px) {
-    .fixed {
-      position: absolute;
+    input, textarea, select {
+      -webkit-user-select: text;
+      user-select: text;
     }
   }
 

@@ -125,7 +125,10 @@ const LoginPage = () => {
                 id="username"
                 name="username"
                 type="text"
-                autoComplete="username"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 value={formData.username}
                 onChange={handleChange}
                 maxLength={LIMITS.USERNAME.MAX}
@@ -159,7 +162,10 @@ const LoginPage = () => {
                 id="favoriteSong"
                 name="favoriteSong"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 value={formData.favoriteSong}
                 onChange={handleChange}
                 maxLength={LIMITS.FAVORITE_SONG.MAX}

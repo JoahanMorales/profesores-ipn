@@ -211,6 +211,10 @@ const SearchPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar profesor por nombre..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-all"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
               {searchQuery && (
                 <button
