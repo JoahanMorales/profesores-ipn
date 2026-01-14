@@ -35,21 +35,21 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors duration-200">
       {/* Disclaimer Banner */}
       <DisclaimerBanner />
       
       {/* Header */}
-      <header className="border-b border-gray-200">
+      <header className="border-b border-gray-200 dark:border-gray-700">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">
-              <span className="text-ipn-guinda-900">i</span>
-              <span className="text-gray-900">p</span>
+              <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
+              <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <button
               onClick={() => navigate('/login')}
-              className="px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
             >
               Iniciar Sesión
             </button>
@@ -61,23 +61,23 @@ const LandingPage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section className="py-20 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-5xl sm:text-6xl font-bold text-ipn-guinda-900 mb-6">
+            <h2 className="text-5xl sm:text-6xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-6">
               Evalúa a tus profesores del IPN
             </h2>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
               Una plataforma transparente para compartir opiniones sobre docentes 
               y ayudar a la comunidad politécnica a tomar mejores decisiones académicas.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => navigate('/login')}
-                className="px-8 py-3 text-base font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+                className="px-8 py-3 text-base font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
               >
                 Buscar Profesor
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="px-8 py-3 text-base font-medium text-ipn-guinda-900 bg-white border-2 border-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-50 transition-colors"
+                className="px-8 py-3 text-base font-medium text-ipn-guinda-900 dark:text-ipn-guinda-400 bg-white dark:bg-gray-800 border-2 border-ipn-guinda-900 dark:border-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Evaluar Profesor
               </button>

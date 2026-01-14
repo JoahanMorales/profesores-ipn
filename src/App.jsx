@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import LoadingSpinner from './components/LoadingSpinner';
+import ThemeToggle from './components/ThemeToggle';
 
 // Lazy load components for better performance
 const LandingPage = lazy(() => import('./components/LandingPage'));
@@ -21,10 +23,10 @@ function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
     );
@@ -36,8 +38,10 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Suspense fallback={<LoadingSpinner />}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemeToggle />
+          <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {/* Rutas públicas */}
             <Route path="/" element={<LandingPage />} />
@@ -88,6 +92,7 @@ function App() {
           </Routes>
         </Suspense>
       </AuthProvider>
+    </ThemeProvider>
     </BrowserRouter>
   );
 }
