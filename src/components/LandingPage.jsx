@@ -35,7 +35,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="min-h-[100svh] bg-white dark:bg-gray-900 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen-safe bg-white dark:bg-gray-900 flex flex-col transition-colors duration-200">
       {/* Disclaimer Banner */}
       <DisclaimerBanner />
       

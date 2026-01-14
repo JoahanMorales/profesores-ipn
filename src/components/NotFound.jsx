@@ -17,7 +17,7 @@ const NotFound = () => {
   }, []);
 
   return (
-    <div className="min-h-[100svh] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center px-4 transition-colors duration-200">
+    <div className="min-h-screen-safe bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center px-4 transition-colors duration-200">
       <div className="text-center max-w-md">
         {/* Animated Icon */}
         <div className="mb-8 animate-bounce">

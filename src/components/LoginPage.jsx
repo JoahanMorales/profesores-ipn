@@ -83,7 +83,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[100svh] bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
+    <div className="min-h-screen-safe bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h1 className="text-center text-3xl font-bold mb-2">

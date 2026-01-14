@@ -8,18 +8,53 @@
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   }
 
-  /* Fix para viewport en móviles - prevenir desaparición de contenido al abrir teclado */
-  html, body {
+  /* Fix crítico para viewport en móviles - prevenir desaparición de contenido al abrir teclado */
+  html {
     height: 100%;
+    /* Usar fill-available para iOS Safari */
+    height: -webkit-fill-available;
+    /* Prevenir zoom en inputs en iOS */
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  body {
+    min-height: 100%;
+    min-height: -webkit-fill-available;
     position: relative;
     overflow-x: hidden;
+    overflow-y: auto;
+    /* Prevenir bounce effect en iOS */
+    overscroll-behavior-y: none;
+    /* Mejorar rendimiento de scroll */
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Asegurar que el contenido principal use toda la altura disponible */
   #root {
-    min-height: 100svh;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
     display: flex;
     flex-direction: column;
+    position: relative;
+  }
+
+  /* Soporte para diferentes unidades de viewport modernas */
+  @supports (min-height: 100dvh) {
+    #root {
+      min-height: 100dvh;
+    }
+  }
+
+  /* Asegurar que inputs y textareas no causen zoom en móviles */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  /* Prevenir comportamientos extraños en elementos con position fixed */
+  @media (max-width: 768px) {
+    .fixed {
+      position: absolute;
+    }
   }
 
   /* Scrollbar personalizado */
