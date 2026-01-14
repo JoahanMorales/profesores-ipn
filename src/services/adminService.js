@@ -143,7 +143,7 @@ export const buscarDuplicados = async (nombreProfesor) => {
 /**
  * Verificar si usuario es admin
  */
-export const verificarAdmin = async (adminUsername) => {
+export const verificarAdmin = async (adminEmail) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -151,21 +151,10 @@ export const verificarAdmin = async (adminUsername) => {
       return { success: false, esAdmin: false };
     }
 
-    // Buscar el usuario en la tabla usuarios para verificar username
-    const { data: usuario, error } = await supabase
-      .from('usuarios')
-      .select('username')
-      .eq('id', user.id)
-      .single();
+    // Verificar si el email coincide
+    const esAdmin = user.email === adminEmail;
 
-    if (error || !usuario) {
-      return { success: false, esAdmin: false };
-    }
-
-    // Verificar si el username coincide
-    const esAdmin = usuario.username === adminUsername;
-
-    return { success: true, esAdmin, username: usuario.username };
+    return { success: true, esAdmin, email: user.email };
   } catch (error) {
     return { success: false, esAdmin: false };
   }

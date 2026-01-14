@@ -8,8 +8,8 @@ import {
   verificarAdmin 
 } from '../services/adminService';
 
-// ⚠️ Admin configurado para username: Yojan
-const ADMIN_USERNAME = 'Yojan';
+// ⚠️ Admin configurado por email - Cambia este email al tuyo
+const ADMIN_EMAIL = 'tu-email@ejemplo.com'; // CAMBIAR ESTO
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const AdminPanel = () => {
   }, [filtroEstado, esAdmin]);
 
   const verificarAcceso = async () => {
-    const result = await verificarAdmin(ADMIN_USERNAME);
+    const result = await verificarAdmin(ADMIN_EMAIL);
     setEsAdmin(result.esAdmin);
     setVerificando(false);
     
