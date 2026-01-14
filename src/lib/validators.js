@@ -19,7 +19,7 @@ export const LIMITS = {
   },
   PROFESOR_NAME: {
     MIN: 5,
-    MAX: 150
+    MAX: 100
   },
   MATERIA: {
     MIN: 3,

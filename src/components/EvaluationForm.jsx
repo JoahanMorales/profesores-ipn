@@ -179,8 +179,13 @@ const EvaluationForm = () => {
       newErrors.materia = 'La materia es obligatoria';
     }
 
-    if (!formData.calificacionObtenida.trim()) {
+    if (!formData.calificacionObtenida || formData.calificacionObtenida === '') {
       newErrors.calificacionObtenida = 'La calificación obtenida es obligatoria';
+    } else {
+      const calificacion = parseFloat(formData.calificacionObtenida);
+      if (isNaN(calificacion) || calificacion < 1 || calificacion > 10) {
+        newErrors.calificacionObtenida = 'Debe ser un número entre 1 y 10';
+      }
     }
 
     if (!formData.opinion.trim()) {
@@ -418,6 +423,7 @@ const EvaluationForm = () => {
                 id="nombreProfesor"
                 name="nombreProfesor"
                 type="text"
+                maxLength="100"
                 value={formData.nombreProfesor}
                 onChange={handleChange}
                 onFocus={() => setShowAutocomplete(formData.nombreProfesor.length > 0)}
@@ -507,6 +513,7 @@ const EvaluationForm = () => {
                 id="materia"
                 name="materia"
                 type="text"
+                maxLength="150"
                 value={formData.materia}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors ${
@@ -585,12 +592,15 @@ const EvaluationForm = () => {
             {/* Calificación Obtenida */}
             <div>
               <label htmlFor="calificacionObtenida" className="block text-sm font-medium text-gray-900 mb-2">
-                Calificación que obtuviste *
+                Calificación que obtuviste * (1-10)
               </label>
               <input
                 id="calificacionObtenida"
                 name="calificacionObtenida"
-                type="text"
+                type="number"
+                min="1"
+                max="10"
+                step="0.1"
                 value={formData.calificacionObtenida}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors ${
@@ -601,20 +611,22 @@ const EvaluationForm = () => {
               {errors.calificacionObtenida && (
                 <p className="mt-1 text-xs text-red-600">{errors.calificacionObtenida}</p>
               )}
+              <p className="mt-1 text-xs text-gray-500">Solo valores numéricos entre 1 y 10</p>
             </div>
 
             {/* Opinión */}
             <div>
               <label htmlFor="opinion" className="block text-sm font-medium text-gray-900 mb-2">
-                Tu opinión * (mínimo 20 caracteres)
+                Tu opinión * (mínimo 20 caracteres, máximo 2000)
               </label>
               <textarea
                 id="opinion"
                 name="opinion"
                 rows={5}
+                maxLength="2000"
                 value={formData.opinion}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors resize-none ${
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-colors resize-y ${
                   errors.opinion ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Comparte tu experiencia con este profesor: metodología, exámenes, tareas, etc."
@@ -624,7 +636,7 @@ const EvaluationForm = () => {
                   <p className="text-xs text-red-600">{errors.opinion}</p>
                 ) : (
                   <p className="text-xs text-gray-500">
-                    {formData.opinion.length} caracteres
+                    {formData.opinion.length} / 2000 caracteres
                   </p>
                 )}
               </div>
