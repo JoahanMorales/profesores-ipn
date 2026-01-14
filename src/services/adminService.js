@@ -144,23 +144,3 @@ export const buscarDuplicados = async (nombreProfesor) => {
     return handleSupabaseError(error, 'buscarDuplicados');
   }
 };
-
-/**
- * Verificar si usuario es admin
- */
-export const verificarAdmin = async (adminEmail) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return { success: false, esAdmin: false };
-    }
-
-    // Verificar si el email coincide
-    const esAdmin = user.email === adminEmail;
-
-    return { success: true, esAdmin, email: user.email };
-  } catch (error) {
-    return { success: false, esAdmin: false };
-  }
-};

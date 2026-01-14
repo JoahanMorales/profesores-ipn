@@ -244,23 +244,14 @@ const EvaluationForm = () => {
     setSubmitting(true);
 
     try {
-      // 1. Crear o obtener el usuario (CON FINGERPRINT)
+      // 1. Crear o obtener el usuario
       console.log('👤 Buscando/Creando usuario:', user.username);
-      
-      // Preparar datos de fingerprinting
-      const fingerprintData = {
-        deviceId: user.deviceId,
-        fingerprint: user.fingerprint,
-        sessionId: user.sessionId,
-        browser: user.browserInfo
-      };
       
       const usuarioResult = await crearOObtenerUsuario(
         user.username,
         user.favoriteSong,
         formData.escuelaId,
-        formData.carreraId,
-        fingerprintData  // Pasar datos de tracking
+        formData.carreraId
       );
 
       if (!usuarioResult.success) {

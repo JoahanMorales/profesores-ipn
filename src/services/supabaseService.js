@@ -95,25 +95,6 @@ export const buscarProfesores = async (searchQuery = '') => {
 };
 
 /**
- * Obtener detalles completos de un profesor por ID
- */
-export const obtenerProfesorPorId = async (profesorId) => {
-  try {
-    const { data, error } = await supabase
-      .from('ranking_profesores')
-      .select('*')
-      .eq('id', profesorId)
-      .single();
-
-    if (error) throw error;
-
-    return handleSupabaseSuccess(data, 'Profesor encontrado');
-  } catch (error) {
-    return handleSupabaseError(error, 'obtenerProfesorPorId');
-  }
-};
-
-/**
  * Obtener profesor por slug (para URLs amigables) - CON CACHÉ
  */
 export const obtenerProfesorPorSlug = async (slug) => {
@@ -308,37 +289,6 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
   }
 };
 
-/**
- * Obtener estadísticas de un profesor
- */
-export const obtenerEstadisticasProfesor = async (profesorId) => {
-  try {
-    const { data, error } = await supabase
-      .from('evaluaciones')
-      .select('calificacion, recomendado, asistencia_obligatoria')
-      .eq('profesor_id', profesorId);
-
-    if (error) throw error;
-
-    const estadisticas = {
-      total: data.length,
-      promedioCalificacion: data.length > 0 
-        ? (data.reduce((sum, e) => sum + e.calificacion, 0) / data.length).toFixed(1)
-        : 0,
-      porcentajeRecomendacion: data.length > 0
-        ? Math.round((data.filter(e => e.recomendado).length / data.length) * 100)
-        : 0,
-      porcentajeAsistencia: data.length > 0
-        ? Math.round((data.filter(e => e.asistencia_obligatoria).length / data.length) * 100)
-        : 0
-    };
-
-    return handleSupabaseSuccess(estadisticas, 'Estadísticas calculadas');
-  } catch (error) {
-    return handleSupabaseError(error, 'obtenerEstadisticasProfesor');
-  }
-};
-
 // ============================================
 // HELPERS DE BÚSQUEDA
 // ============================================
@@ -368,9 +318,9 @@ export const autocompletarProfesores = async (query) => {
 // ============================================
 
 /**
- * Crear o obtener un usuario (CON FINGERPRINTING - graceful fallback)
+ * Crear o obtener un usuario
  */
-export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId, carreraId, fingerprintData = null) => {
+export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId, carreraId) => {
   try {
     // Buscar por username (método principal y más confiable)
     const { data: existente, error: errorBusqueda } = await supabase
@@ -406,54 +356,6 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     return handleSupabaseSuccess(nuevo, 'Usuario creado');
   } catch (error) {
     return handleSupabaseError(error, 'crearOObtenerUsuario');
-  }
-};
-
-/**
- * Obtener perfil de usuario con sus evaluaciones
- */
-export const obtenerPerfilUsuario = async (usuarioId) => {
-  try {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select(`
-        *,
-        escuela:escuelas(nombre, abreviatura),
-        carrera:carreras(nombre)
-      `)
-      .eq('id', usuarioId)
-      .single();
-
-    if (error) throw error;
-
-    return handleSupabaseSuccess(data, 'Perfil de usuario cargado');
-  } catch (error) {
-    return handleSupabaseError(error, 'obtenerPerfilUsuario');
-  }
-};
-
-/**
- * Obtener evaluaciones de un usuario
- */
-export const obtenerEvaluacionesUsuario = async (usuarioId) => {
-  try {
-    const { data, error } = await supabase
-      .from('evaluaciones')
-      .select(`
-        *,
-        profesor:profesores(nombre_completo),
-        escuela:escuelas(nombre, abreviatura),
-        carrera:carreras(nombre)
-      `)
-      .eq('usuario_id', usuarioId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    console.log('📝 Evaluaciones del usuario:', data?.length || 0);
-    return handleSupabaseSuccess(data, 'Evaluaciones del usuario cargadas');
-  } catch (error) {
-    return handleSupabaseError(error, 'obtenerEvaluacionesUsuario');
   }
 };
 
