@@ -8,6 +8,45 @@
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   }
 
+  /* Prevenir zoom automático en inputs en móviles iOS/Android */
+  /* El zoom ocurre cuando el font-size es menor a 16px */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* En pantallas más grandes, permitir tamaños más pequeños */
+  @media (min-width: 768px) {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="search"],
+    input[type="url"],
+    textarea,
+    select {
+      font-size: inherit !important;
+    }
+  }
+
+  /* Mejorar touch targets en móviles */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select,
+    button {
+      min-height: 44px; /* Recomendación de Apple para touch targets */
+    }
+  }
+
   /* Scrollbar personalizado */
   ::-webkit-scrollbar {
     width: 12px;

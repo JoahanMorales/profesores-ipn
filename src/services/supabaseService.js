@@ -6,7 +6,31 @@ import { CacheManager, CACHE_KEYS, CACHE_EXPIRATION } from '../lib/cacheManager'
 // ============================================
 
 /**
+ * Obtener TODOS los profesores de una sola vez (para búsqueda local)
+ * Se cachea por 30 minutos en el componente que lo llama
+ */
+export const obtenerTodosLosProfesores = async () => {
+  try {
+    // Traer todos los profesores ordenados por evaluaciones
+    const { data, error } = await supabase
+      .from('ranking_profesores')
+      .select('*')
+      .order('total_evaluaciones', { ascending: false })
+      .order('calificacion_promedio', { ascending: false });
+
+    if (error) throw error;
+    
+    console.log('📥 Total de profesores cargados:', data?.length || 0);
+    
+    return handleSupabaseSuccess(data || [], 'Profesores cargados exitosamente');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerTodosLosProfesores');
+  }
+};
+
+/**
  * Buscar profesores por nombre, escuela, carrera o materia (CON CACHÉ)
+ * @deprecated Usar obtenerTodosLosProfesores + búsqueda local para mejor rendimiento
  */
 export const buscarProfesores = async (searchQuery = '') => {
   try {
@@ -176,6 +200,10 @@ export const crearOObtenerProfesor = async (nombreCompleto) => {
       .single();
 
     if (errorCrear) throw errorCrear;
+
+    // 🔄 Invalidar caché de profesores cuando se crea uno nuevo
+    CacheManager.remove('ipn_todos_profesores');
+    console.log('🗑️ Caché de profesores invalidado (nuevo profesor creado)');
 
     console.log('👤 Nuevo profesor creado:', nuevo.nombre_completo);
     return handleSupabaseSuccess(nuevo, 'Profesor creado');

@@ -16,6 +16,7 @@ const LoginPage = () => {
     username: 0,
     favoriteSong: 0
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,7 +84,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen-safe bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h1 className="text-center text-3xl font-bold mb-2">
@@ -125,10 +126,7 @@ const LoginPage = () => {
                 id="username"
                 name="username"
                 type="text"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
+                autoComplete="username"
                 value={formData.username}
                 onChange={handleChange}
                 maxLength={LIMITS.USERNAME.MAX}
@@ -158,22 +156,38 @@ const LoginPage = () => {
                   {charCounts.favoriteSong}/{LIMITS.FAVORITE_SONG.MAX}
                 </span>
               </div>
-              <input
-                id="favoriteSong"
-                name="favoriteSong"
-                type="password"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                value={formData.favoriteSong}
-                onChange={handleChange}
-                maxLength={LIMITS.FAVORITE_SONG.MAX}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-white ${
-                  errors.favoriteSong ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
-                placeholder="Ejemplo: BohemianRhapsody"
-              />
+              <div className="relative">
+                <input
+                  id="favoriteSong"
+                  name="favoriteSong"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={formData.favoriteSong}
+                  onChange={handleChange}
+                  maxLength={LIMITS.FAVORITE_SONG.MAX}
+                  className={`w-full px-3 py-2 pr-10 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-colors dark:bg-gray-700 dark:text-white ${
+                    errors.favoriteSong ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  placeholder="Ejemplo: BohemianRhapsody"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               {errors.favoriteSong && (
                 <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.favoriteSong}</p>
               )}

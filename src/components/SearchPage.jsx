@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { buscarProfesores } from '../services/supabaseService';
+import { obtenerTodosLosProfesores } from '../services/supabaseService';
 import { actualizarCacheProfesores } from '../services/cacheUpdateService';
 import { useSEO } from '../hooks/useSEO';
 import { CacheManager } from '../lib/cacheManager';
@@ -10,7 +10,7 @@ const SearchPage = () => {
   const navigate = useNavigate();
   const { user, logout, monedas } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [profesores, setProfesores] = useState([]);
+  const [todosLosProfesores, setTodosLosProfesores] = useState([]); // Todos los profes cargados
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actualizando, setActualizando] = useState(false);
@@ -26,96 +26,93 @@ const SearchPage = () => {
   
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const [cargandoMas, setCargandoMas] = useState(false);
-  const [hayMasResultados, setHayMasResultados] = useState(true);
   const RESULTADOS_POR_PAGINA = 20;
 
-  // Cargar profesores desde Supabase
+  // 🔍 BÚSQUEDA LOCAL: Filtrar profesores en memoria (sin llamar a la BD)
+  const profesoresFiltrados = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return todosLosProfesores;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    // Normalizar texto para búsqueda (quitar acentos)
+    const normalizar = (texto) => 
+      texto?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
+    
+    return todosLosProfesores.filter(profesor => {
+      const nombre = normalizar(profesor.nombre_completo);
+      const queryNormalizado = normalizar(query);
+      return nombre.includes(queryNormalizado);
+    });
+  }, [todosLosProfesores, searchQuery]);
+
+  // Profesores paginados para mostrar
+  const profesoresPaginados = useMemo(() => {
+    const fin = paginaActual * RESULTADOS_POR_PAGINA;
+    return profesoresFiltrados.slice(0, fin);
+  }, [profesoresFiltrados, paginaActual]);
+
+  const hayMasResultados = profesoresPaginados.length < profesoresFiltrados.length;
+
+  // Cargar TODOS los profesores al iniciar (una sola vez)
   useEffect(() => {
-    cargarProfesores();
+    cargarTodosLosProfesores();
   }, []);
 
-  // Buscar cuando cambia el query
+  // Reset paginación cuando cambia el query
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      setPaginaActual(1); // Reset a página 1 cuando cambia búsqueda
-      setProfesores([]); // Limpiar resultados anteriores
-      cargarProfesores(searchQuery, 1);
-    }, 300); // Debounce de 300ms
-
-    return () => clearTimeout(delayDebounce);
+    setPaginaActual(1);
   }, [searchQuery]);
 
-  const cargarProfesores = async (query = '', pagina = 1) => {
-    if (pagina === 1) {
-      setLoading(true);
-    } else {
-      setCargandoMas(true);
-    }
+  const cargarTodosLosProfesores = async () => {
+    setLoading(true);
     setError(null);
     
-    // 💾 Intentar cargar desde caché si es búsqueda específica (página 1)
-    if (query && pagina === 1) {
-      const cacheKey = `search_${query.toLowerCase().trim()}`;
-      const datosCache = CacheManager.get('SEARCH_QUERY', cacheKey);
-      
-      if (datosCache) {
-        console.log('💾 Búsqueda cargada desde caché:', query);
-        setProfesores(datosCache.slice(0, RESULTADOS_POR_PAGINA));
-        setHayMasResultados(datosCache.length > RESULTADOS_POR_PAGINA);
-        setLoading(false);
-        return;
-      }
+    // 💾 Intentar cargar desde caché primero
+    const cacheKey = 'ipn_todos_profesores';
+    const datosCache = CacheManager.get(cacheKey);
+    
+    if (datosCache && Array.isArray(datosCache)) {
+      console.log('💾 Profesores cargados desde caché local:', datosCache.length);
+      setTodosLosProfesores(datosCache);
+      setLoading(false);
+      return;
     }
     
-    const resultado = await buscarProfesores(query);
+    // Si no hay caché, cargar de Supabase
+    const resultado = await obtenerTodosLosProfesores();
     
     if (resultado.success) {
-      const todosLosProfesores = resultado.data || [];
+      const profesores = Array.isArray(resultado.data) ? resultado.data : [];
+      console.log('📥 Profesores cargados de BD:', profesores.length);
       
-      // 💾 Guardar en caché búsquedas específicas
-      if (query && pagina === 1) {
-        const cacheKey = `search_${query.toLowerCase().trim()}`;
-        CacheManager.set('SEARCH_QUERY', cacheKey, todosLosProfesores);
-        console.log('💾 Búsqueda guardada en caché:', query);
-      }
-      
-      const inicio = (pagina - 1) * RESULTADOS_POR_PAGINA;
-      const fin = inicio + RESULTADOS_POR_PAGINA;
-      const profesoresPagina = todosLosProfesores.slice(inicio, fin);
-      
-      if (pagina === 1) {
-        setProfesores(profesoresPagina);
-      } else {
-        setProfesores(prev => [...prev, ...profesoresPagina]);
-      }
-      
-      setHayMasResultados(fin < todosLosProfesores.length);
+      // 💾 Guardar en caché por 10 minutos
+      CacheManager.set(cacheKey, profesores, 10 * 60 * 1000);
+      setTodosLosProfesores(profesores);
     } else {
       setError(resultado.error);
       console.error('Error al cargar profesores:', resultado.error);
     }
     
     setLoading(false);
-    setCargandoMas(false);
   };
 
   const cargarMasResultados = () => {
-    const nuevaPagina = paginaActual + 1;
-    setPaginaActual(nuevaPagina);
-    cargarProfesores(searchQuery, nuevaPagina);
+    setPaginaActual(prev => prev + 1);
   };
 
   const actualizarDatos = async () => {
     setActualizando(true);
     console.log('🔄 Actualizando datos de profesores...');
     
+    // Limpiar caché local
+    CacheManager.remove('ipn_todos_profesores');
+    
     const resultado = await actualizarCacheProfesores();
     
     if (resultado.success) {
-      // Recargar profesores con datos frescos
-      setPaginaActual(1);
-      await cargarProfesores(searchQuery, 1);
+      // Recargar todos los profesores con datos frescos
+      await cargarTodosLosProfesores();
       console.log('✅ Datos actualizados');
     } else {
       console.error('❌ Error al actualizar:', resultado.error);
@@ -226,9 +223,12 @@ const SearchPage = () => {
 
             {/* Results Count */}
             <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {loading ? 'Buscando...' : `${profesores.length} ${profesores.length === 1 ? 'resultado' : 'resultados'}`}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {loading ? 'Cargando profesores...' : `${profesoresFiltrados.length} ${profesoresFiltrados.length === 1 ? 'resultado' : 'resultados'}`}
                 {searchQuery && !loading && ` para "${searchQuery}"`}
+                {!loading && todosLosProfesores.length > 0 && (
+                  <span className="text-gray-400 dark:text-gray-500"> (de {todosLosProfesores.length} total)</span>
+                )}
               </div>
               <button
                 onClick={actualizarDatos}
@@ -260,13 +260,13 @@ const SearchPage = () => {
               <p className="text-red-600 font-medium">Error al cargar profesores</p>
               <p className="text-sm text-red-500 mt-2">{error}</p>
               <button
-                onClick={() => cargarProfesores(searchQuery)}
+                onClick={cargarTodosLosProfesores}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Reintentar
               </button>
             </div>
-          ) : profesores.length === 0 ? (
+          ) : profesoresFiltrados.length === 0 ? (
             <div className="text-center py-12">
               <svg 
                 className="mx-auto h-12 w-12 text-gray-400" 
@@ -288,7 +288,7 @@ const SearchPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {profesores.map((profesor) => (
+              {profesoresPaginados.map((profesor) => (
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
@@ -342,35 +342,25 @@ const SearchPage = () => {
           )}
 
           {/* Botón Cargar Más */}
-          {!loading && hayMasResultados && profesores.length > 0 && (
+          {!loading && hayMasResultados && profesoresPaginados.length > 0 && (
             <div className="mt-8 flex justify-center">
               <button
                 onClick={cargarMasResultados}
-                disabled={cargandoMas}
-                className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-8 py-3 bg-ipn-guinda-900 text-white rounded-lg hover:bg-ipn-guinda-800 transition-colors font-medium flex items-center gap-2"
               >
-                {cargandoMas ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Cargando...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    Cargar más profesores
-                  </>
-                )}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                Cargar más profesores ({profesoresFiltrados.length - profesoresPaginados.length} restantes)
               </button>
             </div>
           )}
 
           {/* Indicador de fin de resultados */}
-          {!loading && !hayMasResultados && profesores.length > RESULTADOS_POR_PAGINA && (
+          {!loading && !hayMasResultados && profesoresFiltrados.length > RESULTADOS_POR_PAGINA && (
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-500">
-                ✓ Has visto todos los resultados ({profesores.length} profesores)
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                ✓ Has visto todos los resultados ({profesoresFiltrados.length} profesores)
               </p>
             </div>
           )}
