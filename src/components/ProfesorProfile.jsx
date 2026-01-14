@@ -375,7 +375,7 @@ const ProfesorProfile = () => {
                       </div>
                       <button
                         onClick={() => handleReportar(evaluacion.id)}
-                        className="text-gray-400 hover:text-red-600 transition-colors"
+                        className="text-red-500 hover:text-red-700 transition-colors"
                         title="Reportar contenido inapropiado"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
