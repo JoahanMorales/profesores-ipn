@@ -82,4 +82,23 @@ export const useRateLimit = (key, maxAttempts = 5, windowMs = 60000) => {
   return { ...status, checkLimit, reset };
 };
 
+// Export individual functions for non-React usage
+export const checkRateLimit = (key, maxAttempts = 5, windowMs = 60000) => {
+  return rateLimiter.checkLimit(key, maxAttempts, windowMs);
+};
+
+export const clearRateLimit = (key) => {
+  rateLimiter.reset(key);
+};
+
+export const getRateLimitInfo = (key) => {
+  const record = rateLimiter.limits.get(key);
+  if (!record) return null;
+  return {
+    attempts: record.attempts.length,
+    blocked: record.blocked,
+    blockUntil: record.blockUntil,
+  };
+};
+
 export default rateLimiter;
