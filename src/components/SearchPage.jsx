@@ -256,7 +256,7 @@ const SearchPage = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           ) : error ? (
-            <div className="text-center py-12 bg-red-50 rounded-lg border border-red-200">
+            <div className="text-center py-12 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
               <p className="text-red-600 font-medium">Error al cargar profesores</p>
               <p className="text-sm text-red-500 mt-2">{error}</p>
               <button
@@ -281,8 +281,8 @@ const SearchPage = () => {
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
                 />
               </svg>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">No se encontraron resultados</h3>
-              <p className="mt-2 text-sm text-gray-600">
+              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">No se encontraron resultados</h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                 Intenta con otro término de búsqueda
               </p>
             </div>
@@ -292,12 +292,12 @@ const SearchPage = () => {
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
-                  className="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                  className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-gray-500 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0 mr-4">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 break-words">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 break-words">
                           {profesor.nombre_completo}
                         </h3>
                         {/* Badge de Verificado si tiene 3+ evaluaciones */}
@@ -315,21 +315,21 @@ const SearchPage = () => {
                       </div>
                     </div>
                     <div className="flex flex-col items-end ml-4">
-                      <span className="text-3xl font-bold text-gray-900">
+                      <span className="text-3xl font-bold text-gray-900 dark:text-white">
                         {profesor.calificacion_promedio || 'N/A'}
                       </span>
-                      <span className="text-sm text-gray-500">/10</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/10</span>
                     </div>
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-500 text-xs pt-2">
+                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs pt-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                       </svg>
                       <span>{profesor.total_evaluaciones || 0} evaluaciones</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>

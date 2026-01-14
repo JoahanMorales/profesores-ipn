@@ -155,40 +155,40 @@ const ProfesorProfile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 
               className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate('/buscar')}
             >
-              <span className="text-ipn-guinda-900">i</span>
-              <span className="text-gray-900">p</span>
+              <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
+              <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
               {user && (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 rounded-full shadow-lg relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer opacity-40" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
                     <span className="text-xl relative z-10">💎</span>
-                    <span className="font-bold text-gray-900 relative z-10">{monedas}</span>
+                    <span className="font-bold text-gray-900 dark:text-white relative z-10">{monedas}</span>
                   </div>
-                  <span className="hidden sm:inline text-sm text-gray-600">
+                  <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
                     Hola, <span className="font-medium">{user.username}</span>
                   </span>
                 </>
               )}
               <button
                 onClick={() => navigate('/buscar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
               >
                 Buscar
               </button>
               <button
                 onClick={logout}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
               >
                 Cerrar Sesión
               </button>
@@ -211,11 +211,11 @@ const ProfesorProfile = () => {
         </button>
 
         {/* Professor Info Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 mb-8 overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-3xl font-bold text-gray-900 break-words">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white break-words">
                   {profesor.nombre_completo}
                 </h2>
                 {/* Badge de Verificado si tiene 3+ evaluaciones */}
@@ -234,15 +234,15 @@ const ProfesorProfile = () => {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-gray-700">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                  <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                   </svg>
                   <span className="text-lg">{profesor.total_evaluaciones || 0} evaluaciones</span>
                 </div>
 
-                <div className="flex items-center gap-3 text-gray-700">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                  <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <span>{profesor.total_evaluadores || 0} {profesor.total_evaluadores === 1 ? 'persona' : 'personas'}</span>
@@ -251,13 +251,13 @@ const ProfesorProfile = () => {
             </div>
 
             {/* Rating Box */}
-            <div className="bg-gray-50 rounded-lg p-6 text-center md:min-w-[200px]">
-              <div className="text-5xl font-bold text-gray-900 mb-2">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 text-center md:min-w-[200px]">
+              <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
                 {profesor.calificacion_promedio?.toFixed(1) || 'N/A'}
               </div>
-              <div className="text-sm text-gray-600 mb-4">de 10</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">de 10</div>
               {profesor.porcentaje_recomendacion !== null && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   {profesor.porcentaje_recomendacion}% lo recomienda
                 </div>
               )}
@@ -265,7 +265,7 @@ const ProfesorProfile = () => {
           </div>
 
           {/* CTA Button */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => {
                 const params = new URLSearchParams({
@@ -274,7 +274,7 @@ const ProfesorProfile = () => {
                 });
                 navigate(`/evaluar?${params.toString()}`);
               }}
-              className="w-full md:w-auto px-6 py-3 text-base font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+              className="w-full md:w-auto px-6 py-3 text-base font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
             >
               Evaluar a este profesor
             </button>
@@ -283,7 +283,7 @@ const ProfesorProfile = () => {
 
         {/* Evaluations Section */}
         <section>
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Evaluaciones ({evaluaciones.length})
           </h3>
 
@@ -292,14 +292,14 @@ const ProfesorProfile = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           ) : evaluaciones.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Aún no hay evaluaciones
               </h4>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Sé el primero en evaluar a este profesor
               </p>
               <button
@@ -310,7 +310,7 @@ const ProfesorProfile = () => {
                   });
                   navigate(`/evaluar?${params.toString()}`);
                 }}
-                className="px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+                className="px-6 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
               >
                 Evaluar ahora
               </button>
@@ -320,41 +320,41 @@ const ProfesorProfile = () => {
               {evaluaciones.map((evaluacion) => (
                 <div
                   key={evaluacion.id}
-                  className="bg-white border border-gray-200 rounded-lg p-6 overflow-hidden"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 overflow-hidden"
                 >
                   {/* Header con calificación y badges */}
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-gray-900">
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
                           {evaluacion.calificacion}
                         </span>
-                        <span className="text-sm text-gray-500">/10</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">/10</span>
                       </div>
                       
                       <div className="flex gap-2 flex-wrap">
                         {evaluacion.recomendado && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                             ✓ Recomendado
                           </span>
                         )}
                         {evaluacion.asistencia_obligatoria && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                             Asistencia obligatoria
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">Calificación obtenida:</span> {evaluacion.calificacion_obtenida}
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Calificación obtenida:</span> {evaluacion.calificacion_obtenida}
                     </div>
                   </div>
 
                   {/* Información de la materia */}
                   <div className="mb-4 text-sm">
-                    <div className="flex items-start gap-2 text-gray-600">
-                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
+                      <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                       <span className="break-words min-w-0"><span className="font-medium">Materia:</span> {evaluacion.materia}</span>
@@ -362,32 +362,32 @@ const ProfesorProfile = () => {
                   </div>
 
                   {/* Opinión */}
-                  <p className="text-gray-700 leading-relaxed mb-4 break-words whitespace-pre-wrap">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 break-words whitespace-pre-wrap">
                     {evaluacion.opinion}
                   </p>
 
                   {/* Mini-perfil del evaluador */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                         {evaluacion.usuario_nombre.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {evaluacion.usuario_nombre}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {evaluacion.escuela?.abreviatura || 'IPN'} • {evaluacion.carrera?.nombre || 'Carrera'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-400 dark:text-gray-500">
                         {formatearFecha(evaluacion.created_at)}
                       </div>
                       <button
                         onClick={() => handleReportar(evaluacion.id)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
+                        className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
                         title="Reportar contenido inapropiado"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,12 +400,12 @@ const ProfesorProfile = () => {
                   {/* Modal de Reporte */}
                   {reportando === evaluacion.id && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-lg max-w-md w-full p-6">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-gray-900">Reportar Evaluación</h3>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Reportar Evaluación</h3>
                           <button
                             onClick={handleCancelarReporte}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                           >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -415,13 +415,13 @@ const ProfesorProfile = () => {
 
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                               Motivo del reporte *
                             </label>
                             <select
                               value={formReporte.tipo}
                               onChange={(e) => setFormReporte({ ...formReporte, tipo: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-ipn-guinda-900 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-ipn-guinda-900 dark:focus:ring-ipn-guinda-600 focus:border-transparent"
                             >
                               <option value="">Selecciona una opción</option>
                               <option value="contenido-ofensivo">Contenido ofensivo</option>
@@ -434,7 +434,7 @@ const ProfesorProfile = () => {
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                               Descripción *
                             </label>
                             <textarea
@@ -443,9 +443,9 @@ const ProfesorProfile = () => {
                               rows={4}
                               maxLength={500}
                               placeholder="Describe por qué reportas esta evaluación..."
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-ipn-guinda-900 focus:border-transparent resize-y"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-ipn-guinda-900 dark:focus:ring-ipn-guinda-600 focus:border-transparent resize-y"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {formReporte.descripcion.length}/500 caracteres
                             </p>
                           </div>
@@ -453,13 +453,13 @@ const ProfesorProfile = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={handleCancelarReporte}
-                              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
+                              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors font-medium"
                             >
                               Cancelar
                             </button>
                             <button
                               onClick={() => handleEnviarReporte(evaluacion.id)}
-                              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+                              className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium"
                             >
                               Enviar Reporte
                             </button>
