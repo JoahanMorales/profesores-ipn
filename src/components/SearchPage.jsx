@@ -134,40 +134,40 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 
               className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate('/buscar')}
             >
-              <span className="text-ipn-guinda-900">i</span>
-              <span className="text-gray-900">p</span>
+              <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
+              <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
               {user && (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 rounded-full shadow-lg relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer opacity-40" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
                     <span className="text-xl relative z-10">💎</span>
-                    <span className="font-bold text-gray-900 relative z-10">{monedas}</span>
+                    <span className="font-bold text-gray-900 dark:text-white relative z-10">{monedas}</span>
                   </div>
-                  <span className="hidden sm:inline text-sm text-gray-600">
+                  <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
                     Hola, <span className="font-medium">{user.username}</span>
                   </span>
                 </>
               )}
               <button
                 onClick={() => navigate('/evaluar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 bg-white border-2 border-gray-900 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
               >
                 Evaluar Profesor
               </button>
               <button
                 onClick={logout}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
               >
                 Cerrar Sesión
               </button>
@@ -184,7 +184,7 @@ const SearchPage = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
               Buscar Profesor
             </h2>
-            <p className="text-gray-600 text-center mb-8">
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-8">
               Ingresa el nombre del profesor para buscar
             </p>
 
@@ -210,7 +210,7 @@ const SearchPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar profesor por nombre..."
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300 focus:border-transparent transition-all"
               />
               {searchQuery && (
                 <button
