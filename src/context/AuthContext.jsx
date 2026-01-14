@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getAnonymousUserInfo, getDeviceId } from '../lib/browserFingerprint';
+import { getAnonymousUserInfo, getDeviceId, generateAnonymousUsername } from '../lib/browserFingerprint';
 import { crearOObtenerUsuario } from '../services/supabaseService';
 
 const AuthContext = createContext(null);
@@ -49,7 +49,13 @@ export const AuthProvider = ({ children }) => {
         username, 
         favoriteSong, 
         null, // escuelaId se configura después
-        null  // carreraId se configura después
+        null, // carreraId se configura después
+        {
+          deviceId: deviceData.deviceId,
+          fingerprint: deviceData.fingerprint,
+          sessionId: deviceData.sessionId,
+          browser: deviceData.browser
+        }
       );
 
       if (!resultado.success) {

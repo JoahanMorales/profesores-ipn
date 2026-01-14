@@ -129,18 +129,35 @@ export const actualizarReporte = async (reporteId, estado, notasAdmin = null) =>
  */
 export const buscarDuplicados = async (nombreProfesor) => {
   try {
-    // Búsqueda directa sin RPC - buscar por nombre similar
-    const { data, error } = await supabase
-      .from('profesores')
-      .select('id, nombre_completo, escuela_id, total_evaluaciones')
-      .ilike('nombre_completo', `%${nombreProfesor}%`)
-      .limit(20);
+    const { data, error } = await supabase.rpc('buscar_duplicados_profesores', {
+      nombre_buscar: nombreProfesor
+    });
 
     if (error) throw error;
 
-    console.log('🔍 Posibles duplicados encontrados:', data?.length || 0);
-    return handleSupabaseSuccess(data || [], 'Búsqueda completada');
+    console.log('🔍 Duplicados encontrados:', data?.length || 0);
+    return handleSupabaseSuccess(data, 'Búsqueda completada');
   } catch (error) {
     return handleSupabaseError(error, 'buscarDuplicados');
+  }
+};
+
+/**
+ * Verificar si usuario es admin
+ */
+export const verificarAdmin = async (adminEmail) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { success: false, esAdmin: false };
+    }
+
+    // Verificar si el email coincide
+    const esAdmin = user.email === adminEmail;
+
+    return { success: true, esAdmin, email: user.email };
+  } catch (error) {
+    return { success: false, esAdmin: false };
   }
 };

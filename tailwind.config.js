@@ -10,14 +10,6 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
-      minHeight: {
-        'screen-safe': ['100vh', '100dvh'],
-        'fill': '-webkit-fill-available',
-      },
-      height: {
-        'screen-safe': ['100vh', '100dvh'],
-        'fill': '-webkit-fill-available',
-      },
       colors: {
         'ipn-guinda': {
           50: '#fdf4f7',

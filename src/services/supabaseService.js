@@ -95,6 +95,25 @@ export const buscarProfesores = async (searchQuery = '') => {
 };
 
 /**
+ * Obtener detalles completos de un profesor por ID
+ */
+export const obtenerProfesorPorId = async (profesorId) => {
+  try {
+    const { data, error } = await supabase
+      .from('ranking_profesores')
+      .select('*')
+      .eq('id', profesorId)
+      .single();
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data, 'Profesor encontrado');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerProfesorPorId');
+  }
+};
+
+/**
  * Obtener profesor por slug (para URLs amigables) - CON CACHÉ
  */
 export const obtenerProfesorPorSlug = async (slug) => {
@@ -289,6 +308,37 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
   }
 };
 
+/**
+ * Obtener estadísticas de un profesor
+ */
+export const obtenerEstadisticasProfesor = async (profesorId) => {
+  try {
+    const { data, error } = await supabase
+      .from('evaluaciones')
+      .select('calificacion, recomendado, asistencia_obligatoria')
+      .eq('profesor_id', profesorId);
+
+    if (error) throw error;
+
+    const estadisticas = {
+      total: data.length,
+      promedioCalificacion: data.length > 0 
+        ? (data.reduce((sum, e) => sum + e.calificacion, 0) / data.length).toFixed(1)
+        : 0,
+      porcentajeRecomendacion: data.length > 0
+        ? Math.round((data.filter(e => e.recomendado).length / data.length) * 100)
+        : 0,
+      porcentajeAsistencia: data.length > 0
+        ? Math.round((data.filter(e => e.asistencia_obligatoria).length / data.length) * 100)
+        : 0
+    };
+
+    return handleSupabaseSuccess(estadisticas, 'Estadísticas calculadas');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerEstadisticasProfesor');
+  }
+};
+
 // ============================================
 // HELPERS DE BÚSQUEDA
 // ============================================
@@ -318,44 +368,171 @@ export const autocompletarProfesores = async (query) => {
 // ============================================
 
 /**
- * Crear o obtener un usuario
+ * Crear o obtener un usuario (CON FINGERPRINTING)
  */
-export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId, carreraId) => {
+export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId, carreraId, fingerprintData = null) => {
   try {
-    // Buscar por username (método principal y más confiable)
+    // Si hay datos de fingerprinting, usarlos para buscar/crear
+    if (fingerprintData) {
+      const { deviceId, fingerprint, sessionId, browser } = fingerprintData;
+
+      // Intentar buscar usuario por device_id (mismo dispositivo)
+      const { data: existentePorDevice, error: errorDevice } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('device_id', deviceId)
+        .single();
+
+      if (existentePorDevice) {
+        // Usuario encontrado por dispositivo: actualizar sesión
+        const { data: actualizado, error: errorUpdate } = await supabase
+          .from('usuarios')
+          .update({
+            session_id: sessionId,
+            fingerprint_id: fingerprint,
+            browser_info: browser,
+            last_seen: new Date().toISOString(),
+            total_sessions: existentePorDevice.total_sessions + 1
+          })
+          .eq('id', existentePorDevice.id)
+          .select()
+          .single();
+
+        if (errorUpdate) throw errorUpdate;
+
+        console.log('👤 Usuario encontrado por device_id:', {
+          username: actualizado.username,
+          deviceId: deviceId.substring(0, 15) + '...',
+          sesion: actualizado.total_sessions,
+          browser: `${browser.name} ${browser.version}`
+        });
+
+        return handleSupabaseSuccess(actualizado, 'Usuario encontrado por dispositivo');
+      }
+    }
+
+    // Buscar por username tradicional
     const { data: existente, error: errorBusqueda } = await supabase
       .from('usuarios')
-      .select('id, username, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select('*')
       .eq('username', username)
       .single();
 
     if (existente) {
-      console.log('👤 Usuario encontrado:', existente.username);
+      // Si existe pero no tiene fingerprint, agregarlo
+      if (fingerprintData && !existente.device_id) {
+        const { deviceId, fingerprint, sessionId, browser } = fingerprintData;
+        
+        const { data: actualizado, error: errorUpdate } = await supabase
+          .from('usuarios')
+          .update({
+            device_id: deviceId,
+            fingerprint_id: fingerprint,
+            session_id: sessionId,
+            browser_info: browser,
+            last_seen: new Date().toISOString()
+          })
+          .eq('id', existente.id)
+          .select()
+          .single();
+
+        if (errorUpdate) throw errorUpdate;
+
+        console.log('🔄 Usuario actualizado con fingerprint:', actualizado.username);
+        return handleSupabaseSuccess(actualizado, 'Usuario actualizado');
+      }
+
+      console.log('👤 Usuario ya existe:', existente.username);
       return handleSupabaseSuccess(existente, 'Usuario encontrado');
     }
 
-    // Crear usuario nuevo con campos básicos
+    // Crear usuario nuevo con todos los datos
     const nuevoUsuario = {
       username,
       cancion_favorita: cancionFavorita,
       escuela_id: escuelaId,
       carrera_id: carreraId,
       total_evaluaciones: 0,
-      monedas: 0
+      monedas: 0,
+      total_sessions: 1
     };
+
+    // Agregar datos de fingerprinting si existen
+    if (fingerprintData) {
+      const { deviceId, fingerprint, sessionId, browser } = fingerprintData;
+      nuevoUsuario.device_id = deviceId;
+      nuevoUsuario.fingerprint_id = fingerprint;
+      nuevoUsuario.session_id = sessionId;
+      nuevoUsuario.browser_info = browser;
+      nuevoUsuario.first_seen = new Date().toISOString();
+      nuevoUsuario.last_seen = new Date().toISOString();
+    }
 
     const { data: nuevo, error: errorCrear } = await supabase
       .from('usuarios')
       .insert([nuevoUsuario])
-      .select('id, username, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select()
       .single();
 
     if (errorCrear) throw errorCrear;
 
-    console.log('✨ Usuario creado:', nuevo.username);
+    console.log('✨ Usuario creado con tracking:', {
+      username: nuevo.username,
+      deviceId: fingerprintData ? fingerprintData.deviceId.substring(0, 15) + '...' : 'N/A',
+      browser: fingerprintData ? `${fingerprintData.browser.name} ${fingerprintData.browser.version}` : 'N/A'
+    });
+
     return handleSupabaseSuccess(nuevo, 'Usuario creado');
   } catch (error) {
     return handleSupabaseError(error, 'crearOObtenerUsuario');
+  }
+};
+
+/**
+ * Obtener perfil de usuario con sus evaluaciones
+ */
+export const obtenerPerfilUsuario = async (usuarioId) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select(`
+        *,
+        escuela:escuelas(nombre, abreviatura),
+        carrera:carreras(nombre)
+      `)
+      .eq('id', usuarioId)
+      .single();
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data, 'Perfil de usuario cargado');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerPerfilUsuario');
+  }
+};
+
+/**
+ * Obtener evaluaciones de un usuario
+ */
+export const obtenerEvaluacionesUsuario = async (usuarioId) => {
+  try {
+    const { data, error } = await supabase
+      .from('evaluaciones')
+      .select(`
+        *,
+        profesor:profesores(nombre_completo),
+        escuela:escuelas(nombre, abreviatura),
+        carrera:carreras(nombre)
+      `)
+      .eq('usuario_id', usuarioId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    console.log('📝 Evaluaciones del usuario:', data?.length || 0);
+    return handleSupabaseSuccess(data, 'Evaluaciones del usuario cargadas');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerEvaluacionesUsuario');
   }
 };
 
@@ -411,26 +588,26 @@ export const obtenerEstadisticasGlobales = async () => {
  */
 export const incrementarEvaluacionesUsuario = async (usuarioId) => {
   try {
-    // Hacer update manual directamente (sin RPC)
-    const { data: userData, error: selectError } = await supabase
-      .from('usuarios')
-      .select('total_evaluaciones')
-      .eq('id', usuarioId)
-      .single();
+    const { data, error } = await supabase.rpc('increment_user_evaluations', {
+      user_id: usuarioId
+    });
 
-    if (selectError) {
-      console.warn('⚠️ No se pudo obtener usuario para incrementar:', selectError);
-      return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
-    }
+    if (error) {
+      // Si la función no existe, hacer update manual
+      const { data: userData, error: updateError } = await supabase
+        .from('usuarios')
+        .select('total_evaluaciones')
+        .eq('id', usuarioId)
+        .single();
 
-    const { error: incrementError } = await supabase
-      .from('usuarios')
-      .update({ total_evaluaciones: (userData?.total_evaluaciones || 0) + 1 })
-      .eq('id', usuarioId);
+      if (updateError) throw updateError;
 
-    if (incrementError) {
-      console.warn('⚠️ No se pudo incrementar evaluaciones:', incrementError);
-      return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
+      const { error: incrementError } = await supabase
+        .from('usuarios')
+        .update({ total_evaluaciones: (userData.total_evaluaciones || 0) + 1 })
+        .eq('id', usuarioId);
+
+      if (incrementError) throw incrementError;
     }
 
     return handleSupabaseSuccess(null, 'Contador actualizado');

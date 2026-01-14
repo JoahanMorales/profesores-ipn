@@ -305,3 +305,17 @@ function getOS() {
 function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
+
+/**
+ * Crear username anónimo legible
+ */
+export function generateAnonymousUsername() {
+  const adjectives = ['Rápido', 'Veloz', 'Astuto', 'Sabio', 'Valiente', 'Noble', 'Épico', 'Místico', 'Cósmico', 'Divino'];
+  const animals = ['Águila', 'León', 'Tigre', 'Lobo', 'Búho', 'Halcón', 'Dragón', 'Fénix', 'Panda', 'Koala'];
+  
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  const num = Math.floor(Math.random() * 9999);
+  
+  return `${adj}${animal}${num}`;
+}
