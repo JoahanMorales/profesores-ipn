@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { buscarProfesores } from '../services/supabaseService';
 import { actualizarCacheProfesores } from '../services/cacheUpdateService';
 import { useSEO } from '../hooks/useSEO';
-import CacheManager from '../lib/cacheManager';
+import { CacheManager } from '../lib/cacheManager';
 
 const SearchPage = () => {
   const navigate = useNavigate();
