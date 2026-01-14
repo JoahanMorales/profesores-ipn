@@ -452,7 +452,7 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
       escuela_id: escuelaId,
       carrera_id: carreraId,
       total_evaluaciones: 0,
-      total_monedas: 0,
+      monedas: 0,
       total_sessions: 1
     };
 
