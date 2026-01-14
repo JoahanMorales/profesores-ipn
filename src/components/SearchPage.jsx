@@ -121,7 +121,7 @@ const SearchPage = () => {
               Buscar Profesor
             </h2>
             <p className="text-gray-600 text-center mb-8">
-              Escribe el nombre del profesor, materia, carrera o escuela
+              Ingresa el nombre del profesor para buscar
             </p>
 
             {/* Search Input */}
@@ -145,7 +145,7 @@ const SearchPage = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nombre, materia, carrera o escuela..."
+                placeholder="Buscar profesor por nombre..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
               />
               {searchQuery && (
