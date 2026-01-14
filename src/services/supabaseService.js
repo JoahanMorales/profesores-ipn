@@ -296,6 +296,7 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
         usuario:usuarios(username, escuela_id, carrera_id, total_evaluaciones)
       `)
       .eq('profesor_id', profesorId)
+      .eq('oculto', false)  // Solo mostrar evaluaciones NO ocultas
       .order('created_at', { ascending: false });
 
     if (error) throw error;

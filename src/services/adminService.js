@@ -81,9 +81,11 @@ export const toggleOcultarEvaluacion = async (evaluacionId, ocultar = true) => {
  */
 export const eliminarEvaluacion = async (evaluacionId) => {
   try {
-    const { error } = await supabase.rpc('eliminar_evaluacion_admin', {
-      eval_id: evaluacionId
-    });
+    // Eliminar directamente en lugar de usar RPC
+    const { error } = await supabase
+      .from('evaluaciones')
+      .delete()
+      .eq('id', evaluacionId);
 
     if (error) throw error;
 
