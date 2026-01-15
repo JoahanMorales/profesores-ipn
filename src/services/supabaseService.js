@@ -403,12 +403,13 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     // Buscar por username (método principal y más confiable)
     const { data: existente, error: errorBusqueda } = await supabase
       .from('usuarios')
-      .select('id, username, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select('id, username, cancion_favorita, monedas, total_evaluaciones, escuela_id, carrera_id')
       .eq('username', username)
-      .single();
+      .maybeSingle();
 
+    // maybeSingle() devuelve null si no encuentra, no lanza error
     if (existente) {
-      console.log('� Usuario encontrado:', existente.username);
+      console.log('👤 Usuario encontrado:', existente.username);
       return handleSupabaseSuccess(existente, 'Usuario encontrado');
     }
 

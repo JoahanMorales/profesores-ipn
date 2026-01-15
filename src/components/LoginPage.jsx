@@ -141,6 +141,11 @@ const LoginPage = () => {
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Solo letras, números, guiones y guión bajo. Mínimo {LIMITS.USERNAME.MIN} caracteres.
               </p>
+              <div className="mt-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">💡 Recomendación:</span> No uses tu nombre real ni apodos fácilmente identificables para mantener tu anonimato.
+                </p>
+              </div>
             </div>
 
             {/* Favorite Song Field */}
