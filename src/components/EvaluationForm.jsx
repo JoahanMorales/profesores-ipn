@@ -42,6 +42,7 @@ const EvaluationForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showCoinAnimation, setShowCoinAnimation] = useState(false);
   const [coinsEarned, setCoinsEarned] = useState(5);
+  const [nombreBloqueado, setNombreBloqueado] = useState(false);
 
   // Estados para datos de Supabase
   const [escuelas, setEscuelas] = useState([]);
@@ -73,12 +74,16 @@ const EvaluationForm = () => {
           ...prev,
           nombreProfesor: nombreParam
         }));
+        // Bloquear el input si viene de la URL
+        setNombreBloqueado(true);
       } else if (profesorState) {
         console.log('📝 Autocompletando desde state:', profesorState);
         setFormData(prev => ({
           ...prev,
           nombreProfesor: profesorState.nombre_completo || profesorState.nombre
         }));
+        // Bloquear el input si viene del state
+        setNombreBloqueado(true);
       }
     };
 
@@ -450,27 +455,45 @@ const EvaluationForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Nombre del Profesor con Autocomplete */}
             <div className="relative">
-              <label htmlFor="nombreProfesor" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+              <label htmlFor="nombreProfesor" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                 Nombre del Profesor *
               </label>
-              <input
-                id="nombreProfesor"
-                name="nombreProfesor"
-                type="text"
-                maxLength="100"
-                value={formData.nombreProfesor}
-                onChange={handleChange}
-                onFocus={() => setShowAutocomplete(formData.nombreProfesor.length > 0)}
-                onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
-                className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
-                  errors.nombreProfesor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                }`}
-                placeholder="Ej: Dr. Juan Pérez García"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="words"
-                spellCheck="false"
-              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                💡 De preferencia, escríbelo tal como aparece en el <span className="font-semibold">SAES</span> para evitar duplicados
+              </p>
+              <div className="relative flex items-center gap-2">
+                <input
+                  id="nombreProfesor"
+                  name="nombreProfesor"
+                  type="text"
+                  maxLength="100"
+                  value={formData.nombreProfesor}
+                  onChange={handleChange}
+                  onFocus={() => !nombreBloqueado && setShowAutocomplete(formData.nombreProfesor.length > 0)}
+                  onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                  disabled={nombreBloqueado}
+                  className={`flex-1 px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
+                    errors.nombreProfesor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } ${nombreBloqueado ? 'bg-gray-100 dark:bg-gray-600 cursor-not-allowed' : ''}`}
+                  placeholder="Ej: JUAN PEREZ GARCIA"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck="false"
+                />
+                {nombreBloqueado && (
+                  <button
+                    type="button"
+                    onClick={() => setNombreBloqueado(false)}
+                    className="flex-shrink-0 p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 bg-gray-100 dark:bg-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 border border-gray-300 dark:border-gray-500 rounded-md transition-colors"
+                    title="Desbloquear para editar el nombre"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               {errors.nombreProfesor && (
                 <p className="mt-1 text-xs text-red-600">{errors.nombreProfesor}</p>
               )}

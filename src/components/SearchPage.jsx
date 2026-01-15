@@ -285,6 +285,24 @@ const SearchPage = () => {
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                 Intenta con otro término de búsqueda
               </p>
+              
+              {/* Opción para agregar nuevo profesor */}
+              {searchQuery.trim() && (
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg max-w-md mx-auto">
+                  <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                    ¿El profesor no está registrado? Sé el primero en evaluarlo y agregarlo a la plataforma.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/evaluar?nombre=${encodeURIComponent(searchQuery.trim().toUpperCase())}`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-ipn-guinda-900 dark:bg-ipn-guinda-700 text-white text-sm font-medium rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Agregar y evaluar profesor
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
