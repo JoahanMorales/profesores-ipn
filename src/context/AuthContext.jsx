@@ -48,8 +48,6 @@ export const AuthProvider = ({ children }) => {
       const resultado = await crearOObtenerUsuario(
         username, 
         favoriteSong, 
-        null, // escuelaId se configura después
-        null, // carreraId se configura después
         {
           deviceId: deviceData.deviceId,
           fingerprint: deviceData.fingerprint,

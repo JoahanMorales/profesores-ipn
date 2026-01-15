@@ -321,7 +321,7 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
         *,
         escuela:escuelas(nombre, abreviatura),
         carrera:carreras(nombre),
-        usuario:usuarios(username, escuela_id, carrera_id, total_evaluaciones)
+        usuario:usuarios(username, total_evaluaciones)
       `)
       .eq('profesor_id', profesorId)
       .eq('oculto', false)  // Solo mostrar evaluaciones NO ocultas
@@ -398,12 +398,12 @@ export const autocompletarProfesores = async (query) => {
 /**
  * Crear o obtener un usuario (CON FINGERPRINTING - graceful fallback)
  */
-export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId, carreraId, fingerprintData = null) => {
+export const crearOObtenerUsuario = async (username, cancionFavorita, fingerprintData = null) => {
   try {
     // Buscar por username (método principal y más confiable)
     const { data: existente, error: errorBusqueda } = await supabase
       .from('usuarios')
-      .select('id, username, cancion_favorita, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select('id, username, cancion_favorita, monedas, total_evaluaciones')
       .eq('username', username)
       .maybeSingle();
 
@@ -418,8 +418,6 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     const nuevoUsuario = {
       username,
       cancion_favorita: cancionFavorita?.trim().toLowerCase() || null,
-      escuela_id: escuelaId,
-      carrera_id: carreraId,
       total_evaluaciones: 0,
       monedas: 0
     };
@@ -427,7 +425,7 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     const { data: nuevo, error: errorCrear } = await supabase
       .from('usuarios')
       .insert([nuevoUsuario])
-      .select('id, username, cancion_favorita, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select('id, username, cancion_favorita, monedas, total_evaluaciones')
       .single();
 
     if (errorCrear) throw errorCrear;
