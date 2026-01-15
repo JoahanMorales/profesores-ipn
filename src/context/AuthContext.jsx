@@ -66,7 +66,11 @@ export const AuthProvider = ({ children }) => {
       const dbUser = resultado.data;
 
       // Verificar si el usuario ya existe y la canción coincide
-      if (dbUser.cancion_favorita && dbUser.cancion_favorita !== favoriteSong) {
+      // Normalizar ambas canciones para comparación (trim, lowercase)
+      const cancionDB = dbUser.cancion_favorita?.trim().toLowerCase();
+      const cancionIngresada = favoriteSong?.trim().toLowerCase();
+      
+      if (cancionDB && cancionDB !== cancionIngresada) {
         console.log('🚫 Canción incorrecta para usuario existente');
         return false;
       }

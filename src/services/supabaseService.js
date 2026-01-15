@@ -414,9 +414,10 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     }
 
     // Crear usuario nuevo con campos básicos
+    // Normalizar la canción favorita (lowercase, trim) para comparaciones consistentes
     const nuevoUsuario = {
       username,
-      cancion_favorita: cancionFavorita,
+      cancion_favorita: cancionFavorita?.trim().toLowerCase() || null,
       escuela_id: escuelaId,
       carrera_id: carreraId,
       total_evaluaciones: 0,
@@ -426,7 +427,7 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, escuelaId,
     const { data: nuevo, error: errorCrear } = await supabase
       .from('usuarios')
       .insert([nuevoUsuario])
-      .select('id, username, monedas, total_evaluaciones, escuela_id, carrera_id')
+      .select('id, username, cancion_favorita, monedas, total_evaluaciones, escuela_id, carrera_id')
       .single();
 
     if (errorCrear) throw errorCrear;
