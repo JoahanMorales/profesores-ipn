@@ -23,19 +23,23 @@ export const AuthProvider = ({ children }) => {
     const deviceData = getAnonymousUserInfo();
     setDeviceInfo(deviceData);
 
-    // Verificar si hay una sesión guardada en SessionStorage
-    const savedUser = sessionStorage.getItem('ipn_user');
+    // Verificar si hay una sesión guardada en localStorage (persiste entre sesiones)
+    const savedUser = localStorage.getItem('ipn_user');
     if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      setMonedas(userData.monedas || 0);
-      
-      console.log('✅ Sesión restaurada', {
-        username: userData.username,
-        deviceId: deviceData.deviceId.substring(0, 15) + '...',
-        browser: deviceData.browser.name,
-        os: deviceData.browser.os
-      });
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setMonedas(userData.monedas || 0);
+        
+        console.log('✅ Sesión restaurada', {
+          username: userData.username,
+          deviceId: deviceData.deviceId.substring(0, 15) + '...',
+          browser: deviceData.browser.name,
+          os: deviceData.browser.os
+        });
+      } catch (e) {
+        localStorage.removeItem('ipn_user');
+      }
     }
     setLoading(false);
   }, []);
@@ -87,7 +91,7 @@ export const AuthProvider = ({ children }) => {
         loginTime: new Date().toISOString()
       };
       
-      sessionStorage.setItem('ipn_user', JSON.stringify(userData));
+      localStorage.setItem('ipn_user', JSON.stringify(userData));
       setUser(userData);
       setMonedas(userData.monedas);
       
@@ -109,7 +113,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateMonedas = (nuevasMonedas) => {
     const updatedUser = { ...user, monedas: nuevasMonedas };
-    sessionStorage.setItem('ipn_user', JSON.stringify(updatedUser));
+    localStorage.setItem('ipn_user', JSON.stringify(updatedUser));
     setUser(updatedUser);
     setMonedas(nuevasMonedas);
   };
@@ -121,7 +125,7 @@ export const AuthProvider = ({ children }) => {
       duration: user?.loginTime ? Math.floor((Date.now() - new Date(user.loginTime).getTime()) / 1000 / 60) + ' minutos' : 'unknown'
     });
     
-    sessionStorage.removeItem('ipn_user');
+    localStorage.removeItem('ipn_user');
     setUser(null);
     setMonedas(0);
   };

@@ -8,7 +8,7 @@ import { CacheManager } from '../lib/cacheManager';
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const { user, logout, monedas } = useAuth();
+  const { user, logout, monedas, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [todosLosProfesores, setTodosLosProfesores] = useState([]); // Todos los profes cargados
   const [loading, setLoading] = useState(true);
@@ -144,7 +144,7 @@ const SearchPage = () => {
               <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-              {user && (
+              {isAuthenticated() ? (
                 <>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
@@ -154,20 +154,35 @@ const SearchPage = () => {
                   <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
                     Hola, <span className="font-medium">{user.username}</span>
                   </span>
+                  <button
+                    onClick={() => navigate('/evaluar')}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                  >
+                    Evaluar Profesor
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate('/evaluar')}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                  >
+                    Evaluar Profesor
+                  </button>
+                  <button
+                    onClick={() => navigate(`/login?returnTo=${encodeURIComponent('/buscar')}`)}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
+                  >
+                    Iniciar Sesión
+                  </button>
                 </>
               )}
-              <button
-                onClick={() => navigate('/evaluar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-gray-900 dark:border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
-              >
-                Evaluar Profesor
-              </button>
-              <button
-                onClick={logout}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
-              >
-                Cerrar Sesión
-              </button>
             </div>
           </div>
         </nav>

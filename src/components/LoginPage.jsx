@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Validator, LIMITS } from '../lib/validators';
-import { getAnonymousUserInfo } from '../lib/browserFingerprint';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo') || '/buscar';
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
@@ -75,7 +76,7 @@ const LoginPage = () => {
     const success = await login(sanitizedUsername, sanitizedSong);
     
     if (success) {
-      navigate('/buscar');
+      navigate(returnTo);
     } else {
       setErrors({ 
         favoriteSong: 'Usuario existente pero la canción no coincide. Verifica tu canción o usa otro nombre de usuario.' 

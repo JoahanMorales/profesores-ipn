@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -20,6 +20,7 @@ const NotFound = lazy(() => import('./components/NotFound'));
 // Componente para proteger rutas
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -32,7 +33,12 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  return isAuthenticated() ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated()) {
+    const returnTo = location.pathname + location.search;
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
+  }
+
+  return children;
 }
 
 function App() {
@@ -49,26 +55,10 @@ function App() {
             <Route path="/terminos" element={<TermsOfService />} />
             <Route path="/privacidad" element={<PrivacyPolicy />} />
             <Route path="/reportar" element={<ReportPage />} />
+            <Route path="/buscar" element={<SearchPage />} />
+            <Route path="/profesor/:slug" element={<ProfesorProfile />} />
             
-            {/* Rutas protegidas */}
-            <Route 
-              path="/buscar" 
-              element={
-                <ProtectedRoute>
-                  <SearchPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/profesor/:slug" 
-              element={
-                <ProtectedRoute>
-                  <ProfesorProfile />
-                </ProtectedRoute>
-              } 
-            />
-            
+            {/* Rutas protegidas (solo evaluar y admin) */}
             <Route 
               path="/evaluar" 
               element={

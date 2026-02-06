@@ -9,7 +9,7 @@ import { useSEO } from '../hooks/useSEO';
 const ProfesorProfile = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user, logout, monedas } = useAuth();
+  const { user, logout, monedas, isAuthenticated } = useAuth();
   const [profesor, setProfesor] = useState(null);
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,12 +20,12 @@ const ProfesorProfile = () => {
   // SEO dinámico basado en el profesor
   useSEO(
     profesor 
-      ? `${profesor.nombre} - Calificación ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 | ip`
+      ? `${profesor.nombre_completo} - Calificación ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 | ip`
       : 'Cargando perfil... | ip',
     profesor
-      ? `Evaluaciones y opiniones de ${profesor.nombre}. Calificación promedio: ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 basada en ${profesor.total_evaluaciones || 0} evaluaciones de estudiantes del IPN.`
+      ? `Evaluaciones y opiniones de ${profesor.nombre_completo}. Calificación promedio: ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 basada en ${profesor.total_evaluaciones || 0} evaluaciones de estudiantes del IPN.`
       : 'Cargando información del profesor...',
-    profesor ? `${profesor.nombre}, profesor IPN, calificaciones, evaluaciones, opiniones estudiantes` : ''
+    profesor ? `${profesor.nombre_completo}, profesor IPN, calificaciones, evaluaciones, opiniones estudiantes` : ''
   );
 
   useEffect(() => {
@@ -106,15 +106,43 @@ const ProfesorProfile = () => {
   }
 
   if (!profesor) {
+    // Convertir slug a nombre legible para pre-llenar el formulario
+    const nombreDesdeSlug = slug
+      ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      : '';
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-200">
+        <div className="text-center max-w-md mx-auto px-4">
+          <svg className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Profesor no encontrado
           </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            No encontramos a <span className="font-medium text-gray-900 dark:text-white">"{nombreDesdeSlug}"</span> en nuestra base de datos.
+          </p>
+
+          {/* Opción para agregar nuevo profesor */}
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg mb-6">
+            <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+              ¿El profesor no está registrado? Sé el primero en evaluarlo y agregarlo a la plataforma.
+            </p>
+            <button
+              onClick={() => navigate(`/evaluar?nombre=${encodeURIComponent(nombreDesdeSlug.toUpperCase())}`)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-ipn-guinda-900 dark:bg-ipn-guinda-700 text-white text-sm font-medium rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar y evaluar profesor
+            </button>
+          </div>
+
           <button
             onClick={() => navigate('/buscar')}
-            className="px-6 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors"
+            className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Volver a búsqueda
           </button>
@@ -168,7 +196,7 @@ const ProfesorProfile = () => {
               <span className="text-gray-900 dark:text-white">p</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-              {user && (
+              {isAuthenticated() ? (
                 <>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
@@ -178,20 +206,35 @@ const ProfesorProfile = () => {
                   <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
                     Hola, <span className="font-medium">{user.username}</span>
                   </span>
+                  <button
+                    onClick={() => navigate('/buscar')}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                  >
+                    Buscar
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate('/buscar')}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                  >
+                    Buscar
+                  </button>
+                  <button
+                    onClick={() => navigate(`/login?returnTo=${encodeURIComponent(`/profesor/${slug}`)}`)}
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
+                  >
+                    Iniciar Sesión
+                  </button>
                 </>
               )}
-              <button
-                onClick={() => navigate('/buscar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
-              >
-                Buscar
-              </button>
-              <button
-                onClick={logout}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors whitespace-nowrap"
-              >
-                Cerrar Sesión
-              </button>
             </div>
           </div>
         </nav>
@@ -268,6 +311,11 @@ const ProfesorProfile = () => {
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => {
+                if (!isAuthenticated()) {
+                  const returnTo = `/evaluar?nombre=${encodeURIComponent(profesor.nombre_completo)}&slug=${encodeURIComponent(profesor.slug)}`;
+                  navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+                  return;
+                }
                 const params = new URLSearchParams({
                   nombre: profesor.nombre_completo,
                   slug: profesor.slug
@@ -276,7 +324,7 @@ const ProfesorProfile = () => {
               }}
               className="w-full md:w-auto px-6 py-3 text-base font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
             >
-              Evaluar a este profesor
+              {isAuthenticated() ? 'Evaluar a este profesor' : 'Inicia sesión para evaluar'}
             </button>
           </div>
         </div>

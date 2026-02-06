@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Development documentation and SQL files
+# Development documentation
 docs/
 dev-docs/
 
@@ -31,3 +31,6 @@ dev-docs/
 .env
 .env.local
 .env.production
+
+# Supabase local temp files
+supabase/.temp/
