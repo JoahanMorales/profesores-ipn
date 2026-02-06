@@ -458,9 +458,16 @@ const EvaluationForm = () => {
               <label htmlFor="nombreProfesor" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                 Nombre del Profesor *
               </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                💡 De preferencia, escríbelo tal como aparece en el <span className="font-semibold">SAES</span> para evitar duplicados
-              </p>
+              <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-500 rounded">
+                <p className="text-xs text-blue-800 dark:text-blue-300 font-medium mb-1">
+                  💡 Para búsquedas más efectivas:
+                </p>
+                <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-0.5 ml-4">
+                  <li>• Escribe <span className="font-semibold">apellidos primero, luego nombre</span></li>
+                  <li>• Ejemplo: <span className="font-mono bg-white dark:bg-gray-800 px-1 rounded">PÉREZ GARCÍA JUAN</span></li>
+                  <li>• Tal como aparece en el <span className="font-semibold">SAES</span></li>
+                </ul>
+              </div>
               <div className="relative flex items-center gap-2">
                 <input
                   id="nombreProfesor"

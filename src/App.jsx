@@ -16,6 +16,8 @@ const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const ReportPage = lazy(() => import('./components/ReportPage'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const NotFound = lazy(() => import('./components/NotFound'));
+const DatosProfesores = lazy(() => import('./components/DatosProfesores'));
+const DatosProfesor = lazy(() => import('./components/DatosProfesor'));
 
 // Componente para proteger rutas
 function ProtectedRoute({ children }) {
@@ -57,6 +59,8 @@ function App() {
             <Route path="/reportar" element={<ReportPage />} />
             <Route path="/buscar" element={<SearchPage />} />
             <Route path="/profesor/:slug" element={<ProfesorProfile />} />
+            <Route path="/datos/profesores" element={<DatosProfesores />} />
+            <Route path="/datos/profesor/:slug" element={<DatosProfesor />} />
             
             {/* Rutas protegidas (solo evaluar y admin) */}
             <Route 
