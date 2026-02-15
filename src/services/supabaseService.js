@@ -533,33 +533,26 @@ export const obtenerEstadisticasGlobales = async () => {
 };
 
 /**
- * Incrementar contador de evaluaciones del usuario
+ * Incrementar contador de evaluaciones del usuario (vía RPC segura)
  */
 export const incrementarEvaluacionesUsuario = async (usuarioId) => {
   try {
-    // Hacer update manual directamente (sin RPC)
-    const { data: userData, error: selectError } = await supabase
-      .from('usuarios')
-      .select('total_evaluaciones')
-      .eq('id', usuarioId)
-      .single();
+    const { data, error } = await supabase.rpc('incrementar_evaluaciones_seguro', {
+      p_usuario_id: usuarioId
+    });
 
-    if (selectError) {
-      console.warn('⚠️ No se pudo obtener usuario para incrementar:', selectError);
+    if (error) {
+      console.warn('⚠️ No se pudo incrementar evaluaciones:', error);
       return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
     }
 
-    const { error: incrementError } = await supabase
-      .from('usuarios')
-      .update({ total_evaluaciones: (userData?.total_evaluaciones || 0) + 1 })
-      .eq('id', usuarioId);
-
-    if (incrementError) {
-      console.warn('⚠️ No se pudo incrementar evaluaciones:', incrementError);
+    if (!data || !data.success) {
+      console.warn('⚠️ RPC incrementar_evaluaciones:', data?.error);
       return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
     }
 
-    return handleSupabaseSuccess(null, 'Contador actualizado');
+    console.log('📊 Evaluaciones actualizadas:', data.total_evaluaciones);
+    return handleSupabaseSuccess(data, 'Contador actualizado');
   } catch (error) {
     console.warn('⚠️ No se pudo actualizar contador de evaluaciones:', error);
     return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
@@ -567,28 +560,22 @@ export const incrementarEvaluacionesUsuario = async (usuarioId) => {
 };
 
 /**
- * Agregar monedas al usuario (recompensa por evaluar)
+ * Agregar monedas al usuario (recompensa por evaluar) — vía RPC segura
+ * La validación de cantidad ocurre en el servidor (max 50 por operación)
  */
 export const agregarMonedasUsuario = async (usuarioId, cantidad = 5) => {
   try {
-    // Obtener monedas actuales
-    const { data: userData, error: fetchError } = await supabase
-      .from('usuarios')
-      .select('monedas')
-      .eq('id', usuarioId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    // Actualizar con nuevas monedas
-    const { data, error } = await supabase
-      .from('usuarios')
-      .update({ monedas: (userData.monedas || 0) + cantidad })
-      .eq('id', usuarioId)
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('agregar_monedas_seguro', {
+      p_usuario_id: usuarioId,
+      p_cantidad: cantidad
+    });
 
     if (error) throw error;
+
+    if (!data || !data.success) {
+      console.warn('⚠️ No se pudieron agregar monedas:', data?.error);
+      return { success: false, error: data?.error || 'Error al agregar monedas', data: null };
+    }
 
     console.log(`💰 +${cantidad} monedas agregadas. Total: ${data.monedas}`);
     return handleSupabaseSuccess(data, `¡Ganaste ${cantidad} monedas!`);
