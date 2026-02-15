@@ -725,3 +725,115 @@ BEGIN
   );
 END;
 $$;
+
+
+-- ************************************************************
+-- PARTE 10: RATE LIMITING SERVER-SIDE PARA obtener_profesor_por_slug
+-- Solo la extensión usa este RPC. Limitamos a 60 llamadas/minuto
+-- por IP para evitar abuso/scraping.
+-- ************************************************************
+
+-- ── Tabla para trackear llamadas RPC ──
+CREATE TABLE IF NOT EXISTS public.rpc_rate_limits (
+  id BIGSERIAL PRIMARY KEY,
+  client_ip TEXT NOT NULL,
+  function_name TEXT NOT NULL,
+  called_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rpc_rate_ip_fn
+  ON public.rpc_rate_limits(client_ip, function_name, called_at);
+
+-- RLS habilitado pero sin policies = nadie accede directo
+ALTER TABLE public.rpc_rate_limits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.rpc_rate_limits FROM anon, authenticated;
+REVOKE ALL ON SEQUENCE public.rpc_rate_limits_id_seq FROM anon, authenticated;
+
+-- ── Función de limpieza automática (elimina registros > 5 min) ──
+CREATE OR REPLACE FUNCTION public.limpiar_rate_limits()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM rpc_rate_limits
+  WHERE called_at < now() - INTERVAL '5 minutes';
+END;
+$$;
+
+-- Solo service_role puede ejecutar limpieza
+REVOKE EXECUTE ON FUNCTION public.limpiar_rate_limits() FROM anon, authenticated;
+
+-- ── Reemplazar obtener_profesor_por_slug con rate limiting ──
+CREATE OR REPLACE FUNCTION public.obtener_profesor_por_slug(p_slug TEXT)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_profesor RECORD;
+  v_client_ip TEXT;
+  v_call_count INT;
+BEGIN
+  IF p_slug IS NULL OR p_slug = '' THEN
+    RETURN json_build_object('ok', false, 'error', 'Slug requerido');
+  END IF;
+
+  -- ── Rate limiting: 60 llamadas/minuto por IP ──
+  v_client_ip := coalesce(
+    current_setting('request.headers', true)::json->>'x-forwarded-for',
+    current_setting('request.headers', true)::json->>'x-real-ip',
+    'unknown'
+  );
+  -- Tomar solo la primera IP si hay múltiples (proxy chain)
+  v_client_ip := split_part(v_client_ip, ',', 1);
+
+  SELECT count(*) INTO v_call_count
+  FROM rpc_rate_limits
+  WHERE client_ip = v_client_ip
+    AND function_name = 'obtener_profesor_por_slug'
+    AND called_at > now() - INTERVAL '1 minute';
+
+  IF v_call_count >= 60 THEN
+    RETURN json_build_object('ok', false, 'error', 'Demasiadas solicitudes. Intenta en 1 minuto.');
+  END IF;
+
+  -- Registrar esta llamada
+  INSERT INTO rpc_rate_limits (client_ip, function_name)
+  VALUES (v_client_ip, 'obtener_profesor_por_slug');
+
+  -- Limpieza oportunista (~1% de las llamadas)
+  IF random() < 0.01 THEN
+    PERFORM limpiar_rate_limits();
+  END IF;
+
+  -- ── Consulta normal ──
+  SELECT 
+    rp.nombre_completo,
+    rp.slug,
+    rp.calificacion_promedio,
+    rp.total_evaluaciones
+  INTO v_profesor
+  FROM ranking_profesores rp
+  WHERE rp.slug = p_slug;
+
+  IF NOT FOUND THEN
+    RETURN json_build_object('ok', false, 'error', 'Profesor no encontrado');
+  END IF;
+
+  RETURN json_build_object(
+    'ok', true,
+    'timestamp', now()::text,
+    'profesor', json_build_object(
+      'nombre', v_profesor.nombre_completo,
+      'slug', v_profesor.slug,
+      'calificacion', CASE 
+        WHEN v_profesor.calificacion_promedio IS NOT NULL 
+        THEN round(v_profesor.calificacion_promedio, 1)::text
+        ELSE 'Sin evaluar'
+      END,
+      'total_evaluaciones', COALESCE(v_profesor.total_evaluaciones, 0)
+    )
+  );
+END;
+$$;
