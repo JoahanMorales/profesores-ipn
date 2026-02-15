@@ -37,6 +37,22 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Listen for storage changes (e.g. extension reverse-syncs monedas after payment)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key !== 'ipn_user') return;
+      try {
+        if (e.newValue) {
+          const updated = JSON.parse(e.newValue);
+          setUser(prev => prev ? { ...prev, monedas: updated.monedas } : prev);
+          setMonedas(updated.monedas || 0);
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const login = async (username, favoriteSong) => {
     try {
       const deviceData = deviceInfo || getAnonymousUserInfo();

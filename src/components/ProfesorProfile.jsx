@@ -199,10 +199,9 @@ const ProfesorProfile = () => {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 
-              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1.5"
+              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate('/buscar')}
             >
-              <img src="/logo_ipnp.svg" alt="IPNProfes" className="h-7 w-7" />
               <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
               <span className="text-gray-900 dark:text-white">p</span>
             </h1>
