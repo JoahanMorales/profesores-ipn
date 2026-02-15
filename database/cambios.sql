@@ -1,26 +1,107 @@
 -- ============================================================
--- CAMBIOS PARA INTEGRACIÓN EXTENSIÓN ↔ SUPABASE DIRECTO
+-- CAMBIOS DE SEGURIDAD + INTEGRACIÓN EXTENSIÓN ↔ SUPABASE
 -- 
 -- Ejecutar en: Supabase Dashboard → SQL Editor → New Query
 -- Pega TODO este archivo y haz clic en "Run"
 -- 
 -- Fecha: 2026-02-15
 -- 
+-- ⚠️ EJECUTAR ANTES DE DEPLOYAR LA WEB O RECARGAR LA EXTENSIÓN
+-- 
 -- Qué hace:
---   1. Crea función RPC para que la extensión lea profesores
---      directamente desde Supabase (reemplaza Vercel)
---   2. Crea funciones seguras (SECURITY DEFINER) para manejar
---      monedas y evaluaciones — impide manipulación desde cliente
---   3. Crea función para descontar monedas desde la extensión
---      (valida credenciales antes de descontar)
+--   1. Restringe permisos de tabla (quita GRANT ALL de anon)
+--   2. Endurece RLS policies (quita USING(true) en UPDATE/DELETE)
+--   3. Crea funciones RPC seguras (SECURITY DEFINER) para TODO
+--      lo que modifica datos: monedas, evaluaciones, admin ops
 --   4. Revoca funciones admin peligrosas del rol anon
 -- ============================================================
 
 
+-- ************************************************************
+-- PARTE 1: RESTRINGIR GRANTS DE TABLA PARA anon
+-- Actualmente: GRANT ALL → cualquiera puede UPDATE/DELETE
+-- Después: solo SELECT + INSERT donde necesario
+-- ************************************************************
+
+-- ── escuelas: solo lectura ──
+REVOKE ALL ON TABLE public.escuelas FROM anon;
+GRANT SELECT ON TABLE public.escuelas TO anon;
+
+-- ── carreras: solo lectura ──
+REVOKE ALL ON TABLE public.carreras FROM anon;
+GRANT SELECT ON TABLE public.carreras TO anon;
+
+-- ── profesores: solo lectura (insert via RPC crear_evaluacion_segura) ──
+REVOKE ALL ON TABLE public.profesores FROM anon;
+GRANT SELECT ON TABLE public.profesores TO anon;
+
+-- ── usuarios: lectura + insertar nuevos (registrarse) ──
+-- UPDATE/DELETE solo via funciones SECURITY DEFINER
+REVOKE ALL ON TABLE public.usuarios FROM anon;
+GRANT SELECT, INSERT ON TABLE public.usuarios TO anon;
+
+-- ── evaluaciones: solo lectura (insert via RPC crear_evaluacion_segura) ──
+-- UPDATE (ocultar) y DELETE solo via RPC admin
+REVOKE ALL ON TABLE public.evaluaciones FROM anon;
+GRANT SELECT ON TABLE public.evaluaciones TO anon;
+
+-- ── reportes: insertar (crear reporte) + lectura via vista admin ──
+REVOKE ALL ON TABLE public.reportes FROM anon;
+GRANT SELECT, INSERT ON TABLE public.reportes TO anon;
+
+-- ── vistas: solo lectura ──
+REVOKE ALL ON TABLE public.ranking_profesores FROM anon;
+GRANT SELECT ON TABLE public.ranking_profesores TO anon;
+
+REVOKE ALL ON TABLE public.actividad_reciente FROM anon;
+GRANT SELECT ON TABLE public.actividad_reciente TO anon;
+
+REVOKE ALL ON TABLE public.estadisticas_globales FROM anon;
+GRANT SELECT ON TABLE public.estadisticas_globales TO anon;
+
+REVOKE ALL ON TABLE public.vista_reportes_admin FROM anon;
+GRANT SELECT ON TABLE public.vista_reportes_admin TO anon;
+
+
+-- ************************************************************
+-- PARTE 2: ENDURECER RLS POLICIES
+-- Quitar UPDATE/DELETE con USING(true) — ahora solo via RPC
+-- ************************************************************
+
+-- ── usuarios: quitar UPDATE/DELETE abiertos ──
+DROP POLICY IF EXISTS "Usuarios pueden actualizar usuarios" ON public.usuarios;
+DROP POLICY IF EXISTS "usuarios_actualizar_sesion" ON public.usuarios;
+DROP POLICY IF EXISTS "usuarios_eliminar_inactivos" ON public.usuarios;
+
+-- ── evaluaciones: quitar UPDATE abierto ──
+DROP POLICY IF EXISTS "Admin puede ocultar evaluaciones" ON public.evaluaciones;
+
+-- ── profesores: quitar UPDATE abierto ──
+DROP POLICY IF EXISTS "Usuarios pueden actualizar profesores" ON public.profesores;
+
+-- Las policies de SELECT e INSERT se conservan (ya existen):
+--   "Todos pueden leer escuelas" → SELECT USING (true) ✓
+--   "Todos pueden leer carreras" → SELECT USING (true) ✓
+--   "Todos pueden leer profesores" → SELECT USING (true) ✓
+--   "Todos pueden leer evaluaciones" → SELECT USING (true) ✓
+--   "Todos pueden leer usuarios" → SELECT USING (true) ✓
+--   "usuarios_leer_propio_device" → SELECT USING (true) ✓
+--   "Cualquier usuario puede crear evaluaciones" → INSERT ✓
+--   "Cualquier usuario puede registrar profesores" → INSERT ✓
+--   "Usuarios ven sus reportes" → SELECT USING (true) ✓
+--   "Cualquiera puede crear reportes" → INSERT ✓
+
+
+-- ************************************************************
+-- PARTE 3: FUNCIONES RPC SEGURAS
+-- Todas usan SECURITY DEFINER = se ejecutan con permisos del
+-- owner (postgres), no del caller (anon). Así el código interno
+-- puede hacer UPDATE/DELETE aunque anon no tenga permiso directo.
+-- ************************************************************
+
 -- ============================================================
--- 1. FUNCIÓN: Obtener profesor por slug (para la extensión)
---    Reemplaza la llamada a Vercel /api/profesor/[slug]
---    Devuelve el mismo formato JSON que devolvía la API de Vercel
+-- 3A. Obtener profesor por slug (para la extensión)
+--     Reemplaza la llamada a Vercel /api/profesor/[slug]
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.obtener_profesor_por_slug(p_slug TEXT)
 RETURNS JSON
@@ -66,10 +147,8 @@ $$;
 
 
 -- ============================================================
--- 2. FUNCIÓN: Agregar monedas de forma segura
---    Usada por la web después de crear una evaluación
---    SECURITY DEFINER = se ejecuta con privilegios del owner,
---    así el cliente no puede manipular monedas directamente
+-- 3B. Agregar monedas de forma segura
+--     Usada por la web después de crear una evaluación
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.agregar_monedas_seguro(
   p_usuario_id UUID,
@@ -83,12 +162,10 @@ DECLARE
   v_monedas_actuales INT;
   v_monedas_nuevas INT;
 BEGIN
-  -- Solo cantidades razonables de recompensa (1-50)
   IF p_cantidad <= 0 OR p_cantidad > 50 THEN
     RETURN json_build_object('success', false, 'error', 'Cantidad inválida');
   END IF;
 
-  -- Obtener monedas actuales con lock para evitar race conditions
   SELECT monedas INTO v_monedas_actuales
   FROM usuarios
   WHERE id = p_usuario_id
@@ -104,17 +181,13 @@ BEGIN
   SET monedas = v_monedas_nuevas
   WHERE id = p_usuario_id;
 
-  RETURN json_build_object(
-    'success', true,
-    'monedas', v_monedas_nuevas
-  );
+  RETURN json_build_object('success', true, 'monedas', v_monedas_nuevas);
 END;
 $$;
 
 
 -- ============================================================
--- 3. FUNCIÓN: Incrementar evaluaciones de forma segura
---    Usada por la web después de crear una evaluación
+-- 3C. Incrementar evaluaciones de forma segura
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.incrementar_evaluaciones_seguro(
   p_usuario_id UUID
@@ -141,9 +214,8 @@ $$;
 
 
 -- ============================================================
--- 4. FUNCIÓN: Descontar monedas (para la extensión)
---    Valida credenciales (username + canción) ANTES de descontar.
---    Así un atacante no puede descontar monedas de otro usuario.
+-- 3D. Descontar monedas (para la extensión)
+--     Valida credenciales ANTES de descontar
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.descontar_monedas(
   p_username TEXT,
@@ -159,12 +231,10 @@ DECLARE
   v_user RECORD;
   v_monedas_nuevas INT;
 BEGIN
-  -- Validar cantidad
   IF p_cantidad <= 0 OR p_cantidad > 100 THEN
     RETURN json_build_object('success', false, 'error', 'Cantidad inválida');
   END IF;
 
-  -- Buscar usuario y verificar credenciales con lock
   SELECT id, username, cancion_favorita, monedas
   INTO v_user
   FROM usuarios
@@ -175,12 +245,10 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Usuario no encontrado');
   END IF;
 
-  -- Verificar contraseña (canción favorita)
   IF v_user.cancion_favorita != p_cancion_favorita THEN
     RETURN json_build_object('success', false, 'error', 'Credenciales inválidas');
   END IF;
 
-  -- Verificar saldo suficiente
   IF COALESCE(v_user.monedas, 0) < p_cantidad THEN
     RETURN json_build_object(
       'success', false,
@@ -189,7 +257,6 @@ BEGIN
     );
   END IF;
 
-  -- Descontar
   v_monedas_nuevas := v_user.monedas - p_cantidad;
 
   UPDATE usuarios
@@ -208,45 +275,263 @@ $$;
 
 
 -- ============================================================
--- 5. PERMISOS: Otorgar ejecución de las nuevas funciones a anon
---    (anon es el rol que usa la anon key del cliente)
+-- 3E. ADMIN: Ocultar/mostrar evaluación
+--     Verifica que el caller sea el admin (username='Yojan')
+--     antes de permitir la operación
 -- ============================================================
-GRANT EXECUTE ON FUNCTION public.obtener_profesor_por_slug(TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.obtener_profesor_por_slug(TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.obtener_profesor_por_slug(TEXT) TO service_role;
+CREATE OR REPLACE FUNCTION public.admin_toggle_ocultar_evaluacion(
+  p_admin_username TEXT,
+  p_admin_cancion TEXT,
+  p_evaluacion_id UUID,
+  p_ocultar BOOLEAN DEFAULT true
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_admin RECORD;
+BEGIN
+  -- Verificar credenciales de admin
+  SELECT id, username FROM usuarios
+  WHERE username = p_admin_username
+    AND cancion_favorita = p_admin_cancion
+  INTO v_admin;
 
-GRANT EXECUTE ON FUNCTION public.agregar_monedas_seguro(UUID, INT) TO anon;
-GRANT EXECUTE ON FUNCTION public.agregar_monedas_seguro(UUID, INT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.agregar_monedas_seguro(UUID, INT) TO service_role;
+  IF NOT FOUND OR v_admin.username != 'Yojan' THEN
+    RETURN json_build_object('success', false, 'error', 'No autorizado');
+  END IF;
 
-GRANT EXECUTE ON FUNCTION public.incrementar_evaluaciones_seguro(UUID) TO anon;
-GRANT EXECUTE ON FUNCTION public.incrementar_evaluaciones_seguro(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.incrementar_evaluaciones_seguro(UUID) TO service_role;
+  UPDATE evaluaciones
+  SET oculto = p_ocultar
+  WHERE id = p_evaluacion_id;
 
-GRANT EXECUTE ON FUNCTION public.descontar_monedas(TEXT, TEXT, INT, TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.descontar_monedas(TEXT, TEXT, INT, TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.descontar_monedas(TEXT, TEXT, INT, TEXT) TO service_role;
+  IF NOT FOUND THEN
+    RETURN json_build_object('success', false, 'error', 'Evaluación no encontrada');
+  END IF;
+
+  RETURN json_build_object('success', true, 'oculto', p_ocultar);
+END;
+$$;
 
 
 -- ============================================================
--- 6. SEGURIDAD: Revocar funciones de admin peligrosas de anon
---    Estas funciones solo deben ejecutarse desde el dashboard
---    de Supabase o con la service_role key (servidor)
+-- 3F. ADMIN: Eliminar evaluación permanentemente
 -- ============================================================
-REVOKE EXECUTE ON FUNCTION public.eliminar_evaluacion_admin(UUID) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.eliminar_evaluacion_admin(UUID) FROM authenticated;
+CREATE OR REPLACE FUNCTION public.admin_eliminar_evaluacion(
+  p_admin_username TEXT,
+  p_admin_cancion TEXT,
+  p_evaluacion_id UUID
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_admin RECORD;
+BEGIN
+  SELECT id, username FROM usuarios
+  WHERE username = p_admin_username
+    AND cancion_favorita = p_admin_cancion
+  INTO v_admin;
 
-REVOKE EXECUTE ON FUNCTION public.limpiar_profesores_huerfanos() FROM anon;
-REVOKE EXECUTE ON FUNCTION public.limpiar_profesores_huerfanos() FROM authenticated;
+  IF NOT FOUND OR v_admin.username != 'Yojan' THEN
+    RETURN json_build_object('success', false, 'error', 'No autorizado');
+  END IF;
 
-REVOKE EXECUTE ON FUNCTION public.limpiar_usuarios_inactivos(INT) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.limpiar_usuarios_inactivos(INT) FROM authenticated;
+  DELETE FROM evaluaciones WHERE id = p_evaluacion_id;
 
-REVOKE EXECUTE ON FUNCTION public.detectar_anomalias_usuario(TEXT) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.detectar_anomalias_usuario(TEXT) FROM authenticated;
+  IF NOT FOUND THEN
+    RETURN json_build_object('success', false, 'error', 'Evaluación no encontrada');
+  END IF;
 
-REVOKE EXECUTE ON FUNCTION public.buscar_usuario_por_device(TEXT) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.buscar_usuario_por_device(TEXT) FROM authenticated;
+  RETURN json_build_object('success', true);
+END;
+$$;
 
-REVOKE EXECUTE ON FUNCTION public.refresh_estadisticas() FROM anon;
-REVOKE EXECUTE ON FUNCTION public.refresh_estadisticas() FROM authenticated;
+
+-- ============================================================
+-- 3G. ADMIN: Actualizar estado de reporte
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.admin_actualizar_reporte(
+  p_admin_username TEXT,
+  p_admin_cancion TEXT,
+  p_reporte_id UUID,
+  p_estado TEXT,
+  p_notas_admin TEXT DEFAULT NULL
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_admin RECORD;
+BEGIN
+  SELECT id, username FROM usuarios
+  WHERE username = p_admin_username
+    AND cancion_favorita = p_admin_cancion
+  INTO v_admin;
+
+  IF NOT FOUND OR v_admin.username != 'Yojan' THEN
+    RETURN json_build_object('success', false, 'error', 'No autorizado');
+  END IF;
+
+  UPDATE reportes
+  SET estado = p_estado,
+      revisado_at = now(),
+      notas_admin = COALESCE(p_notas_admin, notas_admin)
+  WHERE id = p_reporte_id;
+
+  IF NOT FOUND THEN
+    RETURN json_build_object('success', false, 'error', 'Reporte no encontrado');
+  END IF;
+
+  RETURN json_build_object('success', true, 'estado', p_estado);
+END;
+$$;
+
+
+-- ============================================================
+-- 3H. Crear evaluación de forma segura (ATÓMICA)
+--     Valida credenciales → crea profesor si no existe →
+--     crea evaluación → incrementa contador → suma monedas
+--     Todo en una sola transacción.
+--     Así no se puede insertar evaluaciones sin credenciales.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
+  p_username TEXT,
+  p_cancion_favorita TEXT,
+  p_nombre_profesor TEXT,
+  p_escuela_id UUID,
+  p_carrera_id UUID,
+  p_materia TEXT,
+  p_calificacion INT,
+  p_recomendado BOOLEAN DEFAULT true,
+  p_asistencia_obligatoria BOOLEAN DEFAULT false,
+  p_calificacion_obtenida TEXT DEFAULT NULL,
+  p_opinion TEXT DEFAULT ''
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user RECORD;
+  v_profesor RECORD;
+  v_evaluacion RECORD;
+  v_slug TEXT;
+  v_monedas_nuevas INT;
+  v_total_evals INT;
+BEGIN
+  -- ── 1. Validar credenciales ──
+  SELECT id, username, cancion_favorita, monedas, total_evaluaciones
+  INTO v_user
+  FROM usuarios
+  WHERE username = p_username
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN json_build_object('success', false, 'error', 'Usuario no encontrado');
+  END IF;
+
+  IF v_user.cancion_favorita != p_cancion_favorita THEN
+    RETURN json_build_object('success', false, 'error', 'Credenciales inválidas');
+  END IF;
+
+  -- ── 2. Validar datos de la evaluación ──
+  IF p_calificacion < 1 OR p_calificacion > 10 THEN
+    RETURN json_build_object('success', false, 'error', 'Calificación debe ser entre 1 y 10');
+  END IF;
+
+  IF char_length(p_opinion) < 20 THEN
+    RETURN json_build_object('success', false, 'error', 'La opinión debe tener al menos 20 caracteres');
+  END IF;
+
+  IF char_length(p_materia) < 3 THEN
+    RETURN json_build_object('success', false, 'error', 'Materia inválida');
+  END IF;
+
+  IF char_length(p_nombre_profesor) < 5 THEN
+    RETURN json_build_object('success', false, 'error', 'Nombre de profesor inválido');
+  END IF;
+
+  -- ── 3. Crear o obtener profesor ──
+  SELECT id, nombre_completo, slug
+  INTO v_profesor
+  FROM profesores
+  WHERE nombre_completo = p_nombre_profesor;
+
+  IF NOT FOUND THEN
+    v_slug := lower(
+      regexp_replace(
+        regexp_replace(
+          translate(p_nombre_profesor,
+            'ÁÉÍÓÚáéíóúÑñÜü',
+            'AEIOUaeiouNnUu'),
+          '[^a-zA-Z0-9]+', '-', 'g'),
+        '(^-|-$)', '', 'g')
+    );
+
+    INSERT INTO profesores (nombre_completo, slug)
+    VALUES (p_nombre_profesor, v_slug)
+    RETURNING id, nombre_completo, slug INTO v_profesor;
+  END IF;
+
+  -- ── 4. Crear evaluación ──
+  INSERT INTO evaluaciones (
+    profesor_id, escuela_id, carrera_id, usuario_id, usuario_nombre,
+    materia, calificacion, recomendado, asistencia_obligatoria,
+    calificacion_obtenida, opinion
+  ) VALUES (
+    v_profesor.id, p_escuela_id, p_carrera_id, v_user.id, v_user.username,
+    p_materia, p_calificacion, p_recomendado, p_asistencia_obligatoria,
+    p_calificacion_obtenida, p_opinion
+  )
+  RETURNING * INTO v_evaluacion;
+
+  -- ── 5. Incrementar evaluaciones + sumar 5 monedas ──
+  v_total_evals := COALESCE(v_user.total_evaluaciones, 0) + 1;
+  v_monedas_nuevas := COALESCE(v_user.monedas, 0) + 5;
+
+  UPDATE usuarios
+  SET total_evaluaciones = v_total_evals,
+      monedas = v_monedas_nuevas
+  WHERE id = v_user.id;
+
+  RETURN json_build_object(
+    'success', true,
+    'evaluacion_id', v_evaluacion.id,
+    'profesor', json_build_object(
+      'id', v_profesor.id,
+      'nombre', v_profesor.nombre_completo,
+      'slug', v_profesor.slug
+    ),
+    'monedas', v_monedas_nuevas,
+    'total_evaluaciones', v_total_evals
+  );
+END;
+$$;
+
+
+-- ************************************************************
+-- PARTE 4: PERMISOS DE EJECUCIÓN PARA LAS FUNCIONES
+-- ************************************************************
+GRANT EXECUTE ON FUNCTION public.obtener_profesor_por_slug(TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.agregar_monedas_seguro(UUID, INT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.incrementar_evaluaciones_seguro(UUID) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.descontar_monedas(TEXT, TEXT, INT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_toggle_ocultar_evaluacion(TEXT, TEXT, UUID, BOOLEAN) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_eliminar_evaluacion(TEXT, TEXT, UUID) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_actualizar_reporte(TEXT, TEXT, UUID, TEXT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT) TO anon, authenticated, service_role;
+
+
+-- ************************************************************
+-- PARTE 5: REVOCAR FUNCIONES ADMIN PELIGROSAS ANTIGUAS
+-- ************************************************************
+REVOKE EXECUTE ON FUNCTION public.eliminar_evaluacion_admin(UUID) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.limpiar_profesores_huerfanos() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.limpiar_usuarios_inactivos(INT) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.detectar_anomalias_usuario(TEXT) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.buscar_usuario_por_device(TEXT) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.refresh_estadisticas() FROM anon, authenticated;

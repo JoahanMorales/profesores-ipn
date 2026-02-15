@@ -281,9 +281,50 @@ export const obtenerCarrerasPorEscuela = async (escuelaId) => {
 // ============================================
 
 /**
- * Crear una nueva evaluación (INVALIDA CACHÉ)
+ * Crear una evaluación de forma segura via RPC
+ * Valida credenciales → crea profesor si no existe → crea evaluación → suma monedas
+ * Todo en una sola transacción atómica server-side
+ */
+export const crearEvaluacionSegura = async (username, cancionFavorita, formData) => {
+  try {
+    const { data, error } = await supabase.rpc('crear_evaluacion_segura', {
+      p_username: username,
+      p_cancion_favorita: cancionFavorita?.trim().toLowerCase() || '',
+      p_nombre_profesor: formData.nombreProfesor,
+      p_escuela_id: formData.escuelaId,
+      p_carrera_id: formData.carreraId,
+      p_materia: formData.materia,
+      p_calificacion: parseInt(formData.calificacion),
+      p_recomendado: formData.recomendado ?? true,
+      p_asistencia_obligatoria: formData.asistenciaObligatoria ?? false,
+      p_calificacion_obtenida: formData.calificacionObtenida || null,
+      p_opinion: formData.opinion
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
+
+    console.log('⭐ Evaluación creada via RPC:', data.evaluacion_id);
+
+    // Invalidar caché relacionado
+    CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS)) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    return handleSupabaseSuccess(data, 'Evaluación publicada exitosamente');
+  } catch (error) {
+    return handleSupabaseError(error, 'crearEvaluacionSegura');
+  }
+};
+
+/**
+ * @deprecated Usar crearEvaluacionSegura en su lugar
  */
 export const crearEvaluacion = async (evaluacionData) => {
+  console.warn('⚠️ crearEvaluacion está deprecada. Usar crearEvaluacionSegura.');
   try {
     const { data, error } = await supabase
       .from('evaluaciones')
@@ -293,11 +334,7 @@ export const crearEvaluacion = async (evaluacionData) => {
 
     if (error) throw error;
 
-    console.log('⭐ Nueva evaluación creada:', data.id);
-    
-    // IMPORTANTE: Invalidar caché relacionado
     CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
-    // Limpiar caché de búsquedas
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS)) {
         localStorage.removeItem(key);

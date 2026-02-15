@@ -1,6 +1,25 @@
 import { supabase, handleSupabaseError, handleSupabaseSuccess } from '../lib/supabase';
 
 /**
+ * Obtener credenciales admin del localStorage
+ * Necesarias para las funciones RPC que verifican admin server-side
+ */
+function getAdminCredentials() {
+  try {
+    const raw = localStorage.getItem('ipn_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    if (user.username !== 'Yojan') return null;
+    return {
+      username: user.username,
+      cancion: user.favoriteSong?.trim().toLowerCase() || ''
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Crear un reporte de evaluación
  */
 export const crearReporte = async (evaluacionId, tipoReporte, descripcion, fingerprint) => {
@@ -55,16 +74,22 @@ export const obtenerReportes = async (estado = null) => {
 };
 
 /**
- * Ocultar/mostrar evaluación
+ * Ocultar/mostrar evaluación (via RPC con verificación admin server-side)
  */
 export const toggleOcultarEvaluacion = async (evaluacionId, ocultar = true) => {
   try {
-    const { error } = await supabase
-      .from('evaluaciones')
-      .update({ oculto: ocultar })
-      .eq('id', evaluacionId);
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_toggle_ocultar_evaluacion', {
+      p_admin_username: creds.username,
+      p_admin_cancion: creds.cancion,
+      p_evaluacion_id: evaluacionId,
+      p_ocultar: ocultar
+    });
 
     if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
     console.log(`👁️ Evaluación ${ocultar ? 'ocultada' : 'mostrada'}:`, evaluacionId);
     return handleSupabaseSuccess(
@@ -77,17 +102,21 @@ export const toggleOcultarEvaluacion = async (evaluacionId, ocultar = true) => {
 };
 
 /**
- * Eliminar evaluación permanentemente
+ * Eliminar evaluación permanentemente (via RPC con verificación admin server-side)
  */
 export const eliminarEvaluacion = async (evaluacionId) => {
   try {
-    // Eliminar directamente en lugar de usar RPC
-    const { error } = await supabase
-      .from('evaluaciones')
-      .delete()
-      .eq('id', evaluacionId);
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_eliminar_evaluacion', {
+      p_admin_username: creds.username,
+      p_admin_cancion: creds.cancion,
+      p_evaluacion_id: evaluacionId
+    });
 
     if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
     console.log('🗑️ Evaluación eliminada:', evaluacionId);
     return handleSupabaseSuccess(null, 'Evaluación eliminada permanentemente');
@@ -97,25 +126,23 @@ export const eliminarEvaluacion = async (evaluacionId) => {
 };
 
 /**
- * Actualizar estado del reporte
+ * Actualizar estado del reporte (via RPC con verificación admin server-side)
  */
 export const actualizarReporte = async (reporteId, estado, notasAdmin = null) => {
   try {
-    const updateData = {
-      estado: estado,
-      revisado_at: new Date().toISOString()
-    };
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
 
-    if (notasAdmin) {
-      updateData.notas_admin = notasAdmin;
-    }
-
-    const { error } = await supabase
-      .from('reportes')
-      .update(updateData)
-      .eq('id', reporteId);
+    const { data, error } = await supabase.rpc('admin_actualizar_reporte', {
+      p_admin_username: creds.username,
+      p_admin_cancion: creds.cancion,
+      p_reporte_id: reporteId,
+      p_estado: estado,
+      p_notas_admin: notasAdmin
+    });
 
     if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
     console.log('✅ Reporte actualizado:', reporteId);
     return handleSupabaseSuccess(null, 'Reporte actualizado');
