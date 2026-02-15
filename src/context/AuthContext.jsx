@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getAnonymousUserInfo, getDeviceId, generateAnonymousUsername } from '../lib/browserFingerprint';
 import { crearOObtenerUsuario } from '../services/supabaseService';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -30,6 +31,31 @@ export const AuthProvider = ({ children }) => {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setMonedas(userData.monedas || 0);
+
+        // Fetch fresh balance from DB on every page load
+        if (userData.username) {
+          supabase
+            .from('usuarios')
+            .select('monedas, total_evaluaciones')
+            .eq('username', userData.username)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                const freshMonedas = data.monedas ?? 0;
+                const freshEvals = data.total_evaluaciones ?? 0;
+                setMonedas(freshMonedas);
+                setUser(prev => prev ? { ...prev, monedas: freshMonedas, totalEvaluaciones: freshEvals } : prev);
+                // Persist to localStorage so session-sync picks it up
+                try {
+                  const current = JSON.parse(localStorage.getItem('ipn_user') || '{}');
+                  current.monedas = freshMonedas;
+                  current.totalEvaluaciones = freshEvals;
+                  localStorage.setItem('ipn_user', JSON.stringify(current));
+                } catch (_) {}
+              }
+            })
+            .catch(() => {});
+        }
       } catch (e) {
         localStorage.removeItem('ipn_user');
       }
