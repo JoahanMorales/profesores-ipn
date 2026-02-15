@@ -7,11 +7,7 @@ import {
   obtenerEscuelas, 
   obtenerCarrerasPorEscuela, 
   autocompletarProfesores,
-  crearOObtenerProfesor,
-  crearEvaluacion,
-  crearOObtenerUsuario,
-  incrementarEvaluacionesUsuario,
-  agregarMonedasUsuario,
+  crearEvaluacionSegura,
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
@@ -249,87 +245,49 @@ const EvaluationForm = () => {
     setSubmitting(true);
 
     try {
-      // 1. Crear o obtener el usuario (CON FINGERPRINT)
-      console.log('👤 Buscando/Creando usuario:', user.username);
-      
-      // Preparar datos de fingerprinting
-      const fingerprintData = {
-        deviceId: user.deviceId,
-        fingerprint: user.fingerprint,
-        sessionId: user.sessionId,
-        browser: user.browserInfo
-      };
-      
-      const usuarioResult = await crearOObtenerUsuario(
+      // Crear evaluación de forma segura via RPC atómico
+      // (valida credenciales → crea profesor → crea evaluación → suma monedas)
+      console.log('💾 Enviando evaluación segura...');
+
+      const result = await crearEvaluacionSegura(
         user.username,
         user.favoriteSong,
-        formData.escuelaId,
-        formData.carreraId,
-        fingerprintData  // Pasar datos de tracking
+        {
+          nombreProfesor: formData.nombreProfesor,
+          escuelaId: formData.escuelaId,
+          carreraId: formData.carreraId,
+          materia: formData.materia,
+          calificacion: parseInt(formData.calificacion),
+          recomendado: formData.recomendado,
+          asistenciaObligatoria: formData.asistenciaObligatoria,
+          calificacionObtenida: formData.calificacionObtenida,
+          opinion: formData.opinion
+        }
       );
 
-      if (!usuarioResult.success) {
-        alert('Error al registrar usuario: ' + usuarioResult.error);
+      if (!result.success) {
+        alert('Error al guardar la evaluación: ' + result.error);
         setSubmitting(false);
         return;
       }
 
-      const usuario = usuarioResult.data;
-      console.log('✅ Usuario obtenido:', usuario);
+      console.log('✅ Evaluación guardada exitosamente:', result.data);
 
-      // 2. Crear o obtener el profesor
-      console.log('🔍 Buscando/Creando profesor:', formData.nombreProfesor);
-      const profesorResult = await crearOObtenerProfesor(formData.nombreProfesor);
-      
-      if (!profesorResult.success) {
-        alert('Error al crear el profesor: ' + profesorResult.error);
-        setSubmitting(false);
-        return;
+      // Actualizar monedas en el contexto
+      if (result.data?.monedas !== undefined) {
+        updateMonedas(result.data.monedas);
       }
 
-      const profesor = profesorResult.data;
-      console.log('✅ Profesor obtenido:', profesor);
-
-      // 3. Crear la evaluación con usuario_id
-      const evaluacionData = {
-        profesor_id: profesor.id,
-        escuela_id: formData.escuelaId,
-        carrera_id: formData.carreraId,
-        usuario_id: usuario.id,
-        usuario_nombre: user.username,
-        materia: formData.materia,
-        calificacion: parseInt(formData.calificacion),
-        recomendado: formData.recomendado,
-        asistencia_obligatoria: formData.asistenciaObligatoria,
-        calificacion_obtenida: formData.calificacionObtenida,
-        opinion: formData.opinion
-      };
-
-      console.log('💾 Guardando evaluación:', evaluacionData);
-      const evaluacionResult = await crearEvaluacion(evaluacionData);
-
-      if (!evaluacionResult.success) {
-        alert('Error al guardar la evaluación: ' + evaluacionResult.error);
-        setSubmitting(false);
-        return;
-      }
-
-      // 4. Incrementar contador de evaluaciones del usuario
-      await incrementarEvaluacionesUsuario(usuario.id);
-
-      // 5. Agregar monedas al usuario (+5 monedas por evaluación)
-      console.log('💰 Agregando 5 monedas al usuario...');
-      const monedasResult = await agregarMonedasUsuario(usuario.id, 5);
-      
-      if (monedasResult.success) {
-        console.log('✅ Monedas agregadas. Total:', monedasResult.data.monedas);
-        // Actualizar monedas en el contexto
-        updateMonedas(monedasResult.data.monedas);
-      } else {
-        console.error('❌ Error al agregar monedas:', monedasResult.error);
-      }
-      
-      console.log('✅ Evaluación guardada exitosamente');
+      // Actualizar totalEvaluaciones en localStorage para session-sync
+      try {
+        const raw = localStorage.getItem('ipn_user');
+        if (raw) {
+          const u = JSON.parse(raw);
+          if (result.data?.monedas !== undefined) u.monedas = result.data.monedas;
+          if (result.data?.total_evaluaciones !== undefined) u.totalEvaluaciones = result.data.total_evaluaciones;
+          localStorage.setItem('ipn_user', JSON.stringify(u));
+        }
+      } catch (_) {}
 
       // Mostrar animación de monedas
       setShowCoinAnimation(true);
