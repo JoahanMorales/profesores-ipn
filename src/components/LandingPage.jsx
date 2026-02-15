@@ -43,7 +43,8 @@ const LandingPage = () => {
       <header className="border-b border-gray-200 dark:border-gray-700">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold flex items-center gap-1.5">
+              <img src="/logo_ipnp.svg" alt="IPNProfes" className="h-7 w-7" />
               <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
               <span className="text-gray-900 dark:text-white">p</span>
             </h1>
@@ -69,6 +70,14 @@ const LandingPage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section className="py-20 text-center">
           <div className="max-w-3xl mx-auto">
+            {/* Logo mariposa con animación */}
+            <div className="flex justify-center mb-8">
+              <img 
+                src="/logo_ipnp.svg" 
+                alt="IPNProfes Mariposa" 
+                className="h-24 w-24 sm:h-32 sm:w-32 animate-butterfly drop-shadow-lg" 
+              />
+            </div>
             <h2 className="text-5xl sm:text-6xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-6">
               Evalúa a tus profesores del IPN
             </h2>

@@ -84,7 +84,8 @@ const LoginPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold mb-2">
+        <h1 className="text-center text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+          <img src="/logo_ipnp.svg" alt="IPNProfes" className="h-9 w-9" />
           <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
           <span className="text-gray-900 dark:text-white">p</span>
         </h1>

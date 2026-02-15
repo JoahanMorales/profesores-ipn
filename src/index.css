@@ -165,5 +165,30 @@
   .animate-fade-in-down {
     animation: fade-in-down 0.3s ease-out;
   }
+
+  /* Animación de mariposa — aleteo suave + flotación */
+  @keyframes butterfly {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg) scale(1);
+    }
+    15% {
+      transform: translateY(-6px) rotate(-2deg) scale(1.03);
+    }
+    30% {
+      transform: translateY(-3px) rotate(1deg) scale(0.98);
+    }
+    50% {
+      transform: translateY(-8px) rotate(-1deg) scale(1.02);
+    }
+    70% {
+      transform: translateY(-2px) rotate(2deg) scale(0.99);
+    }
+    85% {
+      transform: translateY(-5px) rotate(-1.5deg) scale(1.01);
+    }
+  }
+  .animate-butterfly {
+    animation: butterfly 4s ease-in-out infinite;
+  }
 }
 
