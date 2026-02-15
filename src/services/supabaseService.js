@@ -20,8 +20,6 @@ export const obtenerTodosLosProfesores = async () => {
 
     if (error) throw error;
     
-    console.log('📥 Total de profesores cargados:', data?.length || 0);
-    
     return handleSupabaseSuccess(data || [], 'Profesores cargados exitosamente');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerTodosLosProfesores');
@@ -68,7 +66,7 @@ export const buscarProfesores = async (searchQuery = '') => {
     const { data: profesoresPorNombre, error: errorNombre } = await supabase
       .from('ranking_profesores')
       .select('*')
-      .ilike('nombre_completo', `%${searchQuery}%`)
+      .ilike('nombre_completo', `%${escapeIlike(searchQuery)}%`)
       .order('total_evaluaciones', { ascending: false })
       .order('calificacion_promedio', { ascending: false })
       .limit(50);
@@ -86,7 +84,7 @@ export const buscarProfesores = async (searchQuery = '') => {
     const { data: evaluaciones, error: errorEvaluaciones } = await supabase
       .from('evaluaciones')
       .select('profesor_id')
-      .ilike('materia', `%${searchQuery}%`);
+      .ilike('materia', `%${escapeIlike(searchQuery)}%`);
 
     if (errorEvaluaciones) throw errorEvaluaciones;
 
@@ -281,6 +279,13 @@ export const obtenerCarrerasPorEscuela = async (escuelaId) => {
 // ============================================
 
 /**
+ * Escapa caracteres wildcard de PostgreSQL para uso seguro en ilike
+ */
+function escapeIlike(str) {
+  return str.replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
+
+/**
  * Crear una evaluación de forma segura via RPC
  * Valida credenciales → crea profesor si no existe → crea evaluación → suma monedas
  * Todo en una sola transacción atómica server-side
@@ -304,8 +309,6 @@ export const crearEvaluacionSegura = async (username, cancionFavorita, formData)
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
-    console.log('⭐ Evaluación creada via RPC:', data.evaluacion_id);
-
     // Invalidar caché relacionado
     CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
     Object.keys(localStorage).forEach(key => {
@@ -317,33 +320,6 @@ export const crearEvaluacionSegura = async (username, cancionFavorita, formData)
     return handleSupabaseSuccess(data, 'Evaluación publicada exitosamente');
   } catch (error) {
     return handleSupabaseError(error, 'crearEvaluacionSegura');
-  }
-};
-
-/**
- * @deprecated Usar crearEvaluacionSegura en su lugar
- */
-export const crearEvaluacion = async (evaluacionData) => {
-  console.warn('⚠️ crearEvaluacion está deprecada. Usar crearEvaluacionSegura.');
-  try {
-    const { data, error } = await supabase
-      .from('evaluaciones')
-      .insert([evaluacionData])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS)) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    return handleSupabaseSuccess(data, 'Evaluación publicada exitosamente');
-  } catch (error) {
-    return handleSupabaseError(error, 'crearEvaluacion');
   }
 };
 
@@ -418,7 +394,7 @@ export const autocompletarProfesores = async (query) => {
     const { data, error } = await supabase
       .from('profesores')
       .select('id, nombre_completo')
-      .ilike('nombre_completo', `%${query}%`)
+      .ilike('nombre_completo', `%${escapeIlike(query)}%`)
       .limit(5);
 
     if (error) throw error;
@@ -446,7 +422,6 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, fingerprin
 
     // maybeSingle() devuelve null si no encuentra, no lanza error
     if (existente) {
-      console.log('👤 Usuario encontrado:', existente.username);
       return handleSupabaseSuccess(existente, 'Usuario encontrado');
     }
 
@@ -467,7 +442,6 @@ export const crearOObtenerUsuario = async (username, cancionFavorita, fingerprin
 
     if (errorCrear) throw errorCrear;
 
-    console.log('✨ Usuario creado:', nuevo.username);
     return handleSupabaseSuccess(nuevo, 'Usuario creado');
   } catch (error) {
     return handleSupabaseError(error, 'crearOObtenerUsuario');
@@ -588,10 +562,8 @@ export const incrementarEvaluacionesUsuario = async (usuarioId) => {
       return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
     }
 
-    console.log('📊 Evaluaciones actualizadas:', data.total_evaluaciones);
     return handleSupabaseSuccess(data, 'Contador actualizado');
   } catch (error) {
-    console.warn('⚠️ No se pudo actualizar contador de evaluaciones:', error);
     return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
   }
 };
@@ -614,7 +586,6 @@ export const agregarMonedasUsuario = async (usuarioId, cantidad = 5) => {
       return { success: false, error: data?.error || 'Error al agregar monedas', data: null };
     }
 
-    console.log(`💰 +${cantidad} monedas agregadas. Total: ${data.monedas}`);
     return handleSupabaseSuccess(data, `¡Ganaste ${cantidad} monedas!`);
   } catch (error) {
     return handleSupabaseError(error, 'agregarMonedasUsuario');

@@ -41,7 +41,6 @@ export const crearReporte = async (evaluacionId, tipoReporte, descripcion, finge
 
     if (error) throw error;
 
-    console.log('📢 Reporte creado:', data.id);
     return handleSupabaseSuccess(data, 'Reporte enviado correctamente');
   } catch (error) {
     return handleSupabaseError(error, 'crearReporte');
@@ -66,7 +65,6 @@ export const obtenerReportes = async (estado = null) => {
 
     if (error) throw error;
 
-    console.log('📋 Reportes obtenidos:', data?.length || 0);
     return handleSupabaseSuccess(data, 'Reportes cargados');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerReportes');
@@ -91,7 +89,6 @@ export const toggleOcultarEvaluacion = async (evaluacionId, ocultar = true) => {
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
-    console.log(`👁️ Evaluación ${ocultar ? 'ocultada' : 'mostrada'}:`, evaluacionId);
     return handleSupabaseSuccess(
       { oculto: ocultar }, 
       `Evaluación ${ocultar ? 'ocultada' : 'mostrada'} correctamente`
@@ -118,7 +115,6 @@ export const eliminarEvaluacion = async (evaluacionId) => {
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
-    console.log('🗑️ Evaluación eliminada:', evaluacionId);
     return handleSupabaseSuccess(null, 'Evaluación eliminada permanentemente');
   } catch (error) {
     return handleSupabaseError(error, 'eliminarEvaluacion');
@@ -144,7 +140,6 @@ export const actualizarReporte = async (reporteId, estado, notasAdmin = null) =>
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
-    console.log('✅ Reporte actualizado:', reporteId);
     return handleSupabaseSuccess(null, 'Reporte actualizado');
   } catch (error) {
     return handleSupabaseError(error, 'actualizarReporte');

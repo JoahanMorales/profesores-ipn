@@ -12,6 +12,7 @@ import {
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
 import { checkRateLimit } from '../lib/rateLimiter';
+import { Validator } from '../lib/validators';
 import { useSEO } from '../hooks/useSEO';
 
 const EvaluationForm = () => {
@@ -65,7 +66,6 @@ const EvaluationForm = () => {
       const profesorState = location.state?.profesor;
       
       if (nombreParam) {
-        console.log('📝 Autocompletando nombre desde URL:', nombreParam);
         setFormData(prev => ({
           ...prev,
           nombreProfesor: nombreParam
@@ -73,7 +73,6 @@ const EvaluationForm = () => {
         // Bloquear el input si viene de la URL
         setNombreBloqueado(true);
       } else if (profesorState) {
-        console.log('📝 Autocompletando desde state:', profesorState);
         setFormData(prev => ({
           ...prev,
           nombreProfesor: profesorState.nombre_completo || profesorState.nombre
@@ -248,12 +247,20 @@ const EvaluationForm = () => {
       // Crear evaluación via RPC segura (valida credenciales server-side)
       // Hace todo atómicamente: crea profesor si no existe, crea evaluación,
       // incrementa contador y suma monedas
-      console.log('💾 Creando evaluación segura para:', formData.nombreProfesor);
+
+      // Sanitizar inputs antes de enviar
+      const sanitizedFormData = {
+        ...formData,
+        nombreProfesor: Validator.sanitize(formData.nombreProfesor),
+        materia: Validator.sanitize(formData.materia),
+        opinion: Validator.sanitize(formData.opinion),
+        calificacionObtenida: formData.calificacionObtenida
+      };
 
       const result = await crearEvaluacionSegura(
         user.username,
         user.favoriteSong,
-        formData
+        sanitizedFormData
       );
 
       if (!result.success) {
@@ -261,9 +268,6 @@ const EvaluationForm = () => {
         setSubmitting(false);
         return;
       }
-
-      console.log('✅ Evaluación creada:', result.data.evaluacion_id);
-      console.log('💰 Monedas totales:', result.data.monedas);
 
       // Actualizar monedas en el contexto
       updateMonedas(result.data.monedas);

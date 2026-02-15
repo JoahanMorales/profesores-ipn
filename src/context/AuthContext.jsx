@@ -30,13 +30,6 @@ export const AuthProvider = ({ children }) => {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setMonedas(userData.monedas || 0);
-        
-        console.log('✅ Sesión restaurada', {
-          username: userData.username,
-          deviceId: deviceData.deviceId.substring(0, 15) + '...',
-          browser: deviceData.browser.name,
-          os: deviceData.browser.os
-        });
       } catch (e) {
         localStorage.removeItem('ipn_user');
       }
@@ -73,7 +66,6 @@ export const AuthProvider = ({ children }) => {
       const cancionIngresada = favoriteSong?.trim().toLowerCase();
       
       if (cancionDB && cancionDB !== cancionIngresada) {
-        console.log('🚫 Canción incorrecta para usuario existente');
         return false;
       }
 
@@ -94,15 +86,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('ipn_user', JSON.stringify(userData));
       setUser(userData);
       setMonedas(userData.monedas);
-      
-      console.log('🔐 Login exitoso:', {
-        username,
-        userId: dbUser.id,
-        monedas: userData.monedas,
-        evaluaciones: userData.totalEvaluaciones,
-        deviceId: userData.deviceId.substring(0, 15) + '...',
-        browser: `${userData.browserInfo.name} ${userData.browserInfo.version}`
-      });
 
       return true;
     } catch (error) {
@@ -119,12 +102,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log('🚪 Sesión cerrada:', {
-      username: user?.username,
-      deviceId: user?.deviceId?.substring(0, 15) + '...',
-      duration: user?.loginTime ? Math.floor((Date.now() - new Date(user.loginTime).getTime()) / 1000 / 60) + ' minutos' : 'unknown'
-    });
-    
     localStorage.removeItem('ipn_user');
     setUser(null);
     setMonedas(0);

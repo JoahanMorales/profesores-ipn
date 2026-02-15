@@ -6,7 +6,9 @@ import { Validator, LIMITS } from '../lib/validators';
 const LoginPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo') || '/buscar';
+  const rawReturnTo = searchParams.get('returnTo') || '/buscar';
+  // Validar que returnTo sea una ruta relativa segura (prevenir open redirect)
+  const returnTo = (rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')) ? rawReturnTo : '/buscar';
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
@@ -61,12 +63,6 @@ const LoginPage = () => {
       setErrors(newErrors);
       return;
     }
-
-    console.log('📝 Intento de login:', {
-      username: formData.username,
-      favoriteSong: '***HIDDEN***',
-      timestamp: new Date().toISOString()
-    });
 
     // Sanitizar antes de enviar
     const sanitizedUsername = Validator.sanitize(formData.username);

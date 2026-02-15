@@ -528,6 +528,8 @@ GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID,
 
 -- ************************************************************
 -- PARTE 5: REVOCAR FUNCIONES ADMIN PELIGROSAS ANTIGUAS
+-- Estas funciones no tienen verificación de credenciales,
+-- cualquiera con la anon key podía llamarlas.
 -- ************************************************************
 REVOKE EXECUTE ON FUNCTION public.eliminar_evaluacion_admin(UUID) FROM anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.limpiar_profesores_huerfanos() FROM anon, authenticated;
@@ -535,3 +537,191 @@ REVOKE EXECUTE ON FUNCTION public.limpiar_usuarios_inactivos(INT) FROM anon, aut
 REVOKE EXECUTE ON FUNCTION public.detectar_anomalias_usuario(TEXT) FROM anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.buscar_usuario_por_device(TEXT) FROM anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.refresh_estadisticas() FROM anon, authenticated;
+
+-- ── Funciones que modifican datos sin verificar quién llama ──
+REVOKE EXECUTE ON FUNCTION public.ocultar_evaluacion(UUID, BOOLEAN) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.registrar_sesion(INT, TEXT, JSONB) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.registrar_sesion(TEXT, TEXT, TEXT, TEXT, JSONB) FROM anon, authenticated;
+
+
+-- ************************************************************
+-- PARTE 6: VISTAS DE ADMIN — solo lectura para service_role
+-- stats_navegadores y stats_tracking exponen datos de tracking
+-- de usuarios (device_id, fingerprint, browser_info).
+-- No deben ser accesibles con la anon key.
+-- ************************************************************
+REVOKE ALL ON TABLE public.stats_navegadores FROM anon, authenticated;
+REVOKE ALL ON TABLE public.stats_tracking FROM anon, authenticated;
+
+
+-- ************************************************************
+-- PARTE 7: QUITAR INSERT POLICIES REDUNDANTES
+-- Si INSERT va por RPC (SECURITY DEFINER), las INSERT policies
+-- de RLS en evaluaciones y profesores ya no se necesitan para
+-- anon directo. Pero las dejamos porque las funciones
+-- SECURITY DEFINER ejecutan como postgres (bypasan RLS).
+-- Solo nos aseguramos de que GRANT no dé INSERT.
+-- (Ya hecho en Parte 1 arriba)
+-- ************************************************************
+
+-- ── Quitar policy "Admin puede actualizar reportes" (ya no necesaria, usamos RPC) ──
+DROP POLICY IF EXISTS "Admin puede actualizar reportes" ON public.reportes;
+
+
+-- ************************************************************
+-- PARTE 8: DEFAULT PRIVILEGES — CRÍTICO
+-- Supabase por defecto otorga ALL a anon en tablas/funciones
+-- futuras. Esto significa que si creas una tabla o función
+-- nueva, anon automáticamente tiene acceso total.
+-- Quitamos eso para que siempre tengas que dar permisos
+-- explícitamente.
+-- ************************************************************
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE ALL ON TABLES FROM anon;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE ALL ON FUNCTIONS FROM anon;
+
+-- Mantener SELECT por defecto para que nuevas vistas sean legibles
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT SELECT ON TABLES TO anon;
+
+
+-- ************************************************************
+-- PARTE 9: CHECK CONSTRAINTS + RATE LIMITING SERVER-SIDE
+-- Previene valores fuera de rango y abuso por spam
+-- ************************************************************
+
+-- ── Constraint para validar calificaciones entre 1 y 10 ──
+DO $$ BEGIN
+  ALTER TABLE public.evaluaciones
+    ADD CONSTRAINT chk_calificacion CHECK (calificacion BETWEEN 1 AND 10);
+  EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ── Rate limiting en la función crear_evaluacion_segura ──
+-- Reemplazar la función para incluir verificación de tiempo
+-- entre evaluaciones (máximo 1 por minuto por usuario)
+CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
+  p_username TEXT,
+  p_cancion_favorita TEXT,
+  p_nombre_profesor TEXT,
+  p_escuela_id UUID,
+  p_carrera_id UUID,
+  p_materia TEXT,
+  p_calificacion INT,
+  p_recomendado BOOLEAN DEFAULT true,
+  p_asistencia_obligatoria BOOLEAN DEFAULT false,
+  p_calificacion_obtenida TEXT DEFAULT NULL,
+  p_opinion TEXT DEFAULT ''
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user RECORD;
+  v_profesor RECORD;
+  v_evaluacion RECORD;
+  v_slug TEXT;
+  v_monedas_nuevas INT;
+  v_total_evals INT;
+  v_last_eval TIMESTAMPTZ;
+BEGIN
+  -- ── 1. Validar credenciales ──
+  SELECT id, username, cancion_favorita, monedas, total_evaluaciones
+  INTO v_user
+  FROM usuarios
+  WHERE username = p_username
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN json_build_object('success', false, 'error', 'Usuario no encontrado');
+  END IF;
+
+  IF v_user.cancion_favorita != p_cancion_favorita THEN
+    RETURN json_build_object('success', false, 'error', 'Credenciales inválidas');
+  END IF;
+
+  -- ── 1b. Rate limiting server-side: 1 evaluación por 30 segundos ──
+  SELECT MAX(created_at) INTO v_last_eval
+  FROM evaluaciones
+  WHERE usuario_id = v_user.id;
+
+  IF v_last_eval IS NOT NULL AND (now() - v_last_eval) < INTERVAL '30 seconds' THEN
+    RETURN json_build_object('success', false, 'error', 'Espera al menos 30 segundos entre evaluaciones');
+  END IF;
+
+  -- ── 2. Validar datos de la evaluación ──
+  IF p_calificacion < 1 OR p_calificacion > 10 THEN
+    RETURN json_build_object('success', false, 'error', 'Calificación debe ser entre 1 y 10');
+  END IF;
+
+  IF char_length(p_opinion) < 20 THEN
+    RETURN json_build_object('success', false, 'error', 'La opinión debe tener al menos 20 caracteres');
+  END IF;
+
+  IF char_length(p_materia) < 3 THEN
+    RETURN json_build_object('success', false, 'error', 'Materia inválida');
+  END IF;
+
+  IF char_length(p_nombre_profesor) < 5 THEN
+    RETURN json_build_object('success', false, 'error', 'Nombre de profesor inválido');
+  END IF;
+
+  -- ── 3. Crear o obtener profesor ──
+  SELECT id, nombre_completo, slug
+  INTO v_profesor
+  FROM profesores
+  WHERE nombre_completo = p_nombre_profesor;
+
+  IF NOT FOUND THEN
+    v_slug := lower(
+      regexp_replace(
+        regexp_replace(
+          translate(p_nombre_profesor,
+            'ÁÉÍÓÚáéíóúÑñÜü',
+            'AEIOUaeiouNnUu'),
+          '[^a-zA-Z0-9]+', '-', 'g'),
+        '(^-|-$)', '', 'g')
+    );
+
+    INSERT INTO profesores (nombre_completo, slug)
+    VALUES (p_nombre_profesor, v_slug)
+    RETURNING id, nombre_completo, slug INTO v_profesor;
+  END IF;
+
+  -- ── 4. Crear evaluación ──
+  INSERT INTO evaluaciones (
+    profesor_id, escuela_id, carrera_id, usuario_id, usuario_nombre,
+    materia, calificacion, recomendado, asistencia_obligatoria,
+    calificacion_obtenida, opinion
+  ) VALUES (
+    v_profesor.id, p_escuela_id, p_carrera_id, v_user.id, v_user.username,
+    p_materia, p_calificacion, p_recomendado, p_asistencia_obligatoria,
+    p_calificacion_obtenida, p_opinion
+  )
+  RETURNING * INTO v_evaluacion;
+
+  -- ── 5. Incrementar evaluaciones + sumar 5 monedas ──
+  v_total_evals := COALESCE(v_user.total_evaluaciones, 0) + 1;
+  v_monedas_nuevas := COALESCE(v_user.monedas, 0) + 5;
+
+  UPDATE usuarios
+  SET total_evaluaciones = v_total_evals,
+      monedas = v_monedas_nuevas
+  WHERE id = v_user.id;
+
+  RETURN json_build_object(
+    'success', true,
+    'evaluacion_id', v_evaluacion.id,
+    'profesor', json_build_object(
+      'id', v_profesor.id,
+      'nombre', v_profesor.nombre_completo,
+      'slug', v_profesor.slug
+    ),
+    'monedas', v_monedas_nuevas,
+    'total_evaluaciones', v_total_evals
+  );
+END;
+$$;
