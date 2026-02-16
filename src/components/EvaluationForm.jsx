@@ -8,10 +8,11 @@ import {
   obtenerCarrerasPorEscuela, 
   autocompletarProfesores,
   crearOObtenerProfesor,
-  crearEvaluacion,
+  crearEvaluacionSegura,
   crearOObtenerUsuario,
   incrementarEvaluacionesUsuario,
   agregarMonedasUsuario,
+  obtenerMonedasUsuario,
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
@@ -333,8 +334,8 @@ const EvaluationForm = () => {
         opinion: formData.opinion
       };
 
-      console.log('💾 Guardando evaluación:', evaluacionData);
-      const evaluacionResult = await crearEvaluacion(evaluacionData);
+      console.log('💾 Guardando evaluación (RPC seguro)...');
+      const evaluacionResult = await crearEvaluacionSegura(user.username, user.favoriteSong, formData);
 
       if (!evaluacionResult.success) {
         alert('Error al guardar la evaluación: ' + evaluacionResult.error);
@@ -342,22 +343,19 @@ const EvaluationForm = () => {
         return;
       }
 
-      // 4. Incrementar contador de evaluaciones del usuario
-      await incrementarEvaluacionesUsuario(usuario.id);
-
-      // 5. Agregar monedas al usuario (+5 monedas por evaluación)
-      console.log('💰 Agregando 5 monedas al usuario...');
-      const monedasResult = await agregarMonedasUsuario(usuario.id, 5);
-      
-      if (monedasResult.success) {
-        console.log('✅ Monedas agregadas. Total:', monedasResult.data.monedas);
-        // Actualizar monedas en el contexto
-        updateMonedas(monedasResult.data.monedas);
-      } else {
-        console.error('❌ Error al agregar monedas:', monedasResult.error);
+      // Obtener balance actualizado del usuario (si existe usuario.id)
+      if (usuario && usuario.id) {
+        try {
+          const monedasResp = await obtenerMonedasUsuario(usuario.id);
+          if (monedasResp && monedasResp.success) {
+            updateMonedas(monedasResp.data);
+          }
+        } catch (e) {
+          // No crítico
+        }
       }
-      
-      console.log('✅ Evaluación guardada exitosamente');
+
+      console.log('✅ Evaluación guardada exitosamente (RPC)');
 
       // Mostrar animación de monedas
       setShowCoinAnimation(true);
