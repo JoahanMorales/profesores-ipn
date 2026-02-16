@@ -7,7 +7,11 @@ import {
   obtenerEscuelas, 
   obtenerCarrerasPorEscuela, 
   autocompletarProfesores,
-  crearEvaluacionSegura,
+  crearOObtenerProfesor,
+  crearEvaluacion,
+  crearOObtenerUsuario,
+  incrementarEvaluacionesUsuario,
+  agregarMonedasUsuario,
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
@@ -177,6 +181,34 @@ const EvaluationForm = () => {
     }
   };
 
+  // Manejar cambios numéricos para calificacionObtenida (solo números entre 1 y 10)
+  const handleNumericChange = (e) => {
+    const { name, value } = e.target;
+    // Normalizar coma a punto y eliminar caracteres inválidos
+    let cleaned = value.replace(',', '.').replace(/[^0-9.]/g, '');
+    // Evitar múltiples puntos
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    if (cleaned === '') {
+      setFormData(prev => ({ ...prev, [name]: '' }));
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return;
+
+    // Limitar entre 1 y 10
+    const clamped = Math.max(1, Math.min(10, num));
+
+    // Mantener valor como cadena para controlar el input
+    setFormData(prev => ({ ...prev, [name]: String(clamped) }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
   const handleProfesorSelect = (profesor) => {
     setFormData(prev => ({
       ...prev,
@@ -245,49 +277,87 @@ const EvaluationForm = () => {
     setSubmitting(true);
 
     try {
-      // Crear evaluación de forma segura via RPC atómico
-      // (valida credenciales → crea profesor → crea evaluación → suma monedas)
-      console.log('💾 Enviando evaluación segura...');
-
-      const result = await crearEvaluacionSegura(
+      // 1. Crear o obtener el usuario (CON FINGERPRINT)
+      console.log('👤 Buscando/Creando usuario:', user.username);
+      
+      // Preparar datos de fingerprinting
+      const fingerprintData = {
+        deviceId: user.deviceId,
+        fingerprint: user.fingerprint,
+        sessionId: user.sessionId,
+        browser: user.browserInfo
+      };
+      
+      const usuarioResult = await crearOObtenerUsuario(
         user.username,
         user.favoriteSong,
-        {
-          nombreProfesor: formData.nombreProfesor,
-          escuelaId: formData.escuelaId,
-          carreraId: formData.carreraId,
-          materia: formData.materia,
-          calificacion: parseInt(formData.calificacion),
-          recomendado: formData.recomendado,
-          asistenciaObligatoria: formData.asistenciaObligatoria,
-          calificacionObtenida: formData.calificacionObtenida,
-          opinion: formData.opinion
-        }
+        formData.escuelaId,
+        formData.carreraId,
+        fingerprintData  // Pasar datos de tracking
       );
 
-      if (!result.success) {
-        alert('Error al guardar la evaluación: ' + result.error);
+      if (!usuarioResult.success) {
+        alert('Error al registrar usuario: ' + usuarioResult.error);
         setSubmitting(false);
         return;
       }
 
-      console.log('✅ Evaluación guardada exitosamente:', result.data);
+      const usuario = usuarioResult.data;
+      console.log('✅ Usuario obtenido:', usuario);
 
-      // Actualizar monedas en el contexto
-      if (result.data?.monedas !== undefined) {
-        updateMonedas(result.data.monedas);
+      // 2. Crear o obtener el profesor
+      console.log('🔍 Buscando/Creando profesor:', formData.nombreProfesor);
+      const profesorResult = await crearOObtenerProfesor(formData.nombreProfesor);
+      
+      if (!profesorResult.success) {
+        alert('Error al crear el profesor: ' + profesorResult.error);
+        setSubmitting(false);
+        return;
       }
 
-      // Actualizar totalEvaluaciones en localStorage para session-sync
-      try {
-        const raw = localStorage.getItem('ipn_user');
-        if (raw) {
-          const u = JSON.parse(raw);
-          if (result.data?.monedas !== undefined) u.monedas = result.data.monedas;
-          if (result.data?.total_evaluaciones !== undefined) u.totalEvaluaciones = result.data.total_evaluaciones;
-          localStorage.setItem('ipn_user', JSON.stringify(u));
-        }
-      } catch (_) {}
+      const profesor = profesorResult.data;
+      console.log('✅ Profesor obtenido:', profesor);
+
+      // 3. Crear la evaluación con usuario_id
+      const evaluacionData = {
+        profesor_id: profesor.id,
+        escuela_id: formData.escuelaId,
+        carrera_id: formData.carreraId,
+        usuario_id: usuario.id,
+        usuario_nombre: user.username,
+        materia: formData.materia,
+        calificacion: parseInt(formData.calificacion),
+        recomendado: formData.recomendado,
+        asistencia_obligatoria: formData.asistenciaObligatoria,
+        calificacion_obtenida: formData.calificacionObtenida,
+        opinion: formData.opinion
+      };
+
+      console.log('💾 Guardando evaluación:', evaluacionData);
+      const evaluacionResult = await crearEvaluacion(evaluacionData);
+
+      if (!evaluacionResult.success) {
+        alert('Error al guardar la evaluación: ' + evaluacionResult.error);
+        setSubmitting(false);
+        return;
+      }
+
+      // 4. Incrementar contador de evaluaciones del usuario
+      await incrementarEvaluacionesUsuario(usuario.id);
+
+      // 5. Agregar monedas al usuario (+5 monedas por evaluación)
+      console.log('💰 Agregando 5 monedas al usuario...');
+      const monedasResult = await agregarMonedasUsuario(usuario.id, 5);
+      
+      if (monedasResult.success) {
+        console.log('✅ Monedas agregadas. Total:', monedasResult.data.monedas);
+        // Actualizar monedas en el contexto
+        updateMonedas(monedasResult.data.monedas);
+      } else {
+        console.error('❌ Error al agregar monedas:', monedasResult.error);
+      }
+      
+      console.log('✅ Evaluación guardada exitosamente');
 
       // Mostrar animación de monedas
       setShowCoinAnimation(true);
@@ -672,18 +742,19 @@ const EvaluationForm = () => {
               <input
                 id="calificacionObtenida"
                 name="calificacionObtenida"
-                type="number"
+                type="text"
+                inputMode="decimal"
+                pattern="^[0-9]+(\.[0-9]+)?$"
                 min="1"
                 max="10"
                 step="0.1"
                 value={formData.calificacionObtenida}
-                onChange={handleChange}
+                onChange={handleNumericChange}
                 className={`w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
                   errors.calificacionObtenida ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Ej: 9, 10, 8.5"
                 autoComplete="off"
-                inputMode="decimal"
               />
               {errors.calificacionObtenida && (
                 <p className="mt-1 text-xs text-red-600">{errors.calificacionObtenida}</p>
