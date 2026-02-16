@@ -682,10 +682,10 @@ const EvaluationForm = () => {
                 type="range"
                 min="1"
                 max="10"
-                step="1"
+                step="0.1"
                 value={formData.calificacion}
                 onChange={handleChange}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-400"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-400 transition-all duration-150 ease-linear"
               />
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <span>1 (Muy malo)</span>
