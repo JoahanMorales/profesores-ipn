@@ -13,6 +13,7 @@ const ProfesorProfile = lazy(() => import('./components/ProfesorProfile'));
 const EvaluationForm = lazy(() => import('./components/EvaluationForm'));
 const TermsOfService = lazy(() => import('./components/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const Contact = lazy(() => import('./components/Contact'));
 const ReportPage = lazy(() => import('./components/ReportPage'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const NotFound = lazy(() => import('./components/NotFound'));
@@ -55,7 +56,8 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/terminos" element={<TermsOfService />} />
-            <Route path="/privacidad" element={<PrivacyPolicy />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/reportar" element={<ReportPage />} />
             <Route path="/buscar" element={<SearchPage />} />
             <Route path="/profesor/:slug" element={<ProfesorProfile />} />

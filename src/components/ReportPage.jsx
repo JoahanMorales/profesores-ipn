@@ -156,7 +156,7 @@ const ReportPage = () => {
                 <p className="text-sm text-blue-800">
                   <strong>Nota:</strong> Los reportes son revisados manualmente. 
                   Tu información será tratada de forma confidencial según nuestra{' '}
-                  <a href="/privacidad" className="underline hover:text-blue-900">
+                  <a href="/privacy" className="underline hover:text-blue-900">
                     política de privacidad
                   </a>.
                 </p>

@@ -39,14 +39,14 @@ const PrivacyPolicy = () => {
               1.1 Información Anónima
             </h3>
             <p className="text-gray-700 mb-4">
-              <strong className="text-ipn-guinda-900">ip</strong> es una plataforma 100% anónima. NO recopilamos:
+              <strong className="text-ipn-guinda-900">ip</strong> es una plataforma orientada al anonimato. NO recopilamos:
             </p>
             <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-1">
-              <li>❌ Nombres reales</li>
-              <li>❌ Correos electrónicos</li>
-              <li>❌ Números telefónicos</li>
-              <li>❌ Direcciones</li>
-              <li>❌ Información personal identificable</li>
+              <li>Nombres reales</li>
+              <li>Correos electrónicos</li>
+              <li>Números telefónicos</li>
+              <li>Direcciones</li>
+              <li>Información personal identificable</li>
             </ul>
 
             <h3 className="text-lg font-medium text-gray-800 mb-2">
@@ -63,7 +63,7 @@ const PrivacyPolicy = () => {
             </ul>
             <div className="bg-ipn-guinda-50 border-l-4 border-ipn-guinda-900 p-4 mb-4">
               <p className="text-sm text-gray-700">
-                🔒 <strong>Importante:</strong> Esta información NO puede vincularse a tu identidad real.
+                <strong>Importante:</strong> Esta información NO puede vincularse a tu identidad real.
               </p>
             </div>
           </section>
@@ -125,10 +125,10 @@ const PrivacyPolicy = () => {
               6. Seguridad de Datos
             </h2>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li>🔐 Encriptación de datos en tránsito (HTTPS)</li>
-              <li>🔐 Bases de datos protegidas con RLS (Row Level Security)</li>
-              <li>🔐 Validación de datos en cliente y servidor</li>
-              <li>🔐 Monitoreo de actividad anómala</li>
+              <li>Encriptación de datos en tránsito (HTTPS)</li>
+              <li>Bases de datos protegidas con RLS (Row Level Security)</li>
+              <li>Validación de datos en cliente y servidor</li>
+              <li>Monitoreo de actividad anómala</li>
             </ul>
           </section>
 
@@ -211,10 +211,10 @@ const PrivacyPolicy = () => {
         {/* Close Button */}
         <div className="mt-8 text-center">
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => navigate(-1)}
             className="px-6 py-3 bg-ipn-guinda-900 text-white rounded-md hover:bg-ipn-guinda-800 transition-colors"
           >
-            Entendido
+            Volver
           </button>
         </div>
         </div>

@@ -36,7 +36,7 @@ const NotFound = () => {
           ¡Ups! Página no encontrada
         </h2>
         <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-          Parece que este profesor no existe en nuestra base de datos... o quizás te perdiste en el camino 🗺️
+          Parece que este profesor no existe en nuestra base de datos o la página que buscas no está disponible.
         </p>
 
         {/* Actions */}
@@ -45,13 +45,13 @@ const NotFound = () => {
             onClick={() => navigate('/buscar')}
             className="px-8 py-3 text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-lg hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-all transform hover:scale-105 font-semibold shadow-lg"
           >
-            🔍 Buscar Profesores
+            Buscar Profesores
           </button>
           <button
             onClick={() => navigate('/')}
             className="px-8 py-3 text-ipn-guinda-900 dark:text-ipn-guinda-400 bg-white dark:bg-gray-800 border-2 border-ipn-guinda-900 dark:border-ipn-guinda-700 rounded-lg hover:bg-ipn-guinda-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 font-semibold shadow-lg"
           >
-            🏠 Volver al Inicio
+            Volver al Inicio
           </button>
         </div>
 
@@ -72,7 +72,7 @@ const NotFound = () => {
               Iniciar Sesión
             </button>
             <button
-              onClick={() => navigate('/privacidad')}
+              onClick={() => navigate('/privacy')}
               className="text-ipn-guinda-900 dark:text-ipn-guinda-400 hover:text-ipn-guinda-700 dark:hover:text-ipn-guinda-300 font-medium hover:underline transition-colors"
             >
               Privacidad

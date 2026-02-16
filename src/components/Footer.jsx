@@ -90,7 +90,7 @@ const Footer = () => {
               </Link>
               <span className="text-gray-600">•</span>
               <Link 
-                to="/privacidad" 
+                to="/privacy" 
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 Política de Privacidad
@@ -106,7 +106,7 @@ const Footer = () => {
           </div>
           
           <p className="text-gray-500 text-xs mt-4 text-center">
-            ip - Plataforma estudiantil independiente. Respetamos tu privacidad 🔒
+            ip - Plataforma estudiantil independiente. Respetamos tu privacidad
           </p>
         </div>
       </div>

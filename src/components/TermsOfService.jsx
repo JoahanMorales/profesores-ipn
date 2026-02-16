@@ -74,8 +74,75 @@ const TermsOfService = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Privacidad</h2>
               <p>
-                Tu privacidad es importante. Consulta nuestra <a href="/privacidad" className="text-ipn-guinda-900 hover:underline font-medium">Política de Privacidad</a> para 
+                Tu privacidad es importante. Consulta nuestra <a href="/privacy" className="text-ipn-guinda-900 hover:underline font-medium">Política de Privacidad</a> para
                 entender cómo recopilamos, usamos y protegemos tu información.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Preámbulo</h2>
+              <p>
+                Todo el material contenido en este sitio Web y sus correspondientes subdirectorios se encuentran protegidos.
+                Todas las marcas, logotipos e imágenes de terceros mencionadas o mostradas son propiedad de sus respectivos dueños.
+              </p>
+              <p className="mt-3">
+                El contenido presente indica que bajo ninguna circunstancia se podrá distribuir, almacenar, transferir, reproducir, publicar o explotar total o parcialmente
+                la información, imágenes, logotipos, textos, clips de audio, video, etc. que se encuentren almacenados en los servidores de esta plataforma sin el consentimiento
+                del autor, licenciatario o titular del derecho patrimonial, así como de la autorización previa y por escrito de los responsables de la plataforma.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Sobre el tipo de contenidos</h2>
+              <p>
+                Nos reservamos el derecho de eliminar o modificar contenidos y/o anuncios publicados por los usuarios que vayan en contra de los buenos valores y costumbres.
+                Los contenidos inapropiados incluyen, pero no se limitan a:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mt-2">
+                <li>Material pornográfico o desnudos totales o parciales</li>
+                <li>Material violento o sádico</li>
+                <li>Material que claramente viole derechos de autor</li>
+                <li>Enlaces a sitios con contenido inapropiado o ilegal</li>
+                <li>Programas o recursos que violen leyes locales o nacionales</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Renuncia</h2>
+              <p>
+                Los materiales contenidos en esta plataforma se proveen "tal cual". No nos responsabilizamos del uso indebido que los usuarios puedan hacer de los contenidos publicados
+                por los mismos, incluyendo la retransmisión total o parcial de contenidos con derechos de autor, vínculos a sitios transmisores de malware, o uso de materiales ofensivos.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Limitaciones</h2>
+              <p>
+                En ningún caso la plataforma o sus proveedores serán responsables por cualquier daño (incluyendo pérdida de datos o beneficios, daños morales o de imagen pública)
+                que surjan del uso o la imposibilidad de usar los materiales en este sitio, incluso si se ha notificado la posibilidad de tales daños.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Revisiones y Erratas</h2>
+              <p>
+                El contenido podría incluir errores técnicos, tipográficos o fotográficos. No garantizamos que cualquiera de los materiales sea preciso, completo o actualizado.
+                Podemos hacer cambios en cualquier momento sin previo aviso.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Vínculos</h2>
+              <p>
+                No hemos revisado todos los sitios vinculados ni el contenido publicado por usuarios en sitios ajenos; por ello no somos responsables por el contenido de dichos sitios.
+                La inclusión de vínculos no implica aprobación y el uso de sitios vinculados es bajo el propio riesgo del usuario.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Términos de modificación</h2>
+              <p>
+                Nos reservamos el derecho a actualizar este documento en cualquier momento sin previo aviso. Es responsabilidad del usuario revisar periódicamente estos términos.
               </p>
             </section>
 
