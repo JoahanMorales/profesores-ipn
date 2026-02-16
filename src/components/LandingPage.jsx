@@ -68,20 +68,20 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <section className="py-20 text-center">
+        <section className="pt-12 pb-12 text-center">
           <div className="max-w-3xl mx-auto">
             {/* Logo mariposa con animación */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-4">
               <img 
                 src="/logo_ipnp.svg" 
                 alt="IPNProfes Mariposa" 
                 className="h-24 w-24 sm:h-32 sm:w-32 animate-butterfly drop-shadow-lg" 
               />
             </div>
-            <h2 className="text-5xl sm:text-6xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-6">
+            <h2 className="text-5xl sm:text-6xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-4">
               Evalúa a tus profesores del IPN
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               Una plataforma transparente para compartir opiniones sobre docentes 
               y ayudar a la comunidad politécnica a tomar mejores decisiones académicas.
             </p>
