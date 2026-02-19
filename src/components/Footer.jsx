@@ -18,16 +18,19 @@ const Footer = () => {
 
           {/* Columna 2: Acerca de */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-ipn-guinda-400">Acerca de</h3>
+            <h3 className="text-lg font-bold mb-4 text-ipn-guinda-400">Explorar</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <span className="block">Publicación sin mostrar tu identidad</span>
+                <Link to="/buscar" className="hover:text-white transition-colors">Buscar Profesores</Link>
               </li>
               <li>
-                <span className="block">Desarrollado por estudiantes</span>
+                <Link to="/eventos" className="hover:text-white transition-colors">Eventos</Link>
               </li>
               <li>
-                <span className="block">Para la comunidad politécnica</span>
+                <Link to="/blog" className="hover:text-white transition-colors">Blog</Link>
+              </li>
+              <li>
+                <Link to="/extension" className="hover:text-white transition-colors">Extensión de Chrome</Link>
               </li>
             </ul>
           </div>
@@ -37,13 +40,13 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4 text-ipn-guinda-400">Contacto</h3>
             <div className="space-y-3">
               <a
-                href="mailto:joahanmorales07@gmail.com"
+                href="mailto:ipnprofes@gmail.com"
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
               >
                 <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                 </svg>
-                <span className="text-sm">joahanmorales07@gmail.com</span>
+                <span className="text-sm">ipnprofes@gmail.com</span>
               </a>
 
               <a

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Validator, LIMITS } from '../lib/validators';
@@ -9,7 +9,17 @@ const LoginPage = () => {
   const rawReturnTo = searchParams.get('returnTo') || '/buscar';
   // Validar que returnTo sea una ruta relativa segura (prevenir open redirect)
   const returnTo = (rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')) ? rawReturnTo : '/buscar';
-  const { login } = useAuth();
+  const { login, logout, isAuthenticated } = useAuth();
+
+  // Si el usuario ya tiene sesión, cerrarla al montar para permitir re-login
+  const loggedOutRef = useRef(false);
+  useEffect(() => {
+    if (isAuthenticated() && !loggedOutRef.current) {
+      loggedOutRef.current = true;
+      logout();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [formData, setFormData] = useState({
     username: '',
     favoriteSong: ''

@@ -34,3 +34,10 @@ dev-docs/
 
 # Supabase local temp files
 supabase/.temp/
+
+# Database seed scripts (contienen datos sensibles de migración)
+database/seeds/
+
+# Database migration SQL files
+database/blog_eventos.sql
+database/contribuidores_migration.sql

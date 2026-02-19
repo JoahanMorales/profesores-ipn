@@ -610,3 +610,89 @@ export const obtenerMonedasUsuario = async (usuarioId) => {
     return handleSupabaseError(error, 'obtenerMonedasUsuario');
   }
 };
+
+// ============================================
+// EVENTOS
+// ============================================
+
+/**
+ * Obtener todos los eventos publicados
+ */
+export const obtenerEventos = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .eq('publicado', true)
+      .order('fecha_inicio', { ascending: true });
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data || [], 'Eventos cargados');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerEventos');
+  }
+};
+
+/**
+ * Obtener un evento por slug
+ */
+export const obtenerEventoPorSlug = async (slug) => {
+  try {
+    const { data, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .eq('slug', slug)
+      .eq('publicado', true)
+      .single();
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data, 'Evento encontrado');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerEventoPorSlug');
+  }
+};
+
+// ============================================
+// BLOG
+// ============================================
+
+/**
+ * Obtener todos los artículos publicados
+ */
+export const obtenerArticulos = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('publicado', true)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data || [], 'Artículos cargados');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerArticulos');
+  }
+};
+
+/**
+ * Obtener un artículo por slug
+ */
+export const obtenerArticuloPorSlug = async (slug) => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .eq('publicado', true)
+      .single();
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data, 'Artículo encontrado');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerArticuloPorSlug');
+  }
+};

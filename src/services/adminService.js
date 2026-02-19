@@ -208,3 +208,235 @@ export const verificarAdmin = async (adminEmail) => {
     return { success: false, esAdmin: false };
   }
 };
+
+// ============================================
+// EVENTOS ADMIN CRUD
+// ============================================
+
+/**
+ * Obtener todos los eventos (incluyendo no publicados) — solo admin
+ */
+export const obtenerEventosAdmin = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data || [], 'Eventos cargados');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerEventosAdmin');
+  }
+};
+
+/**
+ * Crear evento (via RPC con verificación admin)
+ */
+export const crearEvento = async (evento) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_crear_evento', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_slug: evento.slug,
+      p_titulo: evento.titulo,
+      p_descripcion: evento.descripcion,
+      p_contenido: evento.contenido || null,
+      p_fecha_inicio: evento.fecha_inicio,
+      p_fecha_fin: evento.fecha_fin || null,
+      p_hora: evento.hora || null,
+      p_lugar: evento.lugar || '',
+      p_categoria: evento.categoria || 'General',
+      p_link_externo: evento.link_externo || null,
+      p_destacado: evento.destacado || false,
+      p_publicado: evento.publicado !== false,
+      p_nombre_contribuidor: evento.nombre_contribuidor || null,
+      p_instagram_contribuidor: evento.instagram_contribuidor || null,
+      p_escuela_contribuidor: evento.escuela_contribuidor || null,
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    return handleSupabaseSuccess(data, 'Evento creado correctamente');
+  } catch (error) {
+    return handleSupabaseError(error, 'crearEvento');
+  }
+};
+
+/**
+ * Actualizar evento (via RPC con verificación admin)
+ */
+export const actualizarEvento = async (id, campos) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_actualizar_evento', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_id: id,
+      p_slug: campos.slug || null,
+      p_titulo: campos.titulo || null,
+      p_descripcion: campos.descripcion || null,
+      p_contenido: campos.contenido || null,
+      p_fecha_inicio: campos.fecha_inicio || null,
+      p_fecha_fin: campos.fecha_fin || null,
+      p_hora: campos.hora || null,
+      p_lugar: campos.lugar || null,
+      p_categoria: campos.categoria || null,
+      p_link_externo: campos.link_externo || null,
+      p_destacado: campos.destacado ?? null,
+      p_publicado: campos.publicado ?? null,
+      p_nombre_contribuidor: campos.nombre_contribuidor || null,
+      p_instagram_contribuidor: campos.instagram_contribuidor || null,
+      p_escuela_contribuidor: campos.escuela_contribuidor || null,
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    return handleSupabaseSuccess(data, 'Evento actualizado');
+  } catch (error) {
+    return handleSupabaseError(error, 'actualizarEvento');
+  }
+};
+
+/**
+ * Eliminar evento (via RPC con verificación admin)
+ */
+export const eliminarEvento = async (id) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_eliminar_evento', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_id: id,
+    });
+
+    if (error) throw error;
+    if (data && !data.success) throw new Error(data.error);
+
+    return handleSupabaseSuccess(null, 'Evento eliminado');
+  } catch (error) {
+    return handleSupabaseError(error, 'eliminarEvento');
+  }
+};
+
+// ============================================
+// BLOG ADMIN CRUD
+// ============================================
+
+/**
+ * Obtener todos los artículos (incluyendo borradores) — solo admin
+ */
+export const obtenerArticulosAdmin = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return handleSupabaseSuccess(data || [], 'Artículos cargados');
+  } catch (error) {
+    return handleSupabaseError(error, 'obtenerArticulosAdmin');
+  }
+};
+
+/**
+ * Crear artículo de blog (via RPC con verificación admin)
+ */
+export const crearArticulo = async (articulo) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_crear_blog', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_slug: articulo.slug,
+      p_titulo: articulo.titulo,
+      p_resumen: articulo.resumen,
+      p_contenido: articulo.contenido,
+      p_categoria: articulo.categoria || 'General',
+      p_autor: articulo.nombre_contribuidor || 'IPNProfes',
+      p_tiempo_lectura: articulo.tiempo_lectura || '5 min',
+      p_publicado: articulo.publicado || false,
+      p_nombre_contribuidor: articulo.nombre_contribuidor || null,
+      p_instagram_contribuidor: articulo.instagram_contribuidor || null,
+      p_escuela_contribuidor: articulo.escuela_contribuidor || null,
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    return handleSupabaseSuccess(data, 'Artículo creado correctamente');
+  } catch (error) {
+    return handleSupabaseError(error, 'crearArticulo');
+  }
+};
+
+/**
+ * Actualizar artículo de blog (via RPC con verificación admin)
+ */
+export const actualizarArticulo = async (id, campos) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_actualizar_blog', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_id: id,
+      p_slug: campos.slug || null,
+      p_titulo: campos.titulo || null,
+      p_resumen: campos.resumen || null,
+      p_contenido: campos.contenido || null,
+      p_categoria: campos.categoria || null,
+      p_autor: campos.nombre_contribuidor || 'IPNProfes',
+      p_tiempo_lectura: campos.tiempo_lectura || null,
+      p_publicado: campos.publicado ?? null,
+      p_nombre_contribuidor: campos.nombre_contribuidor || null,
+      p_instagram_contribuidor: campos.instagram_contribuidor || null,
+      p_escuela_contribuidor: campos.escuela_contribuidor || null,
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    return handleSupabaseSuccess(data, 'Artículo actualizado');
+  } catch (error) {
+    return handleSupabaseError(error, 'actualizarArticulo');
+  }
+};
+
+/**
+ * Eliminar artículo de blog (via RPC con verificación admin)
+ */
+export const eliminarArticulo = async (id) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_eliminar_blog', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_id: id,
+    });
+
+    if (error) throw error;
+    if (data && !data.success) throw new Error(data.error);
+
+    return handleSupabaseSuccess(null, 'Artículo eliminado');
+  } catch (error) {
+    return handleSupabaseError(error, 'eliminarArticulo');
+  }
+};

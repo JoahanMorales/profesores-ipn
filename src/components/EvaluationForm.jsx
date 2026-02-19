@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Navbar from './Navbar';
 import CoinAnimation from './CoinAnimation';
 import SearchableSelect from './SearchableSelect';
 import { 
@@ -391,45 +392,7 @@ const EvaluationForm = () => {
   return (
     <div className="min-h-screen-safe bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 
-              className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => navigate('/buscar')}
-            >
-              <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">i</span>
-              <span className="text-gray-900 dark:text-white">p</span>
-            </h1>
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-              {user && (
-                <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-200 via-purple-300 to-pink-300 dark:from-slate-700 dark:via-purple-600 dark:to-pink-600 rounded-full shadow-lg relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-gray-300 to-transparent animate-shimmer opacity-40" />
-                    <span className="text-xl relative z-10">💎</span>
-                    <span className="font-bold text-gray-900 dark:text-white relative z-10">{monedas}</span>
-                  </div>
-                  <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-300">
-                    Hola, <span className="font-medium">{user.username}</span>
-                  </span>
-                </>
-              )}
-              <button
-                onClick={() => navigate('/buscar')}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
-              >
-                Buscar
-              </button>
-              <button
-                onClick={logout}
-                className="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 rounded-md hover:bg-ipn-guinda-800 transition-colors whitespace-nowrap"
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -508,7 +471,7 @@ const EvaluationForm = () => {
                   className={`flex-1 px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-colors ${
                     errors.nombreProfesor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   } ${nombreBloqueado ? 'bg-gray-100 dark:bg-gray-600 cursor-not-allowed' : ''}`}
-                  placeholder="Ej: JUAN PEREZ GARCIA"
+                  placeholder="Ej: PEREZ GARCIA JUAN"
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="characters"
@@ -680,7 +643,7 @@ const EvaluationForm = () => {
                 type="range"
                 min="1"
                 max="10"
-                step="0.1"
+                step="1"
                 value={formData.calificacion}
                 onChange={handleChange}
                 className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-gray-400 transition-all duration-150 ease-linear"
