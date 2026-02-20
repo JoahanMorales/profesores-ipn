@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from './Navbar';
 import CoinAnimation from './CoinAnimation';
 import SearchableSelect from './SearchableSelect';
+import Turnstile, { isTurnstileEnabled } from './Turnstile';
 import { 
   obtenerEscuelas, 
   obtenerCarrerasPorEscuela, 
@@ -40,6 +41,7 @@ const EvaluationForm = () => {
   const [showCoinAnimation, setShowCoinAnimation] = useState(false);
   const [coinsEarned, setCoinsEarned] = useState(5);
   const [nombreBloqueado, setNombreBloqueado] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
 
   // Estados para datos de Supabase
   const [escuelas, setEscuelas] = useState([]);
@@ -271,12 +273,18 @@ const EvaluationForm = () => {
       return;
     }
 
+    // Verificar CAPTCHA si está habilitado
+    if (isTurnstileEnabled() && !captchaToken) {
+      alert('Completa la verificación de seguridad antes de enviar.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       // Crear evaluación via RPC seguro (maneja usuario, profesor, monedas y eval count atómicamente)
       console.log('Guardando evaluación (RPC seguro)...');
-      const evaluacionResult = await crearEvaluacionSegura(user.username, user.favoriteSong, formData);
+      const evaluacionResult = await crearEvaluacionSegura(user.username, user.favoriteSong, formData, captchaToken || undefined);
 
       if (!evaluacionResult.success) {
         alert('Error al guardar la evaluación: ' + evaluacionResult.error);
@@ -688,10 +696,16 @@ const EvaluationForm = () => {
               </div>
             </div>
 
+            {/* CAPTCHA Widget */}
+            <Turnstile
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken('')}
+            />
+
             {/* Submit Button */}
             <div className="pt-4">
               <button
-                disabled={submitting}
+                disabled={submitting || (isTurnstileEnabled() && !captchaToken)}
                 className="w-full py-3 px-4 bg-ipn-guinda-900 text-white text-base font-medium rounded-md hover:bg-ipn-guinda-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ipn-guinda-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (

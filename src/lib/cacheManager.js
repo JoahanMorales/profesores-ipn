@@ -14,6 +14,10 @@ const CACHE_KEYS = {
   SEARCH_RESULTS: `${CACHE_PREFIX}search_`,
   PROFESOR_PROFILE: `${CACHE_PREFIX}profesor_`,
   SEARCH_QUERY: `${CACHE_PREFIX}search_query_`,
+  STATS_GLOBALES: `${CACHE_PREFIX}stats_globales`,
+  TODOS_PROFESORES: `${CACHE_PREFIX}todos_profesores`,
+  EVENTOS: `${CACHE_PREFIX}eventos`,
+  ARTICULOS: `${CACHE_PREFIX}articulos`,
 };
 
 const CACHE_EXPIRATION = {
@@ -23,6 +27,10 @@ const CACHE_EXPIRATION = {
   SEARCH_RESULTS: 5 * 60 * 1000, // 5 minutos
   PROFESOR_PROFILE: 10 * 60 * 1000, // 10 minutos
   SEARCH_QUERY: 15 * 60 * 1000, // 15 minutos para búsquedas específicas
+  STATS_GLOBALES: 1 * 60 * 60 * 1000, // 1 hora (no cambian rápido)
+  TODOS_PROFESORES: 30 * 60 * 1000, // 30 minutos
+  EVENTOS: 15 * 60 * 1000, // 15 minutos
+  ARTICULOS: 15 * 60 * 1000, // 15 minutos
 };
 
 class CacheManager {

@@ -11,6 +11,12 @@ import { CacheManager, CACHE_KEYS, CACHE_EXPIRATION } from '../lib/cacheManager'
  */
 export const obtenerTodosLosProfesores = async () => {
   try {
+    // Verificar caché
+    const cached = CacheManager.get(CACHE_KEYS.TODOS_PROFESORES);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Profesores (desde caché)');
+    }
+
     // Traer todos los profesores ordenados por evaluaciones
     const { data, error } = await supabase
       .from('ranking_profesores')
@@ -19,8 +25,12 @@ export const obtenerTodosLosProfesores = async () => {
       .order('calificacion_promedio', { ascending: false });
 
     if (error) throw error;
-    
-    return handleSupabaseSuccess(data || [], 'Profesores cargados exitosamente');
+
+    const result = data || [];
+    // Cachear por 30 minutos
+    CacheManager.set(CACHE_KEYS.TODOS_PROFESORES, result, CACHE_EXPIRATION.TODOS_PROFESORES);
+
+    return handleSupabaseSuccess(result, 'Profesores cargados exitosamente');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerTodosLosProfesores');
   }
@@ -294,9 +304,9 @@ function escapeIlike(str) {
  * Valida credenciales → crea profesor si no existe → crea evaluación → suma monedas
  * Todo en una sola transacción atómica server-side
  */
-export const crearEvaluacionSegura = async (username, cancionFavorita, formData) => {
+export const crearEvaluacionSegura = async (username, cancionFavorita, formData, captchaToken) => {
   try {
-    const { data, error } = await supabase.rpc('crear_evaluacion_segura', {
+    const params = {
       p_username: username,
       p_cancion_favorita: cancionFavorita?.trim().toLowerCase() || '',
       p_nombre_profesor: formData.nombreProfesor,
@@ -308,15 +318,24 @@ export const crearEvaluacionSegura = async (username, cancionFavorita, formData)
       p_asistencia_obligatoria: formData.asistenciaObligatoria ?? false,
       p_calificacion_obtenida: formData.calificacionObtenida || null,
       p_opinion: formData.opinion
-    });
+    };
+
+    // Solo enviar token si existe
+    if (captchaToken) {
+      params.p_captcha_token = captchaToken;
+    }
+
+    const { data, error } = await supabase.rpc('crear_evaluacion_segura', params);
 
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
     // Invalidar caché relacionado
     CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
+    CacheManager.remove(CACHE_KEYS.TODOS_PROFESORES);
+    CacheManager.remove(CACHE_KEYS.STATS_GLOBALES);
     Object.keys(localStorage).forEach(key => {
-      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS)) {
+      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS) || key.startsWith(CACHE_KEYS.PROFESOR_PROFILE)) {
         localStorage.removeItem(key);
       }
     });
@@ -416,12 +435,19 @@ export const autocompletarProfesores = async (query) => {
  * Verificar/crear usuario de forma segura via RPC
  * Las credenciales se verifican server-side — cancion_favorita NUNCA se expone al cliente
  */
-export const verificarUsuario = async (username, cancionFavorita) => {
+export const verificarUsuario = async (username, cancionFavorita, captchaToken) => {
   try {
-    const { data, error } = await supabase.rpc('verificar_usuario', {
+    const params = {
       p_username: username,
       p_cancion_favorita: cancionFavorita?.trim().toLowerCase() || ''
-    });
+    };
+
+    // Solo enviar token si existe (compatibilidad con CAPTCHA apagado)
+    if (captchaToken) {
+      params.p_captcha_token = captchaToken;
+    }
+
+    const { data, error } = await supabase.rpc('verificar_usuario', params);
 
     if (error) throw error;
     if (!data?.success) throw new Error(data?.error || 'Error desconocido');
@@ -481,42 +507,35 @@ export const obtenerEvaluacionesUsuario = async (usuarioId) => {
  */
 export const obtenerEstadisticasGlobales = async () => {
   try {
-    // Obtener conteo de profesores
-    const { count: totalProfesores, error: errorProfesores } = await supabase
-      .from('profesores')
-      .select('*', { count: 'exact', head: true });
+    // Verificar caché (1 hora — estas estadísticas no cambian rápido)
+    const cached = CacheManager.get(CACHE_KEYS.STATS_GLOBALES);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Estadísticas (desde caché)');
+    }
 
-    if (errorProfesores) throw errorProfesores;
+    // Obtener todos los conteos en paralelo
+    const [profesores, escuelas, carreras, evaluaciones] = await Promise.all([
+      supabase.from('profesores').select('*', { count: 'exact', head: true }),
+      supabase.from('escuelas').select('*', { count: 'exact', head: true }),
+      supabase.from('carreras').select('*', { count: 'exact', head: true }),
+      supabase.from('evaluaciones').select('*', { count: 'exact', head: true }),
+    ]);
 
-    // Obtener conteo de escuelas
-    const { count: totalEscuelas, error: errorEscuelas } = await supabase
-      .from('escuelas')
-      .select('*', { count: 'exact', head: true });
-
-    if (errorEscuelas) throw errorEscuelas;
-
-    // Obtener conteo de carreras
-    const { count: totalCarreras, error: errorCarreras } = await supabase
-      .from('carreras')
-      .select('*', { count: 'exact', head: true });
-
-    if (errorCarreras) throw errorCarreras;
-
-    // Obtener conteo de evaluaciones
-    const { count: totalEvaluaciones, error: errorEvaluaciones } = await supabase
-      .from('evaluaciones')
-      .select('*', { count: 'exact', head: true });
-
-    if (errorEvaluaciones) throw errorEvaluaciones;
+    if (profesores.error) throw profesores.error;
+    if (escuelas.error) throw escuelas.error;
+    if (carreras.error) throw carreras.error;
+    if (evaluaciones.error) throw evaluaciones.error;
 
     const stats = {
-      totalProfesores: totalProfesores || 0,
-      totalEscuelas: totalEscuelas || 0,
-      totalCarreras: totalCarreras || 0,
-      totalEvaluaciones: totalEvaluaciones || 0
+      totalProfesores: profesores.count || 0,
+      totalEscuelas: escuelas.count || 0,
+      totalCarreras: carreras.count || 0,
+      totalEvaluaciones: evaluaciones.count || 0
     };
 
-    console.log('📊 Estadísticas globales:', stats);
+    // Cachear por 1 hora
+    CacheManager.set(CACHE_KEYS.STATS_GLOBALES, stats, CACHE_EXPIRATION.STATS_GLOBALES);
+
     return handleSupabaseSuccess(stats, 'Estadísticas obtenidas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEstadisticasGlobales');
@@ -555,6 +574,12 @@ export const obtenerMonedasUsuario = async (usuarioId) => {
  */
 export const obtenerEventos = async () => {
   try {
+    // Verificar caché
+    const cached = CacheManager.get(CACHE_KEYS.EVENTOS);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Eventos (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('eventos')
       .select('*')
@@ -563,7 +588,10 @@ export const obtenerEventos = async () => {
 
     if (error) throw error;
 
-    return handleSupabaseSuccess(data || [], 'Eventos cargados');
+    const result = data || [];
+    CacheManager.set(CACHE_KEYS.EVENTOS, result, CACHE_EXPIRATION.EVENTOS);
+
+    return handleSupabaseSuccess(result, 'Eventos cargados');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEventos');
   }
@@ -598,6 +626,12 @@ export const obtenerEventoPorSlug = async (slug) => {
  */
 export const obtenerArticulos = async () => {
   try {
+    // Verificar caché
+    const cached = CacheManager.get(CACHE_KEYS.ARTICULOS);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Artículos (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
@@ -606,7 +640,10 @@ export const obtenerArticulos = async () => {
 
     if (error) throw error;
 
-    return handleSupabaseSuccess(data || [], 'Artículos cargados');
+    const result = data || [];
+    CacheManager.set(CACHE_KEYS.ARTICULOS, result, CACHE_EXPIRATION.ARTICULOS);
+
+    return handleSupabaseSuccess(result, 'Artículos cargados');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerArticulos');
   }

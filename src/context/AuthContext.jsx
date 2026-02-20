@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getAnonymousUserInfo, getDeviceId, generateAnonymousUsername } from '../lib/browserFingerprint';
 import { verificarUsuario } from '../services/supabaseService';
 import { supabase } from '../lib/supabase';
@@ -18,6 +18,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [monedas, setMonedas] = useState(0);
   const [deviceInfo, setDeviceInfo] = useState(null);
+  const lastMonedasRefreshRef = useRef(0);
+
+  // Throttle: solo refrescar monedas si pasaron más de 5 minutos
+  const MONEDAS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos
 
   useEffect(() => {
     // Obtener información del dispositivo (sin permisos)
@@ -32,8 +36,9 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setMonedas(userData.monedas || 0);
 
-        // Fetch fresh balance from DB on every page load
-        if (userData.username) {
+        // Fetch fresh balance from DB — throttled to once per 5 min
+        if (userData.username && (Date.now() - lastMonedasRefreshRef.current > MONEDAS_REFRESH_INTERVAL)) {
+          lastMonedasRefreshRef.current = Date.now();
           supabase
             .from('usuarios')
             .select('monedas, total_evaluaciones')
@@ -79,13 +84,13 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const login = async (username, favoriteSong) => {
+  const login = async (username, favoriteSong, captchaToken) => {
     try {
       const deviceData = deviceInfo || getAnonymousUserInfo();
       
       // Verificar credenciales server-side via RPC
       // cancion_favorita NUNCA se expone al cliente
-      const resultado = await verificarUsuario(username, favoriteSong);
+      const resultado = await verificarUsuario(username, favoriteSong, captchaToken);
 
       if (!resultado.success) {
         console.error('Error al verificar usuario:', resultado.error);

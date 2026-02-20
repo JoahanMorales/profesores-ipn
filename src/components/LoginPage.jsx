@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Validator, LIMITS } from '../lib/validators';
+import Turnstile, { isTurnstileEnabled } from './Turnstile';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const LoginPage = () => {
     favoriteSong: 0
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,8 +80,14 @@ const LoginPage = () => {
     const sanitizedUsername = Validator.sanitize(formData.username);
     const sanitizedSong = Validator.sanitize(formData.favoriteSong);
 
+    // Verificar CAPTCHA si está habilitado
+    if (isTurnstileEnabled() && !captchaToken) {
+      setErrors({ general: 'Completa la verificación de seguridad' });
+      return;
+    }
+
     // Realizar login con validación de usuario y contraseña
-    const success = await login(sanitizedUsername, sanitizedSong);
+    const success = await login(sanitizedUsername, sanitizedSong, captchaToken || undefined);
     
     if (success) {
       navigate(returnTo);
@@ -218,11 +226,22 @@ const LoginPage = () => {
               </div>
             </div>
 
+            {/* CAPTCHA Widget */}
+            <Turnstile
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken('')}
+            />
+
+            {errors.general && (
+              <p className="text-xs text-red-600 dark:text-red-400 text-center">{errors.general}</p>
+            )}
+
             {/* Submit Button */}
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ipn-guinda-700 transition-colors"
+                disabled={isTurnstileEnabled() && !captchaToken}
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ipn-guinda-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Ingresar
               </button>
