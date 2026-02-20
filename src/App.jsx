@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -96,6 +97,7 @@ function App() {
           </Routes>
         </Suspense>
       </AuthProvider>
+      <Analytics />
     </ThemeProvider>
     </BrowserRouter>
   );
