@@ -107,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         id: dbUser.id,
         username: dbUser.username,
+        favoriteSong,
         monedas: dbUser.monedas || 0,
         totalEvaluaciones: dbUser.total_evaluaciones || 0,
         deviceId: deviceData.deviceId,
