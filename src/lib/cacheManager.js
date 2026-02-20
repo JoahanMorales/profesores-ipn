@@ -7,6 +7,9 @@
 const CACHE_VERSION = 2;
 const CACHE_PREFIX = `ipn_v${CACHE_VERSION}_`;
 
+// Keys que NO son caché y nunca deben limpiarse automáticamente
+const PROTECTED_KEYS = ['ipn_user', 'ipn_device_id'];
+
 const CACHE_KEYS = {
   ESCUELAS: `${CACHE_PREFIX}escuelas`,
   CARRERAS: `${CACHE_PREFIX}carreras`,
@@ -113,7 +116,7 @@ class CacheManager {
       });
       // También limpiar claves de versiones anteriores (ipn_ sin versión)
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX)) {
+        if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX) && !PROTECTED_KEYS.includes(key)) {
           localStorage.removeItem(key);
         }
       });
@@ -132,7 +135,7 @@ class CacheManager {
     try {
       let cleared = 0;
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('ipn_')) {
+        if (key.startsWith('ipn_') && !PROTECTED_KEYS.includes(key)) {
           const cached = localStorage.getItem(key);
           if (cached) {
             try {
@@ -231,7 +234,7 @@ if (typeof window !== 'undefined') {
   CacheManager.clearExpired();
   // Eliminar claves de versiones anteriores para liberar espacio
   Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX)) {
+    if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX) && !PROTECTED_KEYS.includes(key)) {
       localStorage.removeItem(key);
     }
   });
