@@ -48,24 +48,22 @@ export const crearReporte = async (evaluacionId, tipoReporte, descripcion, finge
 };
 
 /**
- * Obtener todos los reportes (solo admin)
+ * Obtener todos los reportes (solo admin, via RPC con verificación)
  */
 export const obtenerReportes = async (estado = null) => {
   try {
-    let query = supabase
-      .from('vista_reportes_admin')
-      .select('*')
-      .order('fecha_reporte', { ascending: false });
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
 
-    if (estado) {
-      query = query.eq('estado', estado);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc('admin_obtener_reportes', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_estado: estado
+    });
 
     if (error) throw error;
 
-    return handleSupabaseSuccess(data, 'Reportes cargados');
+    return handleSupabaseSuccess(data || [], 'Reportes cargados');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerReportes');
   }
@@ -214,14 +212,17 @@ export const verificarAdmin = async (adminEmail) => {
 // ============================================
 
 /**
- * Obtener todos los eventos (incluyendo no publicados) — solo admin
+ * Obtener todos los eventos (incluyendo no publicados) — solo admin via RPC
  */
 export const obtenerEventosAdmin = async () => {
   try {
-    const { data, error } = await supabase
-      .from('eventos')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_obtener_eventos_todos', {
+      p_username: creds.username,
+      p_cancion: creds.cancion
+    });
 
     if (error) throw error;
 
@@ -334,14 +335,17 @@ export const eliminarEvento = async (id) => {
 // ============================================
 
 /**
- * Obtener todos los artículos (incluyendo borradores) — solo admin
+ * Obtener todos los artículos (incluyendo borradores) — solo admin via RPC
  */
 export const obtenerArticulosAdmin = async () => {
   try {
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_obtener_blog_todos', {
+      p_username: creds.username,
+      p_cancion: creds.cancion
+    });
 
     if (error) throw error;
 

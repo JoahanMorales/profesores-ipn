@@ -413,57 +413,33 @@ export const autocompletarProfesores = async (query) => {
 // ============================================
 
 /**
- * Crear o obtener un usuario (CON FINGERPRINTING - graceful fallback)
+ * Verificar/crear usuario de forma segura via RPC
+ * Las credenciales se verifican server-side — cancion_favorita NUNCA se expone al cliente
  */
-export const crearOObtenerUsuario = async (username, cancionFavorita, fingerprintData = null) => {
+export const verificarUsuario = async (username, cancionFavorita) => {
   try {
-    // Buscar por username (método principal y más confiable)
-    const { data: existente, error: errorBusqueda } = await supabase
-      .from('usuarios')
-      .select('id, username, cancion_favorita, monedas, total_evaluaciones')
-      .eq('username', username)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc('verificar_usuario', {
+      p_username: username,
+      p_cancion_favorita: cancionFavorita?.trim().toLowerCase() || ''
+    });
 
-    // maybeSingle() devuelve null si no encuentra, no lanza error
-    if (existente) {
-      return handleSupabaseSuccess(existente, 'Usuario encontrado');
-    }
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
 
-    // Crear usuario nuevo con campos básicos
-    // Normalizar la canción favorita (lowercase, trim) para comparaciones consistentes
-    const nuevoUsuario = {
-      username,
-      cancion_favorita: cancionFavorita?.trim().toLowerCase() || null,
-      total_evaluaciones: 0,
-      monedas: 0
-    };
-
-    const { data: nuevo, error: errorCrear } = await supabase
-      .from('usuarios')
-      .insert([nuevoUsuario])
-      .select('id, username, cancion_favorita, monedas, total_evaluaciones')
-      .single();
-
-    if (errorCrear) throw errorCrear;
-
-    return handleSupabaseSuccess(nuevo, 'Usuario creado');
+    return handleSupabaseSuccess(data.usuario, data.nuevo ? 'Usuario creado' : 'Login exitoso');
   } catch (error) {
-    return handleSupabaseError(error, 'crearOObtenerUsuario');
+    return handleSupabaseError(error, 'verificarUsuario');
   }
 };
 
 /**
- * Obtener perfil de usuario con sus evaluaciones
+ * Obtener perfil de usuario (solo columnas públicas seguras)
  */
 export const obtenerPerfilUsuario = async (usuarioId) => {
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select(`
-        *,
-        escuela:escuelas(nombre, abreviatura),
-        carrera:carreras(nombre)
-      `)
+      .select('id, username, monedas, total_evaluaciones, created_at')
       .eq('id', usuarioId)
       .single();
 
@@ -547,54 +523,9 @@ export const obtenerEstadisticasGlobales = async () => {
   }
 };
 
-/**
- * Incrementar contador de evaluaciones del usuario (vía RPC segura)
- */
-export const incrementarEvaluacionesUsuario = async (usuarioId) => {
-  try {
-    const { data, error } = await supabase.rpc('incrementar_evaluaciones_seguro', {
-      p_usuario_id: usuarioId
-    });
-
-    if (error) {
-      console.warn('⚠️ No se pudo incrementar evaluaciones:', error);
-      return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
-    }
-
-    if (!data || !data.success) {
-      console.warn('⚠️ RPC incrementar_evaluaciones:', data?.error);
-      return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
-    }
-
-    return handleSupabaseSuccess(data, 'Contador actualizado');
-  } catch (error) {
-    return handleSupabaseSuccess(null, 'Contador no actualizado (no crítico)');
-  }
-};
-
-/**
- * Agregar monedas al usuario (recompensa por evaluar) — vía RPC segura
- * La validación de cantidad ocurre en el servidor (max 50 por operación)
- */
-export const agregarMonedasUsuario = async (usuarioId, cantidad = 5) => {
-  try {
-    const { data, error } = await supabase.rpc('agregar_monedas_seguro', {
-      p_usuario_id: usuarioId,
-      p_cantidad: cantidad
-    });
-
-    if (error) throw error;
-
-    if (!data || !data.success) {
-      console.warn('⚠️ No se pudieron agregar monedas:', data?.error);
-      return { success: false, error: data?.error || 'Error al agregar monedas', data: null };
-    }
-
-    return handleSupabaseSuccess(data, `¡Ganaste ${cantidad} monedas!`);
-  } catch (error) {
-    return handleSupabaseError(error, 'agregarMonedasUsuario');
-  }
-};
+// incrementarEvaluacionesUsuario y agregarMonedasUsuario fueron eliminados.
+// crear_evaluacion_segura ya maneja monedas + evaluaciones internamente
+// y las RPCs standalone fueron revocadas para anon por seguridad.
 
 /**
  * Obtener monedas del usuario

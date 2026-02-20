@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getAnonymousUserInfo, getDeviceId, generateAnonymousUsername } from '../lib/browserFingerprint';
-import { crearOObtenerUsuario } from '../services/supabaseService';
+import { verificarUsuario } from '../services/supabaseService';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
@@ -83,35 +83,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const deviceData = deviceInfo || getAnonymousUserInfo();
       
-      // Intentar crear o obtener usuario desde la base de datos
-      const resultado = await crearOObtenerUsuario(
-        username, 
-        favoriteSong, 
-        {
-          deviceId: deviceData.deviceId,
-          fingerprint: deviceData.fingerprint,
-          sessionId: deviceData.sessionId,
-          browser: deviceData.browser
-        }
-      );
+      // Verificar credenciales server-side via RPC
+      // cancion_favorita NUNCA se expone al cliente
+      const resultado = await verificarUsuario(username, favoriteSong);
 
       if (!resultado.success) {
-        console.error('❌ Error al verificar usuario:', resultado.error);
+        console.error('Error al verificar usuario:', resultado.error);
         return false;
       }
 
       const dbUser = resultado.data;
 
-      // Verificar si el usuario ya existe y la canción coincide
-      // Normalizar ambas canciones para comparación (trim, lowercase)
-      const cancionDB = dbUser.cancion_favorita?.trim().toLowerCase();
-      const cancionIngresada = favoriteSong?.trim().toLowerCase();
-      
-      if (cancionDB && cancionDB !== cancionIngresada) {
-        return false;
-      }
-
-      // Usuario válido o nuevo - crear sesión
+      // Credenciales verificadas por el servidor — crear sesión local
       const userData = {
         id: dbUser.id,
         username: dbUser.username,
@@ -131,7 +114,7 @@ export const AuthProvider = ({ children }) => {
 
       return true;
     } catch (error) {
-      console.error('❌ Error en login:', error);
+      console.error('Error en login:', error);
       return false;
     }
   };

@@ -8,12 +8,7 @@ import {
   obtenerEscuelas, 
   obtenerCarrerasPorEscuela, 
   autocompletarProfesores,
-  crearOObtenerProfesor,
   crearEvaluacionSegura,
-  crearOObtenerUsuario,
-  incrementarEvaluacionesUsuario,
-  agregarMonedasUsuario,
-  obtenerMonedasUsuario,
   obtenerProfesorPorSlug
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
@@ -279,63 +274,8 @@ const EvaluationForm = () => {
     setSubmitting(true);
 
     try {
-      // 1. Crear o obtener el usuario (CON FINGERPRINT)
-      console.log('👤 Buscando/Creando usuario:', user.username);
-      
-      // Preparar datos de fingerprinting
-      const fingerprintData = {
-        deviceId: user.deviceId,
-        fingerprint: user.fingerprint,
-        sessionId: user.sessionId,
-        browser: user.browserInfo
-      };
-      
-      const usuarioResult = await crearOObtenerUsuario(
-        user.username,
-        user.favoriteSong,
-        formData.escuelaId,
-        formData.carreraId,
-        fingerprintData  // Pasar datos de tracking
-      );
-
-      if (!usuarioResult.success) {
-        alert('Error al registrar usuario: ' + usuarioResult.error);
-        setSubmitting(false);
-        return;
-      }
-
-      const usuario = usuarioResult.data;
-      console.log('✅ Usuario obtenido:', usuario);
-
-      // 2. Crear o obtener el profesor
-      console.log('🔍 Buscando/Creando profesor:', formData.nombreProfesor);
-      const profesorResult = await crearOObtenerProfesor(formData.nombreProfesor);
-      
-      if (!profesorResult.success) {
-        alert('Error al crear el profesor: ' + profesorResult.error);
-        setSubmitting(false);
-        return;
-      }
-
-      const profesor = profesorResult.data;
-      console.log('✅ Profesor obtenido:', profesor);
-
-      // 3. Crear la evaluación con usuario_id
-      const evaluacionData = {
-        profesor_id: profesor.id,
-        escuela_id: formData.escuelaId,
-        carrera_id: formData.carreraId,
-        usuario_id: usuario.id,
-        usuario_nombre: user.username,
-        materia: formData.materia,
-        calificacion: parseInt(formData.calificacion),
-        recomendado: formData.recomendado,
-        asistencia_obligatoria: formData.asistenciaObligatoria,
-        calificacion_obtenida: formData.calificacionObtenida,
-        opinion: formData.opinion
-      };
-
-      console.log('💾 Guardando evaluación (RPC seguro)...');
+      // Crear evaluación via RPC seguro (maneja usuario, profesor, monedas y eval count atómicamente)
+      console.log('Guardando evaluación (RPC seguro)...');
       const evaluacionResult = await crearEvaluacionSegura(user.username, user.favoriteSong, formData);
 
       if (!evaluacionResult.success) {
@@ -344,19 +284,12 @@ const EvaluationForm = () => {
         return;
       }
 
-      // Obtener balance actualizado del usuario (si existe usuario.id)
-      if (usuario && usuario.id) {
-        try {
-          const monedasResp = await obtenerMonedasUsuario(usuario.id);
-          if (monedasResp && monedasResp.success) {
-            updateMonedas(monedasResp.data);
-          }
-        } catch (e) {
-          // No crítico
-        }
+      // Actualizar monedas desde la respuesta del RPC (ya incluye el nuevo balance)
+      if (evaluacionResult.data?.monedas != null) {
+        updateMonedas(evaluacionResult.data.monedas);
       }
 
-      console.log('✅ Evaluación guardada exitosamente (RPC)');
+      console.log('Evaluación guardada exitosamente');
 
       // Mostrar animación de monedas
       setShowCoinAnimation(true);
