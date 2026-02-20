@@ -25,8 +25,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Obtener información del dispositivo (sin permisos)
-    const deviceData = getAnonymousUserInfo();
-    setDeviceInfo(deviceData);
+    try {
+      const deviceData = getAnonymousUserInfo();
+      setDeviceInfo(deviceData);
+    } catch (e) {
+      console.warn('Error al obtener info de dispositivo:', e);
+    }
 
     // Verificar si hay una sesión guardada en localStorage (persiste entre sesiones)
     const savedUser = localStorage.getItem('ipn_user');
@@ -103,7 +107,6 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         id: dbUser.id,
         username: dbUser.username,
-        favoriteSong,
         monedas: dbUser.monedas || 0,
         totalEvaluaciones: dbUser.total_evaluaciones || 0,
         deviceId: deviceData.deviceId,

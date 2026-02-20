@@ -7,6 +7,9 @@
 const CACHE_VERSION = 2;
 const CACHE_PREFIX = `ipn_v${CACHE_VERSION}_`;
 
+// Regex que detecta claves de caché versionadas: ipn_v1_, ipn_v2_, etc.
+const VERSIONED_CACHE_REGEX = /^ipn_v\d+_/;
+
 // Keys que NO son caché y nunca deben limpiarse automáticamente
 const PROTECTED_KEYS = ['ipn_user', 'ipn_device_id'];
 
@@ -114,9 +117,9 @@ class CacheManager {
           }
         });
       });
-      // También limpiar claves de versiones anteriores (ipn_ sin versión)
+      // También limpiar claves de versiones anteriores de caché (ipn_v1_, ipn_v3_, etc.)
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX) && !PROTECTED_KEYS.includes(key)) {
+        if (VERSIONED_CACHE_REGEX.test(key) && !key.startsWith(CACHE_PREFIX)) {
           localStorage.removeItem(key);
         }
       });
@@ -135,7 +138,7 @@ class CacheManager {
     try {
       let cleared = 0;
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('ipn_') && !PROTECTED_KEYS.includes(key)) {
+        if (VERSIONED_CACHE_REGEX.test(key)) {
           const cached = localStorage.getItem(key);
           if (cached) {
             try {
@@ -232,9 +235,9 @@ class CacheManager {
 // Al cargar: limpiar caché expirado + purgar claves de versiones anteriores
 if (typeof window !== 'undefined') {
   CacheManager.clearExpired();
-  // Eliminar claves de versiones anteriores para liberar espacio
+  // Eliminar claves de caché de versiones anteriores (ipn_v1_, etc.) para liberar espacio
   Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX) && !PROTECTED_KEYS.includes(key)) {
+    if (VERSIONED_CACHE_REGEX.test(key) && !key.startsWith(CACHE_PREFIX)) {
       localStorage.removeItem(key);
     }
   });
