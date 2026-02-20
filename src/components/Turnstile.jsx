@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
@@ -34,15 +34,11 @@ function loadTurnstileScript() {
 export default function Turnstile({ onVerify, onExpire, theme = 'auto' }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
-
-  const handleVerify = useCallback((token) => {
-    onVerify?.(token);
-  }, [onVerify]);
-
-  const handleExpire = useCallback(() => {
-    onExpire?.();
-    onVerify?.(''); // Limpiar token expirado
-  }, [onExpire, onVerify]);
+  // Usar refs para los callbacks para evitar re-renders del widget
+  const onVerifyRef = useRef(onVerify);
+  const onExpireRef = useRef(onExpire);
+  onVerifyRef.current = onVerify;
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
     if (!SITE_KEY) return;
@@ -53,24 +49,26 @@ export default function Turnstile({ onVerify, onExpire, theme = 'auto' }) {
       .then(() => {
         if (!mounted || !containerRef.current || !window.turnstile) return;
 
-        // Limpiar widget anterior si existe
-        if (widgetIdRef.current != null) {
-          try { window.turnstile.remove(widgetIdRef.current); } catch {}
-        }
+        // Si ya hay un widget renderizado, no hacer nada
+        if (widgetIdRef.current != null) return;
 
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
           theme,
-          callback: handleVerify,
-          'expired-callback': handleExpire,
+          callback: (token) => {
+            onVerifyRef.current?.(token);
+          },
+          'expired-callback': () => {
+            onExpireRef.current?.();
+            onVerifyRef.current?.('');
+          },
           'error-callback': () => {
             // En caso de error, permitir continuar (no bloquear)
-            handleVerify('');
+            onVerifyRef.current?.('');
           },
         });
       })
       .catch(() => {
-        // Si falla cargar el script, no bloquear la UI
         console.warn('No se pudo cargar Turnstile');
       });
 
@@ -81,7 +79,7 @@ export default function Turnstile({ onVerify, onExpire, theme = 'auto' }) {
         widgetIdRef.current = null;
       }
     };
-  }, [theme, handleVerify, handleExpire]);
+  }, [theme]); // Solo depende de theme, NO de los callbacks
 
   // Si no hay site key, no renderizar nada
   if (!SITE_KEY) return null;
