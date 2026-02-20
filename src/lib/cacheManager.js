@@ -2,13 +2,18 @@
 // SISTEMA DE CACHÉ CON LOCALSTORAGE
 // ============================================
 
+// Incrementar esta versión cada vez que cambien datos de escuelas/carreras
+// para invalidar automáticamente el caché de todos los usuarios
+const CACHE_VERSION = 2;
+const CACHE_PREFIX = `ipn_v${CACHE_VERSION}_`;
+
 const CACHE_KEYS = {
-  ESCUELAS: 'ipn_escuelas',
-  CARRERAS: 'ipn_carreras',
-  PROFESORES_POPULARES: 'ipn_profesores_populares',
-  SEARCH_RESULTS: 'ipn_search_',
-  PROFESOR_PROFILE: 'ipn_profesor_',
-  SEARCH_QUERY: 'ipn_search_query_', // Nuevo: cachear por query específica
+  ESCUELAS: `${CACHE_PREFIX}escuelas`,
+  CARRERAS: `${CACHE_PREFIX}carreras`,
+  PROFESORES_POPULARES: `${CACHE_PREFIX}profesores_populares`,
+  SEARCH_RESULTS: `${CACHE_PREFIX}search_`,
+  PROFESOR_PROFILE: `${CACHE_PREFIX}profesor_`,
+  SEARCH_QUERY: `${CACHE_PREFIX}search_query_`,
 };
 
 const CACHE_EXPIRATION = {
@@ -90,6 +95,7 @@ class CacheManager {
    */
   static clearAll() {
     try {
+      // Limpiar claves de la versión actual
       Object.values(CACHE_KEYS).forEach(keyPrefix => {
         Object.keys(localStorage).forEach(key => {
           if (key.startsWith(keyPrefix)) {
@@ -97,7 +103,13 @@ class CacheManager {
           }
         });
       });
-      console.log('✅ Caché limpiado completamente');
+      // También limpiar claves de versiones anteriores (ipn_ sin versión)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX)) {
+          localStorage.removeItem(key);
+        }
+      });
+      console.log('Caché limpiado completamente');
       return true;
     } catch (error) {
       console.warn('⚠️ Error al limpiar caché:', error);
@@ -206,9 +218,15 @@ class CacheManager {
   }
 }
 
-// Limpiar caché expirado al cargar
+// Al cargar: limpiar caché expirado + purgar claves de versiones anteriores
 if (typeof window !== 'undefined') {
   CacheManager.clearExpired();
+  // Eliminar claves de versiones anteriores para liberar espacio
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('ipn_') && !key.startsWith(CACHE_PREFIX)) {
+      localStorage.removeItem(key);
+    }
+  });
 }
 
 export { CacheManager, CACHE_KEYS, CACHE_EXPIRATION };

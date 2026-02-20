@@ -233,9 +233,11 @@ export const obtenerEscuelas = async () => {
 
     if (error) throw error;
 
-    // Guardar en caché por 7 días
-    CacheManager.set(CACHE_KEYS.ESCUELAS, data, CACHE_EXPIRATION.ESCUELAS);
-    console.log('✅ Escuelas cargadas:', data.length);
+    // No cachear resultados vacíos
+    if (data && data.length > 0) {
+      CacheManager.set(CACHE_KEYS.ESCUELAS, data, CACHE_EXPIRATION.ESCUELAS);
+    }
+    console.log('Escuelas cargadas:', data.length);
 
     return handleSupabaseSuccess(data, 'Escuelas cargadas');
   } catch (error) {
@@ -264,9 +266,11 @@ export const obtenerCarrerasPorEscuela = async (escuelaId) => {
 
     if (error) throw error;
 
-    // Guardar en caché por 7 días
-    CacheManager.set(cacheKey, data, CACHE_EXPIRATION.CARRERAS);
-    console.log('✅ Carreras cargadas:', data.length);
+    // No cachear resultados vacíos (evita que se queden 7 días sin carreras)
+    if (data && data.length > 0) {
+      CacheManager.set(cacheKey, data, CACHE_EXPIRATION.CARRERAS);
+    }
+    console.log('Carreras cargadas:', data.length);
 
     return handleSupabaseSuccess(data, 'Carreras cargadas');
   } catch (error) {
