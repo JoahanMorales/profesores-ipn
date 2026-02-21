@@ -17,39 +17,26 @@ AS $$
 DECLARE
   v_texto TEXT;
   v_palabras TEXT[] := ARRAY[
-    'pendejo','pendeja','pendejos','pendejas',
-    'estupido','estupida','estupidos','estupidas',
-    'imbecil','imbeciles',
-    'tarado','tarada','tarados','taradas',
-    'retrasado','retrasada','retrasados','retrasadas',
+    -- Insultos directos fuertes
+    'pendejo','pendeja','pendejos','pendejas','pendejada','pendejadas',
     'puto','puta','putos','putas','putisima','putisimo',
-    'chingar','chingada','chingado','chingados','chingadazo',
-    'chingadera','chingaderas','chingue','chingas','chingo',
-    'verga','vergas',
-    'pinche','pinches',
-    'cabron','cabrona','cabrones','cabronas',
     'culero','culera','culeros','culeras',
-    'mamada','mamadas','mamon','mamona','mamones',
-    'mierda','mierdas',
-    'jodido','jodida','jodidos','jodidas',
-    'carajo','carajos',
     'ojete','ojetes',
-    'bastardo','bastarda',
     'zorra','zorras',
-    'perra','perras',
-    'pendejada','pendejadas',
+    -- Amenazas y violencia
     'madrazo','madrazos',
     'putazo','putazos',
     'chingazo','chingazos',
-    'huevon','huevona','huevones',
+    -- Discriminación
     'naco','naca','nacos','nacas',
+    -- Acoso
     'violador','violadora',
     'degenerado','degenerada',
+    -- Expresiones compuestas graves
     'hijo de puta','hija de puta',
     'hijo de perra','hija de perra',
-    'a la verga','vete a la verga',
-    'que se muera','ojala se muera',
-    'me vale verga','me vale madres'
+    'vete a la verga',
+    'que se muera','ojala se muera'
   ];
   v_palabra TEXT;
 BEGIN
@@ -84,7 +71,8 @@ CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
   p_recomendado BOOLEAN DEFAULT true,
   p_asistencia_obligatoria BOOLEAN DEFAULT false,
   p_calificacion_obtenida TEXT DEFAULT NULL,
-  p_opinion TEXT DEFAULT ''
+  p_opinion TEXT DEFAULT '',
+  p_captcha_token TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -204,4 +192,4 @@ $$;
 
 -- 3. Permisos
 GRANT EXECUTE ON FUNCTION public.contiene_contenido_ofensivo(TEXT) TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;

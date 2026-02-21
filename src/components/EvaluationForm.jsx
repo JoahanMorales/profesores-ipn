@@ -44,6 +44,7 @@ const EvaluationForm = () => {
   const [nombreBloqueado, setNombreBloqueado] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
   const [showContentModal, setShowContentModal] = useState(false);
+  const [flaggedWords, setFlaggedWords] = useState([]);
 
   // Estados para datos de Supabase
   const [escuelas, setEscuelas] = useState([]);
@@ -284,6 +285,7 @@ const EvaluationForm = () => {
     // 🛡️ FILTRO DE CONTENIDO: Verificar que la opinión no tenga lenguaje ofensivo
     const filtro = verificarContenido(formData.opinion);
     if (filtro.flagged) {
+      setFlaggedWords(filtro.palabras);
       setShowContentModal(true);
       return;
     }
@@ -737,8 +739,8 @@ const EvaluationForm = () => {
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-8 shadow-2xl">
             <div className="text-center">
               {/* Icono de corazón */}
-              <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
-                <svg className="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto w-16 h-16 rounded-full bg-ipn-guinda-900/10 dark:bg-ipn-guinda-400/20 flex items-center justify-center mb-5">
+                <svg className="w-8 h-8 text-ipn-guinda-900 dark:text-ipn-guinda-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
@@ -751,8 +753,19 @@ const EvaluationForm = () => {
                 Tu evaluación contiene lenguaje que podría ser ofensivo.
               </p>
 
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
-                <p className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
+              {/* Palabras detectadas */}
+              {flaggedWords.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mb-4">
+                  {flaggedWords.map((word, i) => (
+                    <span key={i} className="inline-block bg-ipn-guinda-900/10 dark:bg-ipn-guinda-400/20 text-ipn-guinda-900 dark:text-ipn-guinda-400 text-sm font-medium px-3 py-1 rounded-full border border-ipn-guinda-900/20 dark:border-ipn-guinda-400/30">
+                      {word}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="bg-ipn-guinda-900/5 dark:bg-ipn-guinda-400/10 border border-ipn-guinda-900/15 dark:border-ipn-guinda-400/20 rounded-xl p-4 mb-6">
+                <p className="text-ipn-guinda-900 dark:text-ipn-guinda-400 text-sm leading-relaxed">
                   Recuerda que los profesores también son personas que se esfuerzan día a día. 
                   Tu opinión es valiosa y puede ayudar a mejorar la educación, pero el respeto 
                   siempre debe ser la base.

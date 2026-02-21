@@ -1,78 +1,36 @@
 /**
  * Filtro de contenido ofensivo para evaluaciones.
- * Detecta groserías, insultos y lenguaje de odio en español.
- * Se usa client-side para UX inmediata + server-side en PostgreSQL como respaldo.
+ * Solo detecta insultos fuertes y lenguaje de odio real.
+ * Palabras como "cabrón", "chingón", "verga", "mierda" son
+ * de uso coloquial en México y NO se filtran.
  */
 
+// Solo palabras/frases realmente ofensivas dirigidas a una persona
 const PALABRAS_PROHIBIDAS = [
-  // Insultos directos
-  'pendejo', 'pendeja', 'pendejos', 'pendejas',
-  'estupido', 'estupida', 'estupidos', 'estupidas',
-  'idiota', 'idiotas',
-  'imbecil', 'imbeciles',
-  'tarado', 'tarada', 'tarados', 'taradas',
-  'retrasado', 'retrasada', 'retrasados', 'retrasadas',
-  'baboso', 'babosa', 'babosos', 'babosas',
-  'menso', 'mensa', 'mensos', 'mensas',
-  'tonto', 'tonta', 'tontos', 'tontas',
-  'bruto', 'bruta', 'brutos', 'brutas',
-  'inutil', 'inutiles',
-  'mediocre', 'mediocres',
-  'incompetente', 'incompetentes',
-  'ignorante', 'ignorantes',
-
-  // Groserías fuertes
+  // Insultos directos fuertes
+  'pendejo', 'pendeja', 'pendejos', 'pendejas', 'pendejada', 'pendejadas',
   'puto', 'puta', 'putos', 'putas', 'putisima', 'putisimo',
-  'chingar', 'chingada', 'chingado', 'chingados', 'chingadazo',
-  'chingadera', 'chingaderas', 'chingue', 'chingas', 'chingo',
-  'verga', 'vergas', 'vergudo',
-  'pinche', 'pinches',
-  'cabron', 'cabrona', 'cabrones', 'cabronas',
   'culero', 'culera', 'culeros', 'culeras',
-  'mamada', 'mamadas', 'mamon', 'mamona', 'mamones',
-  'mierda', 'mierdas', 'mierdero',
-  'joder', 'jodido', 'jodida', 'jodidos', 'jodidas',
-  'carajo', 'carajos',
-  'culo', 'culos',
-  'coger', 'cogida', 'cogido',
-  'nalgas', 'nalgon', 'nalgona',
-  'huevon', 'huevona', 'huevones',
   'ojete', 'ojetes',
-  'bastardo', 'bastarda', 'bastardos',
   'zorra', 'zorras',
-  'perra', 'perras', 'perro', 'perros',
-  'pendejada', 'pendejadas',
 
   // Amenazas y violencia
-  'matar', 'matarte', 'matarlo', 'matarla',
-  'golpear', 'golpearte', 'golpearlo',
-  'madrazo', 'madrazos', 'madrear',
+  'madrazo', 'madrazos',
   'putazo', 'putazos',
   'chingazo', 'chingazos',
 
   // Discriminación
   'naco', 'naca', 'nacos', 'nacas',
-  'indio', 'india', 'indios',
-  'prieto', 'prieta', 'prietos', 'prietas',
-  'gato', 'gata', 'gatos', 'gatas',
-  'muerto de hambre', 'muertos de hambre',
 
   // Acoso sexual
-  'violar', 'violador', 'violadora',
-  'acosador', 'acosadora',
-  'pervertido', 'pervertida',
+  'violador', 'violadora',
   'degenerado', 'degenerada',
 
-  // Expresiones compuestas ofensivas
+  // Expresiones compuestas graves
   'hijo de puta', 'hija de puta',
   'hijo de perra', 'hija de perra',
-  'a la verga', 'vete a la verga',
+  'vete a la verga',
   'que se muera', 'ojala se muera',
-  'hijo de su', 'hijos de su',
-  'vete al diablo', 'vete al carajo',
-  'me vale verga', 'me vale madres',
-  'no vale verga', 'no vale madre',
-  'da asco', 'das asco', 'dan asco',
 ];
 
 /**
