@@ -255,6 +255,8 @@ const EvaluationForm = () => {
 
     if (!formData.materia.trim()) {
       newErrors.materia = 'La materia es obligatoria';
+    } else if (formData.materia.trim().length < 3) {
+      newErrors.materia = 'La materia debe tener al menos 3 caracteres';
     }
 
     if (!formData.calificacionObtenida || formData.calificacionObtenida === '') {
