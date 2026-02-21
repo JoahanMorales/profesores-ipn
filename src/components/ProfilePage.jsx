@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { obtenerEvaluacionesUsuario } from '../services/supabaseService';
+import { obtenerEvaluacionesUsuario, ocultarEvaluacion } from '../services/supabaseService';
 import { useSEO } from '../hooks/useSEO';
 import Navbar from './Navbar';
 
@@ -75,6 +75,9 @@ const ProfilePage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('evaluaciones');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [notificacion, setNotificacion] = useState(null);
 
   useSEO(
     'Mi Perfil | IPNProfes',
@@ -141,6 +144,49 @@ const ProfilePage = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const handleOcultarEvaluacion = async (evalId) => {
+    if (!user?.id || deleting) return;
+    setDeleting(true);
+    try {
+      const result = await ocultarEvaluacion(evalId, user.id);
+      if (result.success) {
+        setEvaluaciones(prev => prev.filter(e => e.id !== evalId));
+        setNotificacion({ tipo: 'exito', mensaje: 'Evaluación eliminada correctamente.' });
+        setTimeout(() => setNotificacion(null), 4000);
+        // Recalcular stats
+        const remaining = evaluaciones.filter(e => e.id !== evalId);
+        if (remaining.length > 0) {
+          const totalEvals = remaining.length;
+          const promedioCalif = remaining.reduce((a, b) => a + b.calificacion, 0) / totalEvals;
+          const recomendados = remaining.filter(e => e.recomendado).length;
+          const escuelasUnicas = [...new Set(remaining.map(e => e.escuela?.abreviatura).filter(Boolean))];
+          const profesoresUnicos = [...new Set(remaining.map(e => e.profesor?.id).filter(Boolean))];
+          const materias = [...new Set(remaining.map(e => e.materia).filter(Boolean))];
+          setStats({
+            totalEvals,
+            promedioCalif: promedioCalif.toFixed(1),
+            recomendados,
+            porcentajeRecomendado: ((recomendados / totalEvals) * 100).toFixed(0),
+            escuelasUnicas,
+            profesoresUnicos: profesoresUnicos.length,
+            materias: materias.length
+          });
+        } else {
+          setStats(null);
+        }
+      } else {
+        setNotificacion({ tipo: 'error', mensaje: result.error || 'Error al eliminar la evaluación.' });
+        setTimeout(() => setNotificacion(null), 3000);
+      }
+    } catch (err) {
+      setNotificacion({ tipo: 'error', mensaje: 'Error al eliminar la evaluación.' });
+      setTimeout(() => setNotificacion(null), 3000);
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   if (!user) return null;
@@ -320,10 +366,61 @@ const ProfilePage = () => {
                         )}
                       </div>
                     </div>
-                    <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl border flex items-center justify-center text-base sm:text-lg font-bold ${getCalifBg(ev.calificacion)} ${getCalifColor(ev.calificacion)}`}>
-                      {ev.calificacion}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl border flex items-center justify-center text-base sm:text-lg font-bold ${getCalifBg(ev.calificacion)} ${getCalifColor(ev.calificacion)}`}>
+                        {ev.calificacion}
+                      </div>
+                      <button
+                        onClick={() => setConfirmDeleteId(ev.id)}
+                        className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1"
+                        title="Eliminar evaluación"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
+
+                  {/* Modal de Confirmación para Eliminar */}
+                  {confirmDeleteId === ev.id && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6">
+                        <div className="text-center">
+                          <div className="mx-auto w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            ¿Eliminar evaluación?
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span className="font-medium">{ev.profesor?.nombre_completo}</span>
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                            Tu evaluación dejará de ser visible y ya no contará en el promedio del profesor. Esta acción no se puede deshacer.
+                          </p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              disabled={deleting}
+                              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleOcultarEvaluacion(ev.id)}
+                              disabled={deleting}
+                              className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium text-sm disabled:opacity-50"
+                            >
+                              {deleting ? 'Eliminando...' : 'Eliminar'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -352,6 +449,30 @@ const ProfilePage = () => {
           </div>
         )}
       </main>
+
+      {/* Notificación Toast */}
+      {notificacion && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in-down">
+          <div className={`max-w-md rounded-lg shadow-lg p-4 ${
+            notificacion.tipo === 'exito' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center gap-3">
+              {notificacion.tipo === 'exito' ? (
+                <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+              <p className="text-sm font-medium">{notificacion.mensaje}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

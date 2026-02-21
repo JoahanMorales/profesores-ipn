@@ -380,7 +380,8 @@ export const obtenerEstadisticasProfesor = async (profesorId) => {
     const { data, error } = await supabase
       .from('evaluaciones')
       .select('calificacion, recomendado, asistencia_obligatoria')
-      .eq('profesor_id', profesorId);
+      .eq('profesor_id', profesorId)
+      .eq('oculto', false);
 
     if (error) throw error;
 
@@ -802,5 +803,37 @@ export const toggleLikeEvaluacion = async (evaluacionId, visitorId, tipo, profes
     if (profesorSlug) {
       CacheManager.invalidateLikes(profesorSlug);
     }
+  }
+};
+
+/**
+ * Ocultar (soft delete) una evaluación propia
+ * Solo funciona si la evaluación pertenece al usuario
+ */
+export const ocultarEvaluacion = async (evaluacionId, usuarioId) => {
+  try {
+    const { data, error } = await supabase.rpc('ocultar_evaluacion_propia', {
+      p_evaluacion_id: evaluacionId,
+      p_usuario_id: usuarioId
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Error desconocido');
+
+    // Invalidar cachés relacionados
+    CacheManager.remove(CACHE_KEYS.TODOS_PROFESORES);
+    CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
+    CacheManager.remove(CACHE_KEYS.STATS_GLOBALES);
+    CacheManager.invalidateUserEvaluaciones();
+    // Invalidar perfiles de profesor y búsquedas
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS) || key.startsWith(CACHE_KEYS.PROFESOR_PROFILE)) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    return handleSupabaseSuccess(data, 'Evaluación ocultada');
+  } catch (error) {
+    return handleSupabaseError(error, 'ocultarEvaluacion');
   }
 };

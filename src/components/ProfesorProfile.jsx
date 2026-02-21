@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug, obtenerLikesBatch, obtenerMisLikesBatch, toggleLikeEvaluacion } from '../services/supabaseService';
+import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug, obtenerLikesBatch, obtenerMisLikesBatch, toggleLikeEvaluacion, ocultarEvaluacion } from '../services/supabaseService';
 import { crearReporte } from '../services/adminService';
 import { getBrowserFingerprint } from '../lib/browserFingerprint';
 import { useSEO } from '../hooks/useSEO';
@@ -23,6 +23,8 @@ const ProfesorProfile = () => {
   const [misLikes, setMisLikes] = useState({});
   const [likingId, setLikingId] = useState(null);
   const [loginPromptEvalId, setLoginPromptEvalId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // SEO dinámico basado en el profesor
   useSEO(
@@ -161,6 +163,32 @@ const ProfesorProfile = () => {
       });
     } finally {
       setLikingId(null);
+    }
+  };
+
+  const handleOcultarEvaluacion = async (evalId) => {
+    if (!user?.id || deleting) return;
+    setDeleting(true);
+    try {
+      const result = await ocultarEvaluacion(evalId, user.id);
+      if (result.success) {
+        // Quitar la evaluación de la lista local
+        setEvaluaciones(prev => prev.filter(e => e.id !== evalId));
+        setNotificacion({ tipo: 'exito', mensaje: 'Evaluación eliminada correctamente.' });
+        setTimeout(() => setNotificacion(null), 4000);
+        // Recargar datos del profesor (promedio actualizado)
+        const profesorResult = await obtenerProfesorPorSlug(slug);
+        if (profesorResult.success) setProfesor(profesorResult.data);
+      } else {
+        setNotificacion({ tipo: 'error', mensaje: result.error || 'Error al eliminar la evaluación.' });
+        setTimeout(() => setNotificacion(null), 3000);
+      }
+    } catch (err) {
+      setNotificacion({ tipo: 'error', mensaje: 'Error al eliminar la evaluación.' });
+      setTimeout(() => setNotificacion(null), 3000);
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -457,6 +485,18 @@ const ProfesorProfile = () => {
                       <div className="text-xs text-gray-400 dark:text-gray-500">
                         {formatearFecha(evaluacion.created_at)}
                       </div>
+                      {/* Botón eliminar (solo para evaluaciones propias) */}
+                      {user?.id && evaluacion.usuario_id === user.id && (
+                        <button
+                          onClick={() => setConfirmDeleteId(evaluacion.id)}
+                          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                          title="Eliminar mi evaluación"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleReportar(evaluacion.id)}
                         className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
@@ -504,6 +544,43 @@ const ProfesorProfile = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Modal de Confirmación para Eliminar */}
+                  {confirmDeleteId === evaluacion.id && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6">
+                        <div className="text-center">
+                          <div className="mx-auto w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            ¿Eliminar evaluación?
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            Tu evaluación dejará de ser visible y ya no contará en el promedio del profesor. Esta acción no se puede deshacer.
+                          </p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              disabled={deleting}
+                              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleOcultarEvaluacion(evaluacion.id)}
+                              disabled={deleting}
+                              className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-medium text-sm disabled:opacity-50"
+                            >
+                              {deleting ? 'Eliminando...' : 'Eliminar'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Modal de Reporte */}
                   {reportando === evaluacion.id && (
