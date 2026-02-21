@@ -42,7 +42,6 @@ const EvaluationForm = () => {
   const [coinsEarned, setCoinsEarned] = useState(5);
   const [nombreBloqueado, setNombreBloqueado] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
-  const [moderando, setModerando] = useState(false);
 
   // Estados para datos de Supabase
   const [escuelas, setEscuelas] = useState([]);
@@ -278,41 +277,6 @@ const EvaluationForm = () => {
     if (isTurnstileEnabled() && !captchaToken) {
       alert('Completa la verificación de seguridad antes de enviar.');
       return;
-    }
-
-    // 🛡️ MODERACIÓN DE CONTENIDO: Verificar opinión con OpenAI Moderation API (OBLIGATORIO)
-    if (formData.opinion.trim().length >= 10) {
-      setModerando(true);
-      try {
-        const modRes = await fetch('/api/moderation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: formData.opinion.trim() })
-        });
-        const modData = await modRes.json();
-
-        if (!modData.ok) {
-          console.warn('Moderación API error:', modData.error);
-          setModerando(false);
-          alert('⚠️ No se pudo verificar el contenido de tu opinión.\n\nPor favor intenta de nuevo en unos segundos.');
-          return;
-        }
-
-        if (modData.flagged || modData.max_score > 0.6) {
-          setModerando(false);
-          alert('⚠️ Tu opinión contiene contenido que viola nuestras políticas de uso.\n\nPor favor, reescribe tu evaluación de forma respetuosa y constructiva.\n\nRecuerda que puedes expresar críticas sin usar lenguaje ofensivo.');
-          return;
-        }
-
-        formData.moderacionScore = modData.max_score;
-      } catch (modError) {
-        console.warn('Error al moderar contenido:', modError);
-        setModerando(false);
-        alert('⚠️ No se pudo verificar el contenido de tu opinión.\n\nRevisa tu conexión a internet e intenta de nuevo.');
-        return;
-      } finally {
-        setModerando(false);
-      }
     }
 
     setSubmitting(true);
@@ -741,15 +705,10 @@ const EvaluationForm = () => {
             {/* Submit Button */}
             <div className="pt-4">
               <button
-                disabled={submitting || moderando || (isTurnstileEnabled() && !captchaToken)}
+                disabled={submitting || (isTurnstileEnabled() && !captchaToken)}
                 className="w-full py-3 px-4 bg-ipn-guinda-900 text-white text-base font-medium rounded-md hover:bg-ipn-guinda-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ipn-guinda-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {moderando ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Verificando contenido...</span>
-                  </>
-                ) : submitting ? (
+                {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     <span>Enviando...</span>

@@ -325,11 +325,6 @@ export const crearEvaluacionSegura = async (username, cancionFavorita, formData,
       params.p_captcha_token = captchaToken;
     }
 
-    // Enviar score de moderación si existe
-    if (formData.moderacionScore != null) {
-      params.p_moderacion_score = formData.moderacionScore;
-    }
-
     const { data, error } = await supabase.rpc('crear_evaluacion_segura', params);
 
     if (error) throw error;

@@ -1,33 +1,14 @@
 -- ============================================
--- MIGRACIÓN: Moderación de contenido con OpenAI
+-- ROLLBACK: Revertir moderación de contenido
 -- ============================================
--- Fecha: 2026-02-20
--- Descripción:
---   1. Agregar columna `moderacion_score` a `evaluaciones`
---      para guardar el score máximo de moderación (0 a 1).
---   2. Actualizar RPC `crear_evaluacion_segura` para aceptar
---      el score de moderación y guardarlo.
+-- Ejecutar en Supabase SQL Editor para volver
+-- a dejar todo como estaba antes.
 -- ============================================
 
--- ─────────────────────────────────────────────
--- 1. Agregar columna moderacion_score
--- ─────────────────────────────────────────────
-ALTER TABLE public.evaluaciones
-ADD COLUMN IF NOT EXISTS moderacion_score REAL DEFAULT NULL;
+-- 1. Eliminar la versión nueva del RPC (13 params con moderacion_score)
+DROP FUNCTION IF EXISTS public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, REAL);
 
-COMMENT ON COLUMN public.evaluaciones.moderacion_score IS
-  'Score de moderación OpenAI (0-1). NULL = no evaluado. >0.5 = flagged.';
-
--- ─────────────────────────────────────────────
--- 2. Eliminar versión anterior del RPC (12 params, sin moderacion_score)
---    para evitar ambigüedad de overload en PostgreSQL
--- ─────────────────────────────────────────────
-DROP FUNCTION IF EXISTS public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT);
-
--- ─────────────────────────────────────────────
--- 3. Crear RPC con el nuevo parámetro p_moderacion_score
--- ─────────────────────────────────────────────
-
+-- 2. Recrear la versión original del RPC (11 params, sin moderacion_score)
 CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
   p_username TEXT,
   p_cancion_favorita TEXT,
@@ -39,9 +20,7 @@ CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
   p_recomendado BOOLEAN DEFAULT true,
   p_asistencia_obligatoria BOOLEAN DEFAULT false,
   p_calificacion_obtenida TEXT DEFAULT NULL,
-  p_opinion TEXT DEFAULT '',
-  p_captcha_token TEXT DEFAULT NULL,
-  p_moderacion_score REAL DEFAULT NULL
+  p_opinion TEXT DEFAULT ''
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -56,7 +35,6 @@ DECLARE
   v_total_evals INT;
   v_last_eval TIMESTAMPTZ;
 BEGIN
-  -- ── 1. Validar credenciales ──
   SELECT id, username, cancion_favorita, monedas, total_evaluaciones
   INTO v_user
   FROM usuarios
@@ -71,7 +49,6 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Credenciales inválidas');
   END IF;
 
-  -- ── 1b. Rate limiting server-side: 1 evaluación por 30 segundos ──
   SELECT MAX(created_at) INTO v_last_eval
   FROM evaluaciones
   WHERE usuario_id = v_user.id;
@@ -80,7 +57,6 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Espera al menos 30 segundos entre evaluaciones');
   END IF;
 
-  -- ── 2. Validar datos de la evaluación ──
   IF p_calificacion < 1 OR p_calificacion > 10 THEN
     RETURN json_build_object('success', false, 'error', 'Calificación debe ser entre 1 y 10');
   END IF;
@@ -97,7 +73,6 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Nombre de profesor inválido');
   END IF;
 
-  -- ── 3. Crear o obtener profesor ──
   SELECT id, nombre_completo, slug
   INTO v_profesor
   FROM profesores
@@ -119,19 +94,17 @@ BEGIN
     RETURNING id, nombre_completo, slug INTO v_profesor;
   END IF;
 
-  -- ── 4. Crear evaluación (con score de moderación) ──
   INSERT INTO evaluaciones (
     profesor_id, escuela_id, carrera_id, usuario_id, usuario_nombre,
     materia, calificacion, recomendado, asistencia_obligatoria,
-    calificacion_obtenida, opinion, moderacion_score
+    calificacion_obtenida, opinion
   ) VALUES (
     v_profesor.id, p_escuela_id, p_carrera_id, v_user.id, v_user.username,
     p_materia, p_calificacion, p_recomendado, p_asistencia_obligatoria,
-    p_calificacion_obtenida, p_opinion, p_moderacion_score
+    p_calificacion_obtenida, p_opinion
   )
   RETURNING * INTO v_evaluacion;
 
-  -- ── 5. Incrementar evaluaciones + sumar 5 monedas ──
   v_total_evals := COALESCE(v_user.total_evaluaciones, 0) + 1;
   v_monedas_nuevas := COALESCE(v_user.monedas, 0) + 5;
 
@@ -154,5 +127,8 @@ BEGIN
 END;
 $$;
 
--- Reasignar permisos (re-grant porque cambiamos la firma con el nuevo parámetro)
-GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT, REAL) TO anon, authenticated, service_role;
+-- 3. Reasignar permisos con la firma original
+GRANT EXECUTE ON FUNCTION public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT) TO anon, authenticated, service_role;
+
+-- 4. Eliminar columna moderacion_score
+ALTER TABLE public.evaluaciones DROP COLUMN IF EXISTS moderacion_score;
