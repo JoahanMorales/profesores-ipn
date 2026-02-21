@@ -19,10 +19,14 @@ COMMENT ON COLUMN public.evaluaciones.moderacion_score IS
   'Score de moderación OpenAI (0-1). NULL = no evaluado. >0.5 = flagged.';
 
 -- ─────────────────────────────────────────────
--- 2. Actualizar RPC crear_evaluacion_segura
+-- 2. Eliminar versión anterior del RPC (12 params, sin moderacion_score)
+--    para evitar ambigüedad de overload en PostgreSQL
 -- ─────────────────────────────────────────────
--- Se agrega parámetro p_moderacion_score (REAL, DEFAULT NULL).
--- Si viene, se guarda en la evaluación.
+DROP FUNCTION IF EXISTS public.crear_evaluacion_segura(TEXT, TEXT, TEXT, UUID, UUID, TEXT, INT, BOOLEAN, BOOLEAN, TEXT, TEXT, TEXT);
+
+-- ─────────────────────────────────────────────
+-- 3. Crear RPC con el nuevo parámetro p_moderacion_score
+-- ─────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION public.crear_evaluacion_segura(
   p_username TEXT,

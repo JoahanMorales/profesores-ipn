@@ -1,6 +1,10 @@
 export default async function handler(req, res) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', 'https://www.ipnprofes.com');
+  // CORS - permitir www y non-www
+  const allowedOrigins = ['https://www.ipnprofes.com', 'https://ipnprofes.com'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

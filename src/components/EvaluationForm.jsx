@@ -280,7 +280,7 @@ const EvaluationForm = () => {
       return;
     }
 
-    // 🛡️ MODERACIÓN DE CONTENIDO: Verificar opinión con OpenAI Moderation API
+    // 🛡️ MODERACIÓN DE CONTENIDO: Verificar opinión con OpenAI Moderation API (OBLIGATORIO)
     if (formData.opinion.trim().length >= 10) {
       setModerando(true);
       try {
@@ -293,18 +293,23 @@ const EvaluationForm = () => {
 
         if (!modData.ok) {
           console.warn('Moderación API error:', modData.error);
-          // Si falla la API de moderación, permitir envío pero sin score
-          formData.moderacionScore = null;
-        } else if (modData.flagged) {
+          setModerando(false);
+          alert('⚠️ No se pudo verificar el contenido de tu opinión.\n\nPor favor intenta de nuevo en unos segundos.');
+          return;
+        }
+
+        if (modData.flagged || modData.max_score > 0.6) {
           setModerando(false);
           alert('⚠️ Tu opinión contiene contenido que viola nuestras políticas de uso.\n\nPor favor, reescribe tu evaluación de forma respetuosa y constructiva.\n\nRecuerda que puedes expresar críticas sin usar lenguaje ofensivo.');
           return;
-        } else {
-          formData.moderacionScore = modData.max_score;
         }
+
+        formData.moderacionScore = modData.max_score;
       } catch (modError) {
         console.warn('Error al moderar contenido:', modError);
-        formData.moderacionScore = null;
+        setModerando(false);
+        alert('⚠️ No se pudo verificar el contenido de tu opinión.\n\nRevisa tu conexión a internet e intenta de nuevo.');
+        return;
       } finally {
         setModerando(false);
       }
