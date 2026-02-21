@@ -15,7 +15,7 @@
 -- ════════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS public.evaluacion_likes (
   id BIGSERIAL PRIMARY KEY,
-  evaluacion_id BIGINT NOT NULL REFERENCES evaluaciones(id) ON DELETE CASCADE,
+  evaluacion_id UUID NOT NULL REFERENCES evaluaciones(id) ON DELETE CASCADE,
   visitor_id TEXT NOT NULL,
   tipo TEXT NOT NULL CHECK (tipo IN ('like', 'dislike')),
   created_at TIMESTAMPTZ DEFAULT now(),
