@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug, obtenerLikesBatch, obtenerMisLikesBatch, toggleLikeEvaluacion, ocultarEvaluacion } from '../services/supabaseService';
-import { crearReporte } from '../services/adminService';
+import { crearReporte, adminOcultarEvaluacion } from '../services/adminService';
 import { getBrowserFingerprint } from '../lib/browserFingerprint';
 import { useSEO } from '../hooks/useSEO';
 import Navbar from './Navbar';
@@ -25,6 +25,7 @@ const ProfesorProfile = () => {
   const [loginPromptEvalId, setLoginPromptEvalId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const isAdmin = user?.username === 'Yojan';
 
   // SEO dinámico basado en el profesor
   useSEO(
@@ -170,7 +171,13 @@ const ProfesorProfile = () => {
     if (!user?.id || deleting) return;
     setDeleting(true);
     try {
-      const result = await ocultarEvaluacion(evalId, user.id);
+      const evalTarget = evaluaciones.find(e => e.id === evalId);
+      const esMia = evalTarget?.usuario_id === user.id;
+      const result = esMia
+        ? await ocultarEvaluacion(evalId, user.id)
+        : isAdmin
+          ? await adminOcultarEvaluacion(evalId)
+          : { success: false, error: 'No tienes permiso' };
       if (result.success) {
         // Quitar la evaluación de la lista local
         setEvaluaciones(prev => prev.filter(e => e.id !== evalId));
@@ -485,8 +492,8 @@ const ProfesorProfile = () => {
                       <div className="text-xs text-gray-400 dark:text-gray-500">
                         {formatearFecha(evaluacion.created_at)}
                       </div>
-                      {/* Botón eliminar (solo para evaluaciones propias) */}
-                      {user?.id && evaluacion.usuario_id === user.id && (
+                      {/* Botón eliminar (propias o admin) */}
+                      {user?.id && (evaluacion.usuario_id === user.id || isAdmin) && (
                         <button
                           onClick={() => setConfirmDeleteId(evaluacion.id)}
                           className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"

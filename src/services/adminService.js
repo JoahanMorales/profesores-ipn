@@ -444,3 +444,38 @@ export const eliminarArticulo = async (id) => {
     return handleSupabaseError(error, 'eliminarArticulo');
   }
 };
+
+/**
+ * Admin: ocultar cualquier evaluación (soft delete)
+ */
+export const adminOcultarEvaluacion = async (evaluacionId) => {
+  try {
+    const creds = getAdminCredentials();
+    if (!creds) throw new Error('No autorizado');
+
+    const { data, error } = await supabase.rpc('admin_ocultar_evaluacion', {
+      p_username: creds.username,
+      p_cancion: creds.cancion,
+      p_evaluacion_id: evaluacionId,
+    });
+
+    if (error) throw error;
+    if (data && !data.success) throw new Error(data.error);
+
+    // Invalidar cachés
+    const { CacheManager, CACHE_KEYS } = await import('../lib/cacheManager');
+    CacheManager.remove(CACHE_KEYS.TODOS_PROFESORES);
+    CacheManager.remove(CACHE_KEYS.PROFESORES_POPULARES);
+    CacheManager.remove(CACHE_KEYS.STATS_GLOBALES);
+    CacheManager.invalidateUserEvaluaciones();
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(CACHE_KEYS.SEARCH_RESULTS) || key.startsWith(CACHE_KEYS.PROFESOR_PROFILE)) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    return handleSupabaseSuccess(data, 'Evaluación ocultada por admin');
+  } catch (error) {
+    return handleSupabaseError(error, 'adminOcultarEvaluacion');
+  }
+};

@@ -69,6 +69,61 @@ GRANT EXECUTE ON FUNCTION public.ocultar_evaluacion_propia(UUID, UUID) TO anon;
 GRANT EXECUTE ON FUNCTION public.ocultar_evaluacion_propia(UUID, UUID) TO authenticated;
 
 -- ─────────────────────────────────────────────
+-- 1b. RPC: admin_ocultar_evaluacion
+-- ─────────────────────────────────────────────
+-- Permite al admin ocultar CUALQUIER evaluación.
+-- Verifica credenciales admin server-side via verificar_admin().
+
+CREATE OR REPLACE FUNCTION public.admin_ocultar_evaluacion(
+  p_username TEXT,
+  p_cancion TEXT,
+  p_evaluacion_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_eval RECORD;
+BEGIN
+  -- Verificar que es admin
+  IF NOT verificar_admin(p_username, p_cancion) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'No autorizado');
+  END IF;
+
+  -- Validar parámetro
+  IF p_evaluacion_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'ID de evaluación requerido');
+  END IF;
+
+  -- Buscar la evaluación
+  SELECT id, oculto
+  INTO v_eval
+  FROM evaluaciones
+  WHERE id = p_evaluacion_id;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Evaluación no encontrada');
+  END IF;
+
+  IF v_eval.oculto = true THEN
+    RETURN jsonb_build_object('success', false, 'error', 'La evaluación ya está oculta');
+  END IF;
+
+  -- Ocultar
+  UPDATE evaluaciones
+  SET oculto = true
+  WHERE id = p_evaluacion_id;
+
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_ocultar_evaluacion(TEXT, TEXT, UUID) TO anon;
+GRANT EXECUTE ON FUNCTION public.admin_ocultar_evaluacion(TEXT, TEXT, UUID) TO authenticated;
+
+-- ─────────────────────────────────────────────
 -- 2. Actualizar vista ranking_profesores
 -- ─────────────────────────────────────────────
 -- Excluir evaluaciones ocultas del cálculo de promedios y conteos.
