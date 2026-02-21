@@ -40,7 +40,11 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const errorData = await response.text();
       console.error('OpenAI Moderation API error:', response.status, errorData);
-      return res.status(502).json({ ok: false, error: 'Error en servicio de moderación' });
+      return res.status(502).json({ 
+        ok: false, 
+        error: 'Error en servicio de moderación',
+        debug: `OpenAI status: ${response.status}`
+      });
     }
 
     const data = await response.json();
