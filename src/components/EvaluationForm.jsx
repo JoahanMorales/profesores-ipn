@@ -14,6 +14,7 @@ import {
 } from '../services/supabaseService';
 import { buscarDuplicados } from '../services/adminService';
 import { checkRateLimit } from '../lib/rateLimiter';
+import { verificarContenido } from '../lib/contentFilter';
 import { useSEO } from '../hooks/useSEO';
 
 const EvaluationForm = () => {
@@ -42,6 +43,7 @@ const EvaluationForm = () => {
   const [coinsEarned, setCoinsEarned] = useState(5);
   const [nombreBloqueado, setNombreBloqueado] = useState(false);
   const [captchaToken, setCaptchaToken] = useState('');
+  const [showContentModal, setShowContentModal] = useState(false);
 
   // Estados para datos de Supabase
   const [escuelas, setEscuelas] = useState([]);
@@ -276,6 +278,13 @@ const EvaluationForm = () => {
     // Verificar CAPTCHA si está habilitado
     if (isTurnstileEnabled() && !captchaToken) {
       alert('Completa la verificación de seguridad antes de enviar.');
+      return;
+    }
+
+    // 🛡️ FILTRO DE CONTENIDO: Verificar que la opinión no tenga lenguaje ofensivo
+    const filtro = verificarContenido(formData.opinion);
+    if (filtro.flagged) {
+      setShowContentModal(true);
       return;
     }
 
@@ -721,6 +730,48 @@ const EvaluationForm = () => {
           </form>
         </div>
       </main>
+
+      {/* Modal de contenido ofensivo */}
+      {showContentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <div className="text-center">
+              {/* Icono de corazón */}
+              <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
+                <svg className="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                Espera un momento...
+              </h3>
+
+              <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                Tu evaluación contiene lenguaje que podría ser ofensivo.
+              </p>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+                <p className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
+                  Recuerda que los profesores también son personas que se esfuerzan día a día. 
+                  Tu opinión es valiosa y puede ayudar a mejorar la educación, pero el respeto 
+                  siempre debe ser la base.
+                  <br /><br />
+                  Puedes expresar críticas constructivas sin necesidad de usar palabras hirientes. 
+                  ¡Tu voz tiene más peso cuando es respetuosa! 👊
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowContentModal(false)}
+                className="w-full py-3 px-4 bg-ipn-guinda-900 text-white font-medium rounded-xl hover:bg-ipn-guinda-800 transition-colors text-base"
+              >
+                Entendido, voy a corregirla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Animación de monedas */}
       {showCoinAnimation && (
