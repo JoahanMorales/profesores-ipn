@@ -35,6 +35,12 @@ CREATE INDEX IF NOT EXISTS idx_eval_likes_visitor
 -- ════════════════════════════════════════════
 ALTER TABLE evaluacion_likes ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if any (safe re-run)
+DROP POLICY IF EXISTS "likes_select_public" ON evaluacion_likes;
+DROP POLICY IF EXISTS "likes_insert_public" ON evaluacion_likes;
+DROP POLICY IF EXISTS "likes_update_public" ON evaluacion_likes;
+DROP POLICY IF EXISTS "likes_delete_public" ON evaluacion_likes;
+
 -- Cualquiera puede leer likes (son públicos)
 CREATE POLICY "likes_select_public" ON evaluacion_likes
   FOR SELECT USING (true);

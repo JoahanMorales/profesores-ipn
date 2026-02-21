@@ -265,9 +265,8 @@ const ProfilePage = () => {
             {/* Monedas y evaluaciones */}
             <div className="flex gap-2 sm:gap-3">
               <div className="text-center px-3 sm:px-4 py-2 bg-gradient-to-r from-slate-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-purple-900/30 dark:to-pink-900/30 rounded-xl border border-purple-200 dark:border-purple-700">
-                <div className="flex items-center justify-center gap-1.5 text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  <DiamondIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>{monedas || 0}</span>
+                <div className="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  💎 {monedas || 0}
                 </div>
                 <div className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400">Diamantes</div>
               </div>
