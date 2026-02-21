@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug } from '../services/supabaseService';
+import { obtenerEvaluacionesProfesor, obtenerProfesorPorSlug, obtenerLikesBatch, obtenerMisLikesBatch, toggleLikeEvaluacion } from '../services/supabaseService';
 import { crearReporte } from '../services/adminService';
 import { getBrowserFingerprint } from '../lib/browserFingerprint';
 import { useSEO } from '../hooks/useSEO';
@@ -14,9 +14,14 @@ const ProfesorProfile = () => {
   const [profesor, setProfesor] = useState(null);
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [reportando, setReportando] = useState(null); // ID de evaluación siendo reportada
+  const [reportando, setReportando] = useState(null);
   const [formReporte, setFormReporte] = useState({ tipo: '', descripcion: '' });
-  const [notificacion, setNotificacion] = useState(null); // { tipo: 'exito'|'error', mensaje: '' }
+  const [notificacion, setNotificacion] = useState(null);
+
+  // Likes state
+  const [likesMap, setLikesMap] = useState({});
+  const [misLikes, setMisLikes] = useState({});
+  const [likingId, setLikingId] = useState(null);
 
   // SEO dinámico basado en el profesor
   useSEO(
@@ -47,7 +52,22 @@ const ProfesorProfile = () => {
       // Cargar evaluaciones
       const evalResult = await obtenerEvaluacionesProfesor(profesorResult.data.id);
       if (evalResult.success) {
-        setEvaluaciones(evalResult.data || []);
+        const evals = evalResult.data || [];
+        setEvaluaciones(evals);
+
+        // Cargar likes en batch
+        if (evals.length > 0) {
+          const evalIds = evals.map(e => e.id);
+          const likes = await obtenerLikesBatch(evalIds);
+          setLikesMap(likes);
+
+          // Cargar mis likes usando device_id
+          const deviceId = localStorage.getItem('ipn_device_id');
+          if (deviceId) {
+            const mis = await obtenerMisLikesBatch(evalIds, deviceId);
+            setMisLikes(mis);
+          }
+        }
       }
     }
     
@@ -95,6 +115,48 @@ const ProfesorProfile = () => {
     } else {
       setNotificacion({ tipo: 'error', mensaje: '❌ Error al enviar el reporte. Inténtalo de nuevo.' });
       setTimeout(() => setNotificacion(null), 3000);
+    }
+  };
+
+  const handleLike = async (evalId, tipo) => {
+    const deviceId = localStorage.getItem('ipn_device_id');
+    if (!deviceId || likingId) return;
+
+    setLikingId(evalId);
+    try {
+      const prevTipo = misLikes[evalId];
+      const resultado = await toggleLikeEvaluacion(evalId, deviceId, tipo);
+
+      if (resultado === undefined) return; // error
+
+      // Actualizar mi like
+      setMisLikes(prev => {
+        const updated = { ...prev };
+        if (resultado === null) {
+          delete updated[evalId];
+        } else {
+          updated[evalId] = resultado;
+        }
+        return updated;
+      });
+
+      // Recalcular conteos localmente
+      setLikesMap(prev => {
+        const updated = { ...prev };
+        const current = { ...(updated[evalId] || { likes: 0, dislikes: 0 }) };
+
+        // Restar el anterior
+        if (prevTipo === 'like') current.likes = Math.max(0, current.likes - 1);
+        if (prevTipo === 'dislike') current.dislikes = Math.max(0, current.dislikes - 1);
+        // Sumar el nuevo
+        if (resultado === 'like') current.likes++;
+        if (resultado === 'dislike') current.dislikes++;
+
+        updated[evalId] = current;
+        return updated;
+      });
+    } finally {
+      setLikingId(null);
     }
   };
 
@@ -401,6 +463,33 @@ const ProfesorProfile = () => {
                         </svg>
                       </button>
                     </div>
+                  </div>
+
+                  {/* Likes / Dislikes */}
+                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">¿Útil?</span>
+                    <button
+                      onClick={() => handleLike(evaluacion.id, 'like')}
+                      disabled={likingId === evaluacion.id}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                        misLikes[evaluacion.id] === 'like'
+                          ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 ring-1 ring-green-300 dark:ring-green-700'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600'
+                      }`}
+                    >
+                      👍 {(likesMap[evaluacion.id]?.likes || 0) > 0 ? likesMap[evaluacion.id].likes : ''}
+                    </button>
+                    <button
+                      onClick={() => handleLike(evaluacion.id, 'dislike')}
+                      disabled={likingId === evaluacion.id}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                        misLikes[evaluacion.id] === 'dislike'
+                          ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 ring-1 ring-red-300 dark:ring-red-700'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
+                      }`}
+                    >
+                      👎 {(likesMap[evaluacion.id]?.dislikes || 0) > 0 ? likesMap[evaluacion.id].dislikes : ''}
+                    </button>
                   </div>
 
                   {/* Modal de Reporte */}

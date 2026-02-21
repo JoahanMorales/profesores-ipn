@@ -57,9 +57,15 @@ const Navbar = () => {
                   <span className="text-lg relative z-10">💎</span>
                   <span className="font-bold text-sm text-gray-900 dark:text-white relative z-10">{monedas}</span>
                 </div>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Hola, <span className="font-medium">{user.username}</span>
-                </span>
+                <Link
+                  to="/perfil"
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-ipn-guinda-900 dark:hover:text-ipn-guinda-400 transition-colors"
+                >
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-ipn-guinda-900 to-ipn-guinda-700 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {user.username?.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="font-medium">{user.username}</span>
+                </Link>
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm font-medium text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-md hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-colors"
@@ -124,9 +130,16 @@ const Navbar = () => {
                       <span className="text-lg relative z-10">💎</span>
                       <span className="font-bold text-sm text-gray-900 dark:text-white relative z-10">{monedas}</span>
                     </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      Hola, <span className="font-medium">{user.username}</span>
-                    </span>
+                    <Link
+                      to="/perfil"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-ipn-guinda-900 dark:hover:text-ipn-guinda-400 transition-colors"
+                    >
+                      <span className="w-7 h-7 rounded-full bg-gradient-to-br from-ipn-guinda-900 to-ipn-guinda-700 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                        {user.username?.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="font-medium">{user.username}</span>
+                    </Link>
                   </div>
                   <button
                     onClick={() => { logout(); setMobileMenuOpen(false); }}

@@ -486,7 +486,7 @@ export const obtenerEvaluacionesUsuario = async (usuarioId) => {
       .from('evaluaciones')
       .select(`
         *,
-        profesor:profesores(nombre_completo),
+        profesor:profesores(id, nombre_completo, slug),
         escuela:escuelas(nombre, abreviatura),
         carrera:carreras(nombre)
       `)
@@ -495,8 +495,7 @@ export const obtenerEvaluacionesUsuario = async (usuarioId) => {
 
     if (error) throw error;
 
-    console.log('📝 Evaluaciones del usuario:', data?.length || 0);
-    return handleSupabaseSuccess(data, 'Evaluaciones del usuario cargadas');
+    return handleSupabaseSuccess(data || [], 'Evaluaciones del usuario cargadas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEvaluacionesUsuario');
   }
@@ -666,5 +665,110 @@ export const obtenerArticuloPorSlug = async (slug) => {
     return handleSupabaseSuccess(data, 'Artículo encontrado');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerArticuloPorSlug');
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// LIKES / DISLIKES EN EVALUACIONES
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Obtener conteo de likes/dislikes para un batch de evaluaciones
+ */
+export const obtenerLikesBatch = async (evaluacionIds) => {
+  if (!evaluacionIds || evaluacionIds.length === 0) return {};
+
+  try {
+    const { data, error } = await supabase
+      .from('evaluacion_likes')
+      .select('evaluacion_id, tipo')
+      .in('evaluacion_id', evaluacionIds);
+
+    if (error) throw error;
+
+    const result = {};
+    evaluacionIds.forEach(id => {
+      result[id] = { likes: 0, dislikes: 0 };
+    });
+
+    (data || []).forEach(d => {
+      if (!result[d.evaluacion_id]) {
+        result[d.evaluacion_id] = { likes: 0, dislikes: 0 };
+      }
+      if (d.tipo === 'like') result[d.evaluacion_id].likes++;
+      else result[d.evaluacion_id].dislikes++;
+    });
+
+    return result;
+  } catch (error) {
+    console.warn('Error cargando likes:', error);
+    return {};
+  }
+};
+
+/**
+ * Obtener los likes/dislikes del visitor actual para un batch de evaluaciones
+ */
+export const obtenerMisLikesBatch = async (evaluacionIds, visitorId) => {
+  if (!evaluacionIds || evaluacionIds.length === 0 || !visitorId) return {};
+
+  try {
+    const { data, error } = await supabase
+      .from('evaluacion_likes')
+      .select('evaluacion_id, tipo')
+      .in('evaluacion_id', evaluacionIds)
+      .eq('visitor_id', visitorId);
+
+    if (error) throw error;
+
+    const result = {};
+    (data || []).forEach(d => {
+      result[d.evaluacion_id] = d.tipo;
+    });
+    return result;
+  } catch (error) {
+    console.warn('Error cargando mis likes:', error);
+    return {};
+  }
+};
+
+/**
+ * Toggle like/dislike en una evaluación
+ * - Si no existe → crear
+ * - Si existe mismo tipo → quitar (toggle off)
+ * - Si existe tipo opuesto → cambiar
+ */
+export const toggleLikeEvaluacion = async (evaluacionId, visitorId, tipo) => {
+  try {
+    // Verificar si ya existe un like/dislike de este visitor
+    const { data: existing } = await supabase
+      .from('evaluacion_likes')
+      .select('id, tipo')
+      .eq('evaluacion_id', evaluacionId)
+      .eq('visitor_id', visitorId)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.tipo === tipo) {
+        // Toggle off — quitar el like/dislike
+        await supabase.from('evaluacion_likes').delete().eq('id', existing.id);
+        return null;
+      } else {
+        // Cambiar de like a dislike o viceversa
+        await supabase.from('evaluacion_likes').update({ tipo }).eq('id', existing.id);
+        return tipo;
+      }
+    } else {
+      // Crear nuevo like/dislike
+      await supabase.from('evaluacion_likes').insert({
+        evaluacion_id: evaluacionId,
+        visitor_id: visitorId,
+        tipo
+      });
+      return tipo;
+    }
+  } catch (error) {
+    console.error('Error en toggleLike:', error);
+    return undefined; // undefined = error
   }
 };

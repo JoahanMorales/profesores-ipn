@@ -23,6 +23,7 @@ const DatosProfesor = lazy(() => import('./components/DatosProfesor'));
 const EventosPage = lazy(() => import('./components/EventosPage'));
 const BlogPage = lazy(() => import('./components/BlogPage'));
 const ExtensionPage = lazy(() => import('./components/ExtensionPage'));
+const ProfilePage = lazy(() => import('./components/ProfilePage'));
 
 // Componente para proteger rutas
 function ProtectedRoute({ children }) {
@@ -72,6 +73,14 @@ function App() {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogPage />} />
             <Route path="/extension" element={<ExtensionPage />} />
+            <Route 
+              path="/perfil" 
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Rutas protegidas (solo evaluar y admin) */}
             <Route 
