@@ -92,9 +92,28 @@ const EvaluationForm = () => {
     autocompletarDatos();
   }, [searchParams, location.state]);
 
-  // Cargar escuelas al montar el componente
+  // Cargar escuelas al montar y restaurar selección previa
   useEffect(() => {
-    cargarEscuelas();
+    const inicializar = async () => {
+      await cargarEscuelas();
+
+      // Restaurar escuela y carrera de la evaluación anterior
+      const lastEscuela = localStorage.getItem('ipn_last_escuela');
+      const lastCarrera = localStorage.getItem('ipn_last_carrera');
+
+      if (lastEscuela) {
+        setFormData(prev => ({ ...prev, escuelaId: lastEscuela }));
+        // Cargar carreras de esa escuela y luego setear la carrera guardada
+        const res = await obtenerCarrerasPorEscuela(lastEscuela);
+        if (res.success) {
+          setCarreras(res.data);
+          if (lastCarrera && res.data.some(c => c.id === lastCarrera)) {
+            setFormData(prev => ({ ...prev, carreraId: lastCarrera }));
+          }
+        }
+      }
+    };
+    inicializar();
   }, []);
 
   // Cargar carreras cuando cambia la escuela
@@ -310,15 +329,21 @@ const EvaluationForm = () => {
 
       console.log('Evaluación guardada exitosamente');
 
+      // Guardar escuela y carrera para autocompletar la próxima vez
+      if (formData.escuelaId) localStorage.setItem('ipn_last_escuela', formData.escuelaId);
+      if (formData.carreraId) localStorage.setItem('ipn_last_carrera', formData.carreraId);
+
       // Mostrar animación de monedas
       setShowCoinAnimation(true);
       
-      // Reset form después de la animación
+      // Reset form después de la animación (mantener escuela y carrera)
+      const savedEscuela = formData.escuelaId;
+      const savedCarrera = formData.carreraId;
       setTimeout(() => {
         setFormData({
           nombreProfesor: '',
-          escuelaId: '',
-          carreraId: '',
+          escuelaId: savedEscuela,
+          carreraId: savedCarrera,
           materia: '',
           calificacion: 5,
           recomendado: true,
