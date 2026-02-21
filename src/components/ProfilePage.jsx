@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { obtenerEvaluacionesUsuario } from '../services/supabaseService';
@@ -67,93 +67,6 @@ const ChartIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-/* ── Animated Horizontal Bar Chart ───────────────────── */
-const DistributionChart = ({ distribucion, total }) => {
-  const [animated, setAnimated] = useState(false);
-  const chartRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setAnimated(true); },
-      { threshold: 0.3 }
-    );
-    if (chartRef.current) observer.observe(chartRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const maxCount = Math.max(...distribucion, 1);
-
-  const getBarGradient = (calif) => {
-    if (calif >= 8) return 'from-emerald-400 to-green-500 dark:from-emerald-500 dark:to-green-600';
-    if (calif >= 6) return 'from-amber-300 to-yellow-500 dark:from-amber-400 dark:to-yellow-600';
-    if (calif >= 4) return 'from-orange-300 to-orange-500 dark:from-orange-400 dark:to-orange-600';
-    return 'from-red-400 to-rose-500 dark:from-red-500 dark:to-rose-600';
-  };
-
-  const getLabel = (calif) => {
-    if (calif === 10) return 'Excelente';
-    if (calif >= 8) return 'Muy bien';
-    if (calif >= 6) return 'Regular';
-    if (calif >= 4) return 'Bajo';
-    return 'Muy bajo';
-  };
-
-  return (
-    <div ref={chartRef} className="space-y-2">
-      {distribucion.map((count, i) => {
-        const calif = i + 1;
-        const pct = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
-        const widthPct = maxCount > 0 ? (count / maxCount) * 100 : 0;
-
-        return (
-          <div key={calif} className="group flex items-center gap-2 sm:gap-3">
-            {/* Rating number */}
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 transition-transform group-hover:scale-110 ${
-              count > 0
-                ? calif >= 8 ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
-                : calif >= 6 ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400'
-                : calif >= 4 ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400'
-                : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
-            }`}>
-              {calif}
-            </div>
-
-            {/* Bar container */}
-            <div className="flex-1 h-6 sm:h-7 bg-gray-100 dark:bg-gray-700/50 rounded-full overflow-hidden relative">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${getBarGradient(calif)} transition-all duration-1000 ease-out relative overflow-hidden`}
-                style={{ width: animated ? `${Math.max(widthPct, count > 0 ? 8 : 0)}%` : '0%' }}
-              >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0" />
-              </div>
-              {/* Hover label */}
-              {count > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
-                  {getLabel(calif)}
-                </span>
-              )}
-            </div>
-
-            {/* Count + percentage */}
-            <div className="flex items-center gap-1 w-12 sm:w-16 flex-shrink-0 justify-end">
-              <span className={`text-xs sm:text-sm font-bold ${count > 0 ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}>
-                {count}
-              </span>
-              {count > 0 && (
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
-                  ({pct}%)
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
 /* ── Main ProfilePage Component ──────────────────────── */
 const ProfilePage = () => {
   const { user, monedas } = useAuth();
@@ -193,13 +106,6 @@ const ProfilePage = () => {
         const profesoresUnicos = [...new Set(evals.map(e => e.profesor?.id).filter(Boolean))];
         const materias = [...new Set(evals.map(e => e.materia).filter(Boolean))];
 
-        const distribucion = Array(10).fill(0);
-        evals.forEach(e => {
-          if (e.calificacion >= 1 && e.calificacion <= 10) {
-            distribucion[e.calificacion - 1]++;
-          }
-        });
-
         setStats({
           totalEvals,
           promedioCalif: promedioCalif.toFixed(1),
@@ -207,8 +113,7 @@ const ProfilePage = () => {
           porcentajeRecomendado: ((recomendados / totalEvals) * 100).toFixed(0),
           escuelasUnicas,
           profesoresUnicos: profesoresUnicos.length,
-          materias: materias.length,
-          distribucion
+          materias: materias.length
         });
       }
     } catch (err) {
@@ -318,26 +223,6 @@ const ProfilePage = () => {
                 {stats.materias}
               </div>
               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">Materias</div>
-            </div>
-          </div>
-        )}
-
-        {/* Distribución de calificaciones — Horizontal Animated Bars */}
-        {stats && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-4 sm:mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <ChartIcon className="w-5 h-5 text-ipn-guinda-700 dark:text-ipn-guinda-400" />
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Distribución de tus calificaciones
-              </h3>
-            </div>
-            <DistributionChart distribucion={stats.distribucion} total={stats.totalEvals} />
-            {/* Summary pill */}
-            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 inline-block" /> 8-10 Excelente</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-300 to-yellow-500 inline-block" /> 6-7 Regular</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-orange-300 to-orange-500 inline-block" /> 4-5 Bajo</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-red-400 to-rose-500 inline-block" /> 1-3 Muy bajo</span>
             </div>
           </div>
         )}
