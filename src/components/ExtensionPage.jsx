@@ -119,8 +119,8 @@ const ExtensionPage = () => {
           <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 text-center">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium mb-8">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Extensión en validación
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              Disponible en Chrome Web Store
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-6 tracking-tight leading-[1.1]">
@@ -132,12 +132,17 @@ const ExtensionPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="group inline-flex items-center justify-center gap-3 px-8 py-4 text-base font-semibold text-white/60 bg-white/10 rounded-xl border border-white/20 cursor-default">
+              <a
+                href="https://chromewebstore.google.com/detail/oobnedfoijeoneoamkeglfedhkachjgo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center justify-center gap-3 px-8 py-4 text-base font-semibold text-white bg-white/15 rounded-xl border border-white/25 hover:bg-white/25 transition-all backdrop-blur-sm"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0112 6.545h10.691A12 12 0 0012 0zM1.931 5.47A11.943 11.943 0 000 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 01-6.865-2.29zm13.342 2.166a5.446 5.446 0 011.45 7.09l.002.001h-.002l-3.953 6.848c.542.048 1.09.08 1.645.08 6.627 0 12-5.373 12-12 0-1.006-.129-1.981-.361-2.919H15.273zM12 16.364a4.364 4.364 0 110-8.728 4.364 4.364 0 010 8.728z" />
                 </svg>
-                Próximamente en Chrome Web Store
-              </div>
+                Agregar a Chrome — Gratis
+              </a>
               <a
                 href="#funciones"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white border-2 border-white/25 rounded-xl hover:bg-white/10 transition-all backdrop-blur-sm"
@@ -338,15 +343,22 @@ const ExtensionPage = () => {
             style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-              Pronto disponible en Chrome Web Store
+              Ya disponible en Chrome Web Store
             </h2>
             <p className="text-base text-white/70 max-w-xl mx-auto mb-6">
-              La extensión está en proceso de validación. Mientras tanto, explora todas las funciones que tendrá.
+              Instala la extensión gratis y lleva IPNProfes directamente a tu navegador.
             </p>
-            <div className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white/60 bg-white/10 rounded-xl border border-white/20 cursor-default">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              En validación
-            </div>
+            <a
+              href="https://chromewebstore.google.com/detail/oobnedfoijeoneoamkeglfedhkachjgo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-white/15 rounded-xl border border-white/25 hover:bg-white/25 transition-all"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0112 6.545h10.691A12 12 0 0012 0zM1.931 5.47A11.943 11.943 0 000 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 01-6.865-2.29zm13.342 2.166a5.446 5.446 0 011.45 7.09l.002.001h-.002l-3.953 6.848c.542.048 1.09.08 1.645.08 6.627 0 12-5.373 12-12 0-1.006-.129-1.981-.361-2.919H15.273zM12 16.364a4.364 4.364 0 110-8.728 4.364 4.364 0 010 8.728z" />
+              </svg>
+              Agregar a Chrome
+            </a>
           </div>
         </section>
       </main>
