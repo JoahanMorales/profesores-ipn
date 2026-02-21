@@ -478,10 +478,16 @@ export const obtenerPerfilUsuario = async (usuarioId) => {
 };
 
 /**
- * Obtener evaluaciones de un usuario
+ * Obtener evaluaciones de un usuario (con caché)
  */
 export const obtenerEvaluacionesUsuario = async (usuarioId) => {
   try {
+    const cacheKey = `${CACHE_KEYS.USER_EVALUACIONES}${usuarioId}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Evaluaciones del usuario (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('evaluaciones')
       .select(`
@@ -495,6 +501,7 @@ export const obtenerEvaluacionesUsuario = async (usuarioId) => {
 
     if (error) throw error;
 
+    CacheManager.set(cacheKey, data || [], CACHE_EXPIRATION.USER_EVALUACIONES);
     return handleSupabaseSuccess(data || [], 'Evaluaciones del usuario cargadas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEvaluacionesUsuario');
@@ -673,12 +680,19 @@ export const obtenerArticuloPorSlug = async (slug) => {
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Obtener conteo de likes/dislikes para un batch de evaluaciones
+ * Obtener conteo de likes/dislikes para un batch de evaluaciones (con caché por slug)
  */
-export const obtenerLikesBatch = async (evaluacionIds) => {
+export const obtenerLikesBatch = async (evaluacionIds, profesorSlug = '') => {
   if (!evaluacionIds || evaluacionIds.length === 0) return {};
 
   try {
+    // Cachear por slug del profesor si disponible
+    const cacheKey = profesorSlug ? `${CACHE_KEYS.LIKES_BATCH}${profesorSlug}` : null;
+    if (cacheKey) {
+      const cached = CacheManager.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const { data, error } = await supabase
       .from('evaluacion_likes')
       .select('evaluacion_id, tipo')
@@ -699,6 +713,9 @@ export const obtenerLikesBatch = async (evaluacionIds) => {
       else result[d.evaluacion_id].dislikes++;
     });
 
+    if (cacheKey) {
+      CacheManager.set(cacheKey, result, CACHE_EXPIRATION.LIKES_BATCH);
+    }
     return result;
   } catch (error) {
     console.warn('Error cargando likes:', error);
@@ -707,12 +724,18 @@ export const obtenerLikesBatch = async (evaluacionIds) => {
 };
 
 /**
- * Obtener los likes/dislikes del visitor actual para un batch de evaluaciones
+ * Obtener los likes/dislikes del visitor actual para un batch de evaluaciones (con caché)
  */
-export const obtenerMisLikesBatch = async (evaluacionIds, visitorId) => {
+export const obtenerMisLikesBatch = async (evaluacionIds, visitorId, profesorSlug = '') => {
   if (!evaluacionIds || evaluacionIds.length === 0 || !visitorId) return {};
 
   try {
+    const cacheKey = profesorSlug ? `${CACHE_KEYS.MIS_LIKES}${profesorSlug}` : null;
+    if (cacheKey) {
+      const cached = CacheManager.get(cacheKey);
+      if (cached) return cached;
+    }
+
     const { data, error } = await supabase
       .from('evaluacion_likes')
       .select('evaluacion_id, tipo')
@@ -725,6 +748,10 @@ export const obtenerMisLikesBatch = async (evaluacionIds, visitorId) => {
     (data || []).forEach(d => {
       result[d.evaluacion_id] = d.tipo;
     });
+
+    if (cacheKey) {
+      CacheManager.set(cacheKey, result, CACHE_EXPIRATION.MIS_LIKES);
+    }
     return result;
   } catch (error) {
     console.warn('Error cargando mis likes:', error);
@@ -738,7 +765,7 @@ export const obtenerMisLikesBatch = async (evaluacionIds, visitorId) => {
  * - Si existe mismo tipo → quitar (toggle off)
  * - Si existe tipo opuesto → cambiar
  */
-export const toggleLikeEvaluacion = async (evaluacionId, visitorId, tipo) => {
+export const toggleLikeEvaluacion = async (evaluacionId, visitorId, tipo, profesorSlug = '') => {
   try {
     // Verificar si ya existe un like/dislike de este visitor
     const { data: existing } = await supabase
@@ -770,5 +797,10 @@ export const toggleLikeEvaluacion = async (evaluacionId, visitorId, tipo) => {
   } catch (error) {
     console.error('Error en toggleLike:', error);
     return undefined; // undefined = error
+  } finally {
+    // Invalidar caché de likes para este profesor
+    if (profesorSlug) {
+      CacheManager.invalidateLikes(profesorSlug);
+    }
   }
 };

@@ -59,12 +59,12 @@ const ProfesorProfile = () => {
         // Cargar likes en batch
         if (evals.length > 0) {
           const evalIds = evals.map(e => e.id);
-          const likes = await obtenerLikesBatch(evalIds);
+          const likes = await obtenerLikesBatch(evalIds, slug);
           setLikesMap(likes);
 
           // Cargar mis likes usando user.id (session-based)
           if (user?.id) {
-            const mis = await obtenerMisLikesBatch(evalIds, String(user.id));
+            const mis = await obtenerMisLikesBatch(evalIds, String(user.id), slug);
             setMisLikes(mis);
           }
         }
@@ -129,7 +129,7 @@ const ProfesorProfile = () => {
     setLikingId(evalId);
     try {
       const prevTipo = misLikes[evalId];
-      const resultado = await toggleLikeEvaluacion(evalId, String(user.id), tipo);
+      const resultado = await toggleLikeEvaluacion(evalId, String(user.id), tipo, slug);
 
       if (resultado === undefined) return; // error
 

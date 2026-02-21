@@ -24,6 +24,9 @@ const CACHE_KEYS = {
   TODOS_PROFESORES: `${CACHE_PREFIX}todos_profesores`,
   EVENTOS: `${CACHE_PREFIX}eventos`,
   ARTICULOS: `${CACHE_PREFIX}articulos`,
+  LIKES_BATCH: `${CACHE_PREFIX}likes_`,
+  MIS_LIKES: `${CACHE_PREFIX}mislikes_`,
+  USER_EVALUACIONES: `${CACHE_PREFIX}user_evals_`,
 };
 
 const CACHE_EXPIRATION = {
@@ -37,6 +40,9 @@ const CACHE_EXPIRATION = {
   TODOS_PROFESORES: 30 * 60 * 1000, // 30 minutos
   EVENTOS: 15 * 60 * 1000, // 15 minutos
   ARTICULOS: 15 * 60 * 1000, // 15 minutos
+  LIKES_BATCH: 5 * 60 * 1000, // 5 minutos (likes cambian poco)
+  MIS_LIKES: 10 * 60 * 1000, // 10 minutos
+  USER_EVALUACIONES: 5 * 60 * 1000, // 5 minutos
 };
 
 class CacheManager {
@@ -229,6 +235,27 @@ class CacheManager {
   static invalidateAfterEvaluation(profesorSlug) {
     console.log('🔄 Invalidando caché después de evaluación');
     this.invalidateProfesor(profesorSlug);
+    // Invalidar evaluaciones del usuario en perfil
+    this.invalidateUserEvaluaciones();
+  }
+
+  /**
+   * Invalidar caché de likes para un profesor (por slug)
+   */
+  static invalidateLikes(profesorSlug) {
+    this.remove(`${CACHE_KEYS.LIKES_BATCH}${profesorSlug}`);
+    this.remove(`${CACHE_KEYS.MIS_LIKES}${profesorSlug}`);
+  }
+
+  /**
+   * Invalidar caché de evaluaciones del usuario (perfil)
+   */
+  static invalidateUserEvaluaciones() {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(CACHE_KEYS.USER_EVALUACIONES)) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 }
 
