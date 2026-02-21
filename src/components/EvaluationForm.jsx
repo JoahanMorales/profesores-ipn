@@ -750,17 +750,31 @@ const EvaluationForm = () => {
               </h3>
 
               <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                Tu evaluación contiene lenguaje que podría ser ofensivo.
+                Tu evaluación contiene lenguaje que podría ser ofensivo. Las palabras detectadas están resaltadas:
               </p>
 
-              {/* Palabras detectadas */}
+              {/* Texto con palabras resaltadas */}
               {flaggedWords.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center mb-4">
-                  {flaggedWords.map((word, i) => (
-                    <span key={i} className="inline-block bg-ipn-guinda-900/10 dark:bg-ipn-guinda-400/20 text-ipn-guinda-900 dark:text-ipn-guinda-400 text-sm font-medium px-3 py-1 rounded-full border border-ipn-guinda-900/20 dark:border-ipn-guinda-400/30">
-                      {word}
-                    </span>
-                  ))}
+                <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-4 mb-4 text-left max-h-32 overflow-y-auto">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words">
+                    {(() => {
+                      let texto = formData.opinion;
+                      // Crear regex con todas las palabras flaggeadas
+                      const escaped = flaggedWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+                      const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
+                      const parts = texto.split(regex);
+                      return parts.map((part, i) => {
+                        const isMatch = flaggedWords.some(w => part.toLowerCase() === w.toLowerCase());
+                        return isMatch ? (
+                          <span key={i} className="bg-ipn-guinda-900 text-white font-bold px-1 rounded">
+                            {part}
+                          </span>
+                        ) : (
+                          <span key={i}>{part}</span>
+                        );
+                      });
+                    })()}
+                  </p>
                 </div>
               )}
 
