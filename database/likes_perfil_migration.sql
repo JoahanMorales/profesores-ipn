@@ -10,8 +10,8 @@
 -- ════════════════════════════════════════════
 -- TABLA: evaluacion_likes
 -- Almacena likes/dislikes por evaluación
--- Un visitor_id (device fingerprint) solo puede
--- dar 1 like O 1 dislike por evaluación
+-- visitor_id almacena el ID del usuario (session-based)
+-- Un usuario solo puede dar 1 like O 1 dislike por evaluación
 -- ════════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS public.evaluacion_likes (
   id BIGSERIAL PRIMARY KEY,

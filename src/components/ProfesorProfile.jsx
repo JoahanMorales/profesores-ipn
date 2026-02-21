@@ -22,6 +22,7 @@ const ProfesorProfile = () => {
   const [likesMap, setLikesMap] = useState({});
   const [misLikes, setMisLikes] = useState({});
   const [likingId, setLikingId] = useState(null);
+  const [loginPromptEvalId, setLoginPromptEvalId] = useState(null);
 
   // SEO dinámico basado en el profesor
   useSEO(
@@ -61,10 +62,9 @@ const ProfesorProfile = () => {
           const likes = await obtenerLikesBatch(evalIds);
           setLikesMap(likes);
 
-          // Cargar mis likes usando device_id
-          const deviceId = localStorage.getItem('ipn_device_id');
-          if (deviceId) {
-            const mis = await obtenerMisLikesBatch(evalIds, deviceId);
+          // Cargar mis likes usando user.id (session-based)
+          if (user?.id) {
+            const mis = await obtenerMisLikesBatch(evalIds, String(user.id));
             setMisLikes(mis);
           }
         }
@@ -119,13 +119,17 @@ const ProfesorProfile = () => {
   };
 
   const handleLike = async (evalId, tipo) => {
-    const deviceId = localStorage.getItem('ipn_device_id');
-    if (!deviceId || likingId) return;
+    if (!user?.id) {
+      setLoginPromptEvalId(evalId);
+      setTimeout(() => setLoginPromptEvalId(null), 3000);
+      return;
+    }
+    if (likingId) return;
 
     setLikingId(evalId);
     try {
       const prevTipo = misLikes[evalId];
-      const resultado = await toggleLikeEvaluacion(evalId, deviceId, tipo);
+      const resultado = await toggleLikeEvaluacion(evalId, String(user.id), tipo);
 
       if (resultado === undefined) return; // error
 
@@ -466,7 +470,7 @@ const ProfesorProfile = () => {
                   </div>
 
                   {/* Likes / Dislikes */}
-                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 relative">
                     <span className="text-xs text-gray-400 dark:text-gray-500">¿Útil?</span>
                     <button
                       onClick={() => handleLike(evaluacion.id, 'like')}
@@ -477,7 +481,8 @@ const ProfesorProfile = () => {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600'
                       }`}
                     >
-                      👍 {(likesMap[evaluacion.id]?.likes || 0) > 0 ? likesMap[evaluacion.id].likes : ''}
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" /></svg>
+                      {(likesMap[evaluacion.id]?.likes || 0) > 0 ? likesMap[evaluacion.id].likes : ''}
                     </button>
                     <button
                       onClick={() => handleLike(evaluacion.id, 'dislike')}
@@ -488,8 +493,16 @@ const ProfesorProfile = () => {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
                       }`}
                     >
-                      👎 {(likesMap[evaluacion.id]?.dislikes || 0) > 0 ? likesMap[evaluacion.id].dislikes : ''}
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" /></svg>
+                      {(likesMap[evaluacion.id]?.dislikes || 0) > 0 ? likesMap[evaluacion.id].dislikes : ''}
                     </button>
+                    {/* Login prompt tooltip */}
+                    {loginPromptEvalId === evaluacion.id && (
+                      <div className="absolute left-0 -top-10 bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-10">
+                        <button onClick={() => navigate('/login?returnTo=' + encodeURIComponent('/profesor/' + slug))} className="underline hover:text-ipn-guinda-300">Inicia sesión</button> para dar tu opinión
+                        <div className="absolute left-4 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-900 dark:border-t-gray-700" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Modal de Reporte */}
