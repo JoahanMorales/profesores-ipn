@@ -9,7 +9,7 @@ export const obtenerProfesoresNuevos = async (limite = 20) => {
   try {
     const { data, error } = await supabase
       .from('ranking_profesores')
-      .select('*')
+      .select('id, nombre_completo, slug, calificacion_promedio, total_evaluaciones, total_evaluadores, created_at')
       .order('created_at', { ascending: false })
       .limit(limite);
 
@@ -30,7 +30,7 @@ export const actualizarCacheProfesores = async () => {
     // Obtener profesores populares frescos
     const { data, error } = await supabase
       .from('ranking_profesores')
-      .select('*')
+      .select('id, nombre_completo, slug, calificacion_promedio, total_evaluaciones, total_evaluadores')
       .order('total_evaluaciones', { ascending: false })
       .order('calificacion_promedio', { ascending: false })
       .limit(100);

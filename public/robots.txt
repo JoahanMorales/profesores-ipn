@@ -1,0 +1,10 @@
+# ipnprofes.com robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /perfil
+Crawl-delay: 2
+
+# Sitemaps
+Sitemap: https://ipnprofes.com/sitemap.xml

@@ -17,10 +17,10 @@ export const obtenerTodosLosProfesores = async () => {
       return handleSupabaseSuccess(cached, 'Profesores (desde caché)');
     }
 
-    // Traer todos los profesores ordenados por evaluaciones
+    // Traer todos los profesores ordenados por evaluaciones (solo campos necesarios para búsqueda)
     const { data, error } = await supabase
       .from('ranking_profesores')
-      .select('*')
+      .select('id, nombre_completo, slug, calificacion_promedio, total_evaluaciones, total_evaluadores')
       .order('total_evaluaciones', { ascending: false })
       .order('calificacion_promedio', { ascending: false });
 
