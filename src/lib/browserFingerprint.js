@@ -73,8 +73,6 @@ export function getBrowserFingerprint() {
   // Generar hash único
   const fingerprint = generateFingerprint(data);
   
-  console.log('🔐 Browser Fingerprint generado:', fingerprint.substring(0, 12) + '...');
-  
   return {
     id: fingerprint,
     data,
@@ -224,13 +222,11 @@ export function getDeviceId() {
     
     try {
       localStorage.setItem(STORAGE_KEY, deviceId);
-      console.log('💾 Device ID guardado:', deviceId.substring(0, 20) + '...');
-    } catch (e) {
+        } catch (e) {
       console.warn('⚠️ No se pudo guardar device ID en localStorage');
     }
   } else {
-    console.log('✅ Device ID existente:', deviceId.substring(0, 20) + '...');
-  }
+    }
   
   return deviceId;
 }

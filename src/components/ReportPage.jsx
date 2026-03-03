@@ -13,7 +13,6 @@ const ReportPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Aquí podrías integrar con un servicio de email o backend
-    console.log('Reporte enviado:', formData);
     setSubmitted(true);
     
     // Reset después de 3 segundos

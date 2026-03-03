@@ -71,7 +71,6 @@ const EvaluationForm = () => {
       const profesorState = location.state?.profesor;
       
       if (nombreParam) {
-        console.log('📝 Autocompletando nombre desde URL:', nombreParam);
         setFormData(prev => ({
           ...prev,
           nombreProfesor: nombreParam
@@ -79,7 +78,6 @@ const EvaluationForm = () => {
         // Bloquear el input si viene de la URL
         setNombreBloqueado(true);
       } else if (profesorState) {
-        console.log('📝 Autocompletando desde state:', profesorState);
         setFormData(prev => ({
           ...prev,
           nombreProfesor: profesorState.nombre_completo || profesorState.nombre
@@ -315,7 +313,6 @@ const EvaluationForm = () => {
 
     try {
       // Crear evaluación via RPC seguro (maneja usuario, profesor, monedas y eval count atómicamente)
-      console.log('Guardando evaluación (RPC seguro)...');
       const evaluacionResult = await crearEvaluacionSegura(user.username, user.favoriteSong, formData, captchaToken || undefined);
 
       if (!evaluacionResult.success) {
@@ -328,8 +325,6 @@ const EvaluationForm = () => {
       if (evaluacionResult.data?.monedas != null) {
         updateMonedas(evaluacionResult.data.monedas);
       }
-
-      console.log('Evaluación guardada exitosamente');
 
       // Guardar escuela y carrera para autocompletar la próxima vez
       if (formData.escuelaId) localStorage.setItem('ipn_last_escuela', formData.escuelaId);

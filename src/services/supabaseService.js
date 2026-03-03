@@ -20,7 +20,7 @@ export const obtenerTodosLosProfesores = async () => {
     // Traer todos los profesores ordenados por evaluaciones (solo campos necesarios para búsqueda)
     const { data, error } = await supabase
       .from('ranking_profesores')
-      .select('id, nombre_completo, slug, calificacion_promedio, total_evaluaciones, total_evaluadores')
+      .select('id, nombre_completo, slug, calificacion_promedio, total_evaluaciones, total_evaluadores, porcentaje_recomendacion')
       .order('total_evaluaciones', { ascending: false })
       .order('calificacion_promedio', { ascending: false });
 
@@ -49,7 +49,6 @@ export const buscarProfesores = async (searchQuery = '') => {
     
     const cached = CacheManager.get(cacheKey);
     if (cached) {
-      console.log('💾 Usando resultados de caché');
       return handleSupabaseSuccess(cached, 'Búsqueda desde caché');
     }
 
@@ -63,8 +62,6 @@ export const buscarProfesores = async (searchQuery = '') => {
         .limit(100);
 
       if (error) throw error;
-      
-      console.log('🔍 Profesores encontrados:', data?.length || 0);
       
       // Guardar en caché por 1 hora
       CacheManager.set(cacheKey, data, CACHE_EXPIRATION.PROFESORES_POPULARES);
@@ -85,7 +82,6 @@ export const buscarProfesores = async (searchQuery = '') => {
 
     // Si encontró por nombre, retornar y cachear
     if (profesoresPorNombre && profesoresPorNombre.length > 0) {
-      console.log('🔍 Profesores encontrados por nombre:', profesoresPorNombre.length);
       CacheManager.set(cacheKey, profesoresPorNombre, CACHE_EXPIRATION.SEARCH_RESULTS);
       return handleSupabaseSuccess(profesoresPorNombre, 'Búsqueda exitosa');
     }
@@ -99,7 +95,6 @@ export const buscarProfesores = async (searchQuery = '') => {
     if (errorEvaluaciones) throw errorEvaluaciones;
 
     if (!evaluaciones || evaluaciones.length === 0) {
-      console.log('🔍 No se encontraron resultados');
       CacheManager.set(cacheKey, [], CACHE_EXPIRATION.SEARCH_RESULTS);
       return handleSupabaseSuccess([], 'No se encontraron resultados');
     }
@@ -117,8 +112,6 @@ export const buscarProfesores = async (searchQuery = '') => {
       .limit(50);
 
     if (errorRanking) throw errorRanking;
-
-    console.log('🔍 Profesores encontrados por materia:', rankingProfesores?.length || 0);
     CacheManager.set(cacheKey, rankingProfesores, CACHE_EXPIRATION.SEARCH_RESULTS);
     return handleSupabaseSuccess(rankingProfesores, 'Búsqueda exitosa');
   } catch (error) {
@@ -154,7 +147,6 @@ export const obtenerProfesorPorSlug = async (slug) => {
     const cacheKey = `${CACHE_KEYS.PROFESOR_PROFILE}${slug}`;
     const cached = CacheManager.get(cacheKey);
     if (cached) {
-      console.log('💾 Profesor desde caché:', slug);
       return handleSupabaseSuccess(cached, 'Profesor desde caché');
     }
 
@@ -168,7 +160,6 @@ export const obtenerProfesorPorSlug = async (slug) => {
 
     // Guardar en caché por 10 minutos
     CacheManager.set(cacheKey, data, CACHE_EXPIRATION.PROFESOR_PROFILE);
-    console.log('✅ Profesor cargado:', data.nombre_completo);
 
     return handleSupabaseSuccess(data, 'Profesor encontrado');
   } catch (error) {
@@ -189,7 +180,6 @@ export const crearOObtenerProfesor = async (nombreCompleto) => {
       .single();
 
     if (existente) {
-      console.log('👤 Profesor ya existe:', existente.nombre_completo);
       return handleSupabaseSuccess(existente, 'Profesor encontrado');
     }
 
@@ -211,9 +201,6 @@ export const crearOObtenerProfesor = async (nombreCompleto) => {
 
     // 🔄 Invalidar caché de profesores cuando se crea uno nuevo
     CacheManager.remove('ipn_todos_profesores');
-    console.log('🗑️ Caché de profesores invalidado (nuevo profesor creado)');
-
-    console.log('👤 Nuevo profesor creado:', nuevo.nombre_completo);
     return handleSupabaseSuccess(nuevo, 'Profesor creado');
   } catch (error) {
     return handleSupabaseError(error, 'crearOObtenerProfesor');
@@ -232,7 +219,6 @@ export const obtenerEscuelas = async () => {
     // Intentar desde caché
     const cached = CacheManager.get(CACHE_KEYS.ESCUELAS);
     if (cached) {
-      console.log('💾 Escuelas desde caché');
       return handleSupabaseSuccess(cached, 'Escuelas desde caché');
     }
 
@@ -247,7 +233,6 @@ export const obtenerEscuelas = async () => {
     if (data && data.length > 0) {
       CacheManager.set(CACHE_KEYS.ESCUELAS, data, CACHE_EXPIRATION.ESCUELAS);
     }
-    console.log('Escuelas cargadas:', data.length);
 
     return handleSupabaseSuccess(data, 'Escuelas cargadas');
   } catch (error) {
@@ -264,7 +249,6 @@ export const obtenerCarrerasPorEscuela = async (escuelaId) => {
     const cacheKey = `${CACHE_KEYS.CARRERAS}${escuelaId}`;
     const cached = CacheManager.get(cacheKey);
     if (cached) {
-      console.log('💾 Carreras desde caché');
       return handleSupabaseSuccess(cached, 'Carreras desde caché');
     }
 
@@ -280,7 +264,6 @@ export const obtenerCarrerasPorEscuela = async (escuelaId) => {
     if (data && data.length > 0) {
       CacheManager.set(cacheKey, data, CACHE_EXPIRATION.CARRERAS);
     }
-    console.log('Carreras cargadas:', data.length);
 
     return handleSupabaseSuccess(data, 'Carreras cargadas');
   } catch (error) {
@@ -364,8 +347,6 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-
-    console.log('📊 Evaluaciones cargadas:', data?.length || 0);
     return handleSupabaseSuccess(data, 'Evaluaciones cargadas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEvaluacionesProfesor');

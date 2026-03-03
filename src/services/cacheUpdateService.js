@@ -14,8 +14,6 @@ export const obtenerProfesoresNuevos = async (limite = 20) => {
       .limit(limite);
 
     if (error) throw error;
-
-    console.log('🆕 Profesores nuevos:', data?.length || 0);
     return handleSupabaseSuccess(data, 'Profesores nuevos obtenidos');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerProfesoresNuevos');
@@ -39,8 +37,6 @@ export const actualizarCacheProfesores = async () => {
 
     // Actualizar caché
     CacheManager.set(CACHE_KEYS.PROFESORES_POPULARES, data, CACHE_EXPIRATION.PROFESORES_POPULARES);
-    
-    console.log('🔄 Caché de profesores actualizado:', data?.length || 0);
     return handleSupabaseSuccess(data, 'Caché actualizado');
   } catch (error) {
     return handleSupabaseError(error, 'actualizarCacheProfesores');

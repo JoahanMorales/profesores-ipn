@@ -129,7 +129,6 @@ class CacheManager {
           localStorage.removeItem(key);
         }
       });
-      console.log('Caché limpiado completamente');
       return true;
     } catch (error) {
       console.warn('⚠️ Error al limpiar caché:', error);
@@ -163,7 +162,6 @@ class CacheManager {
         }
       });
       if (cleared > 0) {
-        console.log(`🗑️ ${cleared} items expirados eliminados del caché`);
       }
       return cleared;
     } catch (error) {
@@ -252,7 +250,6 @@ class CacheManager {
    * Invalidar caché después de una nueva evaluación
    */
   static invalidateAfterEvaluation(profesorSlug) {
-    console.log('🔄 Invalidando caché después de evaluación');
     this.invalidateProfesor(profesorSlug);
     this.invalidateUserEvaluaciones();
   }
