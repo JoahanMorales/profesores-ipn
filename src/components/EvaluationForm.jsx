@@ -373,7 +373,7 @@ const EvaluationForm = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Back Button */}
         <button
           onClick={() => navigate('/buscar')}
@@ -386,9 +386,9 @@ const EvaluationForm = () => {
         </button>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-8">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400 mb-2">
               Evaluar Profesor
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
@@ -762,7 +762,7 @@ const EvaluationForm = () => {
       {/* Modal de contenido ofensivo */}
       {showContentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-8 shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-5 sm:p-8 shadow-2xl">
             <div className="text-center">
               {/* Icono de corazón */}
               <div className="mx-auto w-16 h-16 rounded-full bg-ipn-guinda-900/10 dark:bg-ipn-guinda-400/20 flex items-center justify-center mb-5">

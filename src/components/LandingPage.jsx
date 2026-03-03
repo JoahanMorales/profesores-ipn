@@ -111,7 +111,7 @@ const LandingPage = () => {
           <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
             style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-16 sm:pt-20 sm:pb-20 text-center">
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 sm:pt-20 sm:pb-20 text-center">
             {/* Logo */}
             <div className="flex justify-center mb-6">
               <img
@@ -121,19 +121,19 @@ const LandingPage = () => {
               />
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-5 tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-5 tracking-tight leading-[1.1]">
               Elige mejor a tus{' '}
               <span className="text-ipn-guinda-900 dark:text-ipn-guinda-400">profesores del IPN</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
               Consulta evaluaciones reales de estudiantes, comparte tu experiencia de forma anónima y usa herramientas que facilitan tu vida académica en el IPN.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10 sm:mb-14">
               <button
                 onClick={() => navigate('/buscar')}
-                className="px-8 py-3.5 text-base font-semibold text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-xl hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-all shadow-lg shadow-ipn-guinda-900/20 hover:shadow-xl hover:-translate-y-0.5"
+                className="px-8 py-3.5 text-base font-semibold text-white bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-xl hover:bg-ipn-guinda-800 dark:hover:bg-ipn-guinda-600 transition-all shadow-lg shadow-ipn-guinda-900/20 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 Buscar Profesor
               </button>
@@ -146,16 +146,16 @@ const LandingPage = () => {
             </div>
 
             {/* Stats inline */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-2xl mx-auto">
               {[
                 { valor: loading ? '...' : stats.totalEscuelas, label: 'Escuelas' },
                 { valor: loading ? '...' : stats.totalCarreras, label: 'Carreras' },
                 { valor: loading ? '...' : stats.totalProfesores, label: 'Profesores' },
                 { valor: loading ? '...' : stats.totalEvaluaciones, label: 'Evaluaciones' },
               ].map((s) => (
-                <div key={s.label} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                  <div className="text-2xl sm:text-3xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400">{s.valor}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.label}</div>
+                <div key={s.label} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
+                  <div className="text-xl sm:text-3xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-400">{s.valor}</div>
+                  <div className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -164,13 +164,13 @@ const LandingPage = () => {
 
         {/* ═══════ CÓMO FUNCIONA ═══════ */}
         <section className="bg-gray-50 dark:bg-gray-800/50 border-y border-gray-200 dark:border-gray-700">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-            <div className="text-center mb-12">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+            <div className="text-center mb-8 sm:mb-12">
               <p className="text-sm font-semibold text-ipn-guinda-900 dark:text-ipn-guinda-400 uppercase tracking-widest mb-2">Cómo funciona</p>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Empieza en menos de 2 minutos</h2>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
               {pasos.map((paso) => (
                 <div key={paso.n} className="text-center">
                   <div className="w-12 h-12 mx-auto mb-4 bg-ipn-guinda-900 dark:bg-ipn-guinda-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md shadow-ipn-guinda-900/20">
@@ -185,15 +185,15 @@ const LandingPage = () => {
         </section>
 
         {/* ═══════ FEATURES ═══════ */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="text-center mb-14">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+          <div className="text-center mb-8 sm:mb-14">
             <p className="text-sm font-semibold text-ipn-guinda-900 dark:text-ipn-guinda-400 uppercase tracking-widest mb-2">Plataforma completa</p>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Todo lo que necesitas como estudiante del IPN</h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {features.map((f, i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 sm:p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
                 <div className="w-11 h-11 rounded-xl bg-ipn-guinda-50 dark:bg-ipn-guinda-900/20 text-ipn-guinda-900 dark:text-ipn-guinda-400 flex items-center justify-center mb-4">
                   {f.icono}
                 </div>

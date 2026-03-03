@@ -86,7 +86,7 @@ const Navbar = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="md:hidden ml-auto p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600"
           >
             {mobileMenuOpen ? (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,14 +102,14 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-gray-200 dark:border-gray-700 mt-2 pt-3">
+          <div className="md:hidden pb-4 border-t border-gray-200 dark:border-gray-700 mt-2 pt-3 max-h-[calc(100vh-5rem)] overflow-y-auto">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-3 rounded-md text-sm font-medium transition-colors active:bg-gray-200 dark:active:bg-gray-600 ${
                     isActive(link.to)
                       ? 'bg-ipn-guinda-50 dark:bg-ipn-guinda-900/30 text-ipn-guinda-900 dark:text-ipn-guinda-400'
                       : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'

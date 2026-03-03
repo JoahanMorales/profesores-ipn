@@ -198,7 +198,7 @@ const SearchPage = () => {
         </section>
 
         {/* Results Section */}
-        <section className="py-10">
+        <section className="py-6 sm:py-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex justify-center items-center py-12">
@@ -269,10 +269,10 @@ const SearchPage = () => {
                 <div
                   key={profesor.id}
                   onClick={() => handleProfesorClick(profesor)}
-                  className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-ipn-guinda-200 dark:hover:border-ipn-guinda-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden"
+                  className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-ipn-guinda-200 dark:hover:border-ipn-guinda-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 min-w-0 mr-4">
+                    <div className="flex-1 min-w-0 mr-3 sm:mr-4">
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 break-words">
                           {profesor.nombre_completo}
@@ -289,8 +289,8 @@ const SearchPage = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end ml-4">
-                      <span className={`text-3xl font-bold ${getRatingColor(profesor.calificacion_promedio)}`}>
+                    <div className="flex flex-col items-end ml-3 sm:ml-4">
+                      <span className={`text-2xl sm:text-3xl font-bold ${getRatingColor(profesor.calificacion_promedio)}`}>
                         {profesor.calificacion_promedio || 'N/A'}
                       </span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">/10</span>

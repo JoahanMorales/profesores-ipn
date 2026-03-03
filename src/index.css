@@ -6,6 +6,27 @@
   /* Estilos base para modo oscuro */
   body {
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    -webkit-tap-highlight-color: transparent; /* Eliminar flash azul al tocar en móviles */
+    -webkit-text-size-adjust: 100%; /* Prevenir ajuste automático de texto en landscape */
+    text-size-adjust: 100%;
+  }
+
+  /* Smooth scroll global */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+  }
+
+  /* Safe area para dispositivos con notch (iPhone X+) */
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: 100dvh;
+  }
+
+  /* Mejorar selección de texto en móviles */
+  * {
+    -webkit-touch-callout: default;
   }
 
   /* Prevenir zoom automático en inputs en móviles iOS/Android */
@@ -41,9 +62,18 @@
   @media (max-width: 767px) {
     input,
     textarea,
-    select,
-    button {
+    select {
       min-height: 44px; /* Recomendación de Apple para touch targets */
+    }
+
+    /* Botones principales: solo los que NO son inline-flex pequeños */
+    button:not([class*="min-w-"]):not([class*="p-1"]):not([class*="p-0"]) {
+      min-height: 44px;
+    }
+
+    /* Prevenir el zoom de doble tap en dispositivos táctiles */
+    * {
+      touch-action: manipulation;
     }
   }
 

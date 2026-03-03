@@ -452,7 +452,7 @@ const ProfilePage = () => {
 
       {/* Notificación Toast */}
       {notificacion && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in-down">
+        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-50 animate-fade-in-down">
           <div className={`max-w-md rounded-lg shadow-lg p-4 ${
             notificacion.tipo === 'exito' 
               ? 'bg-green-500 text-white' 
