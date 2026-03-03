@@ -2,14 +2,6 @@ import { ImageResponse } from '@vercel/og';
 
 export const config = { runtime: 'edge' };
 
-const e = (type, style, ...children) => ({
-  type,
-  props: {
-    style: { display: 'flex', ...style },
-    children: children.length === 0 ? undefined : children.length === 1 ? children[0] : children,
-  },
-});
-
 export default async function handler(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -21,107 +13,236 @@ export default async function handler(request) {
     const categoria = searchParams.get('categoria') || 'General';
     const destacado = searchParams.get('destacado') === 'true';
 
-    const element = e('div', {
-      width: '100%',
-      height: '100%',
-      background: 'linear-gradient(135deg, #6C1458 0%, #4a0938 60%, #1a0412 100%)',
-      padding: '50px 60px',
-      flexDirection: 'column',
-      color: 'white',
-      fontFamily: 'sans-serif',
-    },
-      // Header
-      e('div', {
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
+    // Build detail cards
+    const detailCards = [
+      fecha ? { label: 'FECHA', value: fecha } : null,
+      lugar ? { label: 'LUGAR', value: lugar.length > 35 ? lugar.slice(0, 32) + '...' : lugar } : null,
+      hora ? { label: 'HORA', value: hora } : null,
+    ].filter(Boolean);
+
+    return new ImageResponse(
+      {
+        type: 'div',
+        props: {
+          style: {
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#ffffff',
+            fontFamily: 'Inter, sans-serif',
+          },
+          children: [
+            // Left guinda accent bar
+            {
+              type: 'div',
+              props: {
+                style: {
+                  display: 'flex',
+                  width: '10px',
+                  height: '100%',
+                  backgroundColor: '#6C1458',
+                  flexShrink: 0,
+                },
+              },
+            },
+            // Main content
+            {
+              type: 'div',
+              props: {
+                style: {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  padding: '50px 65px',
+                  justifyContent: 'space-between',
+                },
+                children: [
+                  // Top: brand + pills
+                  {
+                    type: 'div',
+                    props: {
+                      style: {
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      },
+                      children: [
+                        {
+                          type: 'div',
+                          props: {
+                            style: {
+                              display: 'flex',
+                              fontSize: '28px',
+                              fontWeight: 800,
+                              color: '#6C1458',
+                              letterSpacing: '-0.5px',
+                            },
+                            children: 'ipnprofes',
+                          },
+                        },
+                        {
+                          type: 'div',
+                          props: {
+                            style: {
+                              display: 'flex',
+                              gap: '10px',
+                              alignItems: 'center',
+                            },
+                            children: [
+                              ...(destacado
+                                ? [
+                                    {
+                                      type: 'div',
+                                      props: {
+                                        style: {
+                                          display: 'flex',
+                                          fontSize: '14px',
+                                          fontWeight: 700,
+                                          color: '#d97706',
+                                          backgroundColor: '#fffbeb',
+                                          padding: '8px 18px',
+                                          borderRadius: '999px',
+                                          border: '1.5px solid #fde68a',
+                                          letterSpacing: '0.5px',
+                                        },
+                                        children: 'DESTACADO',
+                                      },
+                                    },
+                                  ]
+                                : []),
+                              {
+                                type: 'div',
+                                props: {
+                                  style: {
+                                    display: 'flex',
+                                    fontSize: '16px',
+                                    fontWeight: 600,
+                                    color: '#6C1458',
+                                    backgroundColor: '#fdf4f7',
+                                    padding: '8px 20px',
+                                    borderRadius: '999px',
+                                    border: '1.5px solid #fad1e3',
+                                  },
+                                  children: categoria,
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+
+                  // Center: title + details
+                  {
+                    type: 'div',
+                    props: {
+                      style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '30px',
+                        flex: 1,
+                        justifyContent: 'center',
+                      },
+                      children: [
+                        // Event title — BIG
+                        {
+                          type: 'div',
+                          props: {
+                            style: {
+                              display: 'flex',
+                              fontSize: titulo.length > 45 ? '44px' : '58px',
+                              fontWeight: 800,
+                              color: '#111827',
+                              lineHeight: 1.1,
+                              letterSpacing: '-2px',
+                            },
+                            children: titulo,
+                          },
+                        },
+
+                        // Detail cards row
+                        ...(detailCards.length > 0
+                          ? [
+                              {
+                                type: 'div',
+                                props: {
+                                  style: {
+                                    display: 'flex',
+                                    gap: '16px',
+                                  },
+                                  children: detailCards.map((card) => ({
+                                    type: 'div',
+                                    props: {
+                                      style: {
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        backgroundColor: '#f9fafb',
+                                        border: '1.5px solid #e5e7eb',
+                                        borderRadius: '16px',
+                                        padding: '14px 28px',
+                                        gap: '4px',
+                                      },
+                                      children: [
+                                        {
+                                          type: 'div',
+                                          props: {
+                                            style: {
+                                              display: 'flex',
+                                              fontSize: '13px',
+                                              fontWeight: 700,
+                                              color: '#6C1458',
+                                              letterSpacing: '1.5px',
+                                            },
+                                            children: card.label,
+                                          },
+                                        },
+                                        {
+                                          type: 'div',
+                                          props: {
+                                            style: {
+                                              display: 'flex',
+                                              fontSize: '20px',
+                                              fontWeight: 600,
+                                              color: '#374151',
+                                            },
+                                            children: card.value,
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  })),
+                                },
+                              },
+                            ]
+                          : []),
+                      ],
+                    },
+                  },
+
+                  // Footer
+                  {
+                    type: 'div',
+                    props: {
+                      style: {
+                        display: 'flex',
+                        borderTop: '1.5px solid #e5e7eb',
+                        paddingTop: '18px',
+                        fontSize: '18px',
+                        color: '#9ca3af',
+                        fontWeight: 500,
+                      },
+                      children: 'Eventos de la comunidad politécnica del IPN · ipnprofes.com',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
       },
-        e('div', { fontSize: '24px', fontWeight: '700', opacity: '0.9' }, 'ipnprofes.com/eventos'),
-        e('div', { gap: '10px', alignItems: 'center' },
-          destacado
-            ? e('div', {
-                fontSize: '13px',
-                background: 'rgba(234,179,8,0.2)',
-                color: '#fbbf24',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                border: '1px solid rgba(234,179,8,0.3)',
-                fontWeight: '600',
-              }, 'DESTACADO')
-            : undefined,
-          e('div', {
-            fontSize: '14px',
-            background: 'rgba(255,255,255,0.15)',
-            padding: '6px 18px',
-            borderRadius: '20px',
-            opacity: '0.85',
-          }, categoria)
-        )
-      ),
-
-      // Main content
-      e('div', { flexDirection: 'column', flex: '1', justifyContent: 'center', gap: '30px' },
-        // Title
-        e('div', {
-          fontSize: titulo.length > 50 ? '36px' : '46px',
-          fontWeight: '700',
-          lineHeight: '1.2',
-        }, titulo),
-
-        // Details grid
-        e('div', { gap: '20px', flexWrap: 'wrap' },
-          // Fecha
-          fecha ? e('div', {
-            background: 'rgba(255,255,255,0.1)',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            flexDirection: 'column',
-            gap: '4px',
-          },
-            e('div', { fontSize: '13px', opacity: '0.6', textTransform: 'uppercase', letterSpacing: '1px' }, 'FECHA'),
-            e('div', { fontSize: '18px', fontWeight: '600' }, fecha)
-          ) : undefined,
-
-          // Lugar
-          lugar ? e('div', {
-            background: 'rgba(255,255,255,0.1)',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            flexDirection: 'column',
-            gap: '4px',
-          },
-            e('div', { fontSize: '13px', opacity: '0.6', textTransform: 'uppercase', letterSpacing: '1px' }, 'LUGAR'),
-            e('div', { fontSize: '18px', fontWeight: '600' }, lugar.length > 30 ? lugar.slice(0, 27) + '...' : lugar)
-          ) : undefined,
-
-          // Hora
-          hora ? e('div', {
-            background: 'rgba(255,255,255,0.1)',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            flexDirection: 'column',
-            gap: '4px',
-          },
-            e('div', { fontSize: '13px', opacity: '0.6', textTransform: 'uppercase', letterSpacing: '1px' }, 'HORA'),
-            e('div', { fontSize: '18px', fontWeight: '600' }, hora)
-          ) : undefined
-        )
-      ),
-
-      // Footer
-      e('div', {
-        borderTop: '1px solid rgba(255,255,255,0.15)',
-        paddingTop: '16px',
-        marginTop: '10px',
-        fontSize: '16px',
-        opacity: '0.55',
-      }, 'Descubre los eventos de la comunidad politecnica del IPN')
+      { width: 1200, height: 630 }
     );
-
-    return new ImageResponse(element, {
-      width: 1200,
-      height: 630,
-    });
   } catch (err) {
     return new Response('Error generando imagen', { status: 500 });
   }
