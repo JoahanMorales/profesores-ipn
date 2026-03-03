@@ -222,11 +222,10 @@ export function getDeviceId() {
     
     try {
       localStorage.setItem(STORAGE_KEY, deviceId);
-        } catch (e) {
+    } catch (e) {
       console.warn('⚠️ No se pudo guardar device ID en localStorage');
     }
-  } else {
-    }
+  }
   
   return deviceId;
 }

@@ -330,10 +330,16 @@ export const crearEvaluacionSegura = async (username, cancionFavorita, formData,
 };
 
 /**
- * Obtener evaluaciones de un profesor
+ * Obtener evaluaciones de un profesor (con caché de 5 min)
  */
 export const obtenerEvaluacionesProfesor = async (profesorId) => {
   try {
+    const cacheKey = `${CACHE_KEYS.PROFESOR_PROFILE}evals_${profesorId}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Evaluaciones desde caché');
+    }
+
     const { data, error } = await supabase
       .from('evaluaciones')
       .select(`
@@ -347,6 +353,8 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
+
+    CacheManager.set(cacheKey, data, 5 * 60 * 1000); // 5 minutos
     return handleSupabaseSuccess(data, 'Evaluaciones cargadas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEvaluacionesProfesor');

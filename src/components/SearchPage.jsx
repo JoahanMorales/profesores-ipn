@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { obtenerTodosLosProfesores } from '../services/supabaseService';
 import { actualizarCacheProfesores } from '../services/cacheUpdateService';
 import { useSEO } from '../hooks/useSEO';
-import { CacheManager } from '../lib/cacheManager';
+import { CacheManager, CACHE_KEYS } from '../lib/cacheManager';
 import Navbar from './Navbar';
 
 const SearchPage = () => {
@@ -79,24 +79,11 @@ const SearchPage = () => {
     setLoading(true);
     setError(null);
     
-    // 💾 Intentar cargar desde caché primero
-    const cacheKey = 'ipn_todos_profesores';
-    const datosCache = CacheManager.get(cacheKey);
-    
-    if (datosCache && Array.isArray(datosCache)) {
-      setTodosLosProfesores(datosCache);
-      setLoading(false);
-      return;
-    }
-    
-    // Si no hay caché, cargar de Supabase
+    // Cargar de Supabase (ya tiene caché interno de 30 min)
     const resultado = await obtenerTodosLosProfesores();
     
     if (resultado.success) {
       const profesores = Array.isArray(resultado.data) ? resultado.data : [];
-      
-      // 💾 Guardar en caché por 10 minutos
-      CacheManager.set(cacheKey, profesores, 10 * 60 * 1000);
       setTodosLosProfesores(profesores);
     } else {
       setError(resultado.error);
@@ -112,8 +99,8 @@ const SearchPage = () => {
   const actualizarDatos = async () => {
     setActualizando(true);
     
-    // Limpiar caché local
-    CacheManager.remove('ipn_todos_profesores');
+    // Limpiar caché de profesores
+    CacheManager.remove(CACHE_KEYS.TODOS_PROFESORES);
     
     const resultado = await actualizarCacheProfesores();
     
