@@ -55,14 +55,14 @@ const SearchPage = () => {
 
   const hayMasResultados = profesoresPaginados.length < profesoresFiltrados.length;
 
-  // Color según calificación
+  // Color según calificación (intensidad de guinda)
   const getRatingColor = (cal) => {
     if (!cal) return 'text-gray-400 dark:text-gray-500';
     const num = typeof cal === 'string' ? parseFloat(cal) : cal;
     if (isNaN(num)) return 'text-gray-400 dark:text-gray-500';
-    if (num >= 7) return 'text-green-600 dark:text-green-400';
-    if (num >= 5) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+    if (num >= 7) return 'text-ipn-guinda-900 dark:text-ipn-guinda-300';
+    if (num >= 5) return 'text-ipn-guinda-500 dark:text-ipn-guinda-400';
+    return 'text-ipn-guinda-300 dark:text-ipn-guinda-600';
   };
 
   // Cargar TODOS los profesores al iniciar (una sola vez)

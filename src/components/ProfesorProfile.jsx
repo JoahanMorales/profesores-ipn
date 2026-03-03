@@ -102,23 +102,23 @@ const ProfesorProfile = () => {
     setFormReporte({ tipo: '', descripcion: '' });
   };
 
-  // Rating color helpers
+  // Rating color helpers (intensidad de guinda)
   const getRatingColor = (cal) => {
     if (!cal) return 'text-gray-400 dark:text-gray-500';
     const num = typeof cal === 'number' ? cal : parseFloat(cal);
     if (isNaN(num)) return 'text-gray-400 dark:text-gray-500';
-    if (num >= 7) return 'text-green-600 dark:text-green-400';
-    if (num >= 5) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+    if (num >= 7) return 'text-ipn-guinda-900 dark:text-ipn-guinda-300';
+    if (num >= 5) return 'text-ipn-guinda-500 dark:text-ipn-guinda-400';
+    return 'text-ipn-guinda-300 dark:text-ipn-guinda-600';
   };
 
   const getRatingBg = (cal) => {
     if (!cal) return 'bg-gray-50 dark:bg-gray-700';
     const num = typeof cal === 'number' ? cal : parseFloat(cal);
     if (isNaN(num)) return 'bg-gray-50 dark:bg-gray-700';
-    if (num >= 7) return 'bg-green-50 dark:bg-green-900/20';
-    if (num >= 5) return 'bg-yellow-50 dark:bg-yellow-900/20';
-    return 'bg-red-50 dark:bg-red-900/20';
+    if (num >= 7) return 'bg-ipn-guinda-50 dark:bg-ipn-guinda-950/30';
+    if (num >= 5) return 'bg-ipn-guinda-50/50 dark:bg-ipn-guinda-950/15';
+    return 'bg-gray-50 dark:bg-gray-800';
   };
 
   const shareUrl = `https://ipnprofes.com/profesor/${slug}`;

@@ -19,7 +19,7 @@ export default async function handler(request) {
 
     const calNum = parseFloat(calificacion);
     const sinEvaluar = calificacion === 'Sin evaluar' || calNum === 0;
-    const ratingColor = sinEvaluar ? '#9ca3af' : calNum >= 7 ? '#16a34a' : calNum >= 5 ? '#d97706' : '#dc2626';
+    const ratingColor = sinEvaluar ? '#9ca3af' : calNum >= 7 ? '#6C1458' : calNum >= 5 ? '#e74c89' : '#f7a9cb';
 
     return new ImageResponse(
       {
