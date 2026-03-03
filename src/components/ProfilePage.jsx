@@ -127,15 +127,15 @@ const ProfilePage = () => {
   };
 
   const getCalifColor = (calif) => {
-    if (calif >= 8) return 'text-green-600 dark:text-green-400';
-    if (calif >= 6) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+    if (calif >= 8) return 'text-ipn-guinda-900 dark:text-ipn-guinda-300';
+    if (calif >= 6) return 'text-ipn-guinda-500 dark:text-ipn-guinda-400';
+    return 'text-ipn-guinda-300 dark:text-ipn-guinda-600';
   };
 
   const getCalifBg = (calif) => {
-    if (calif >= 8) return 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800';
-    if (calif >= 6) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800';
-    return 'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800';
+    if (calif >= 8) return 'bg-ipn-guinda-50 dark:bg-ipn-guinda-900/30 border-ipn-guinda-200 dark:border-ipn-guinda-800';
+    if (calif >= 6) return 'bg-ipn-guinda-50/50 dark:bg-ipn-guinda-950/15 border-ipn-guinda-100 dark:border-ipn-guinda-900';
+    return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
   };
 
   const formatFecha = (fecha) => {
@@ -245,27 +245,27 @@ const ProfilePage = () => {
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
-                <CheckCircleIcon className="w-4 h-4 text-green-500 dark:text-green-400" />
+                <CheckCircleIcon className="w-4 h-4 text-ipn-guinda-700 dark:text-ipn-guinda-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-xl sm:text-2xl font-bold text-ipn-guinda-900 dark:text-ipn-guinda-300">
                 {stats.porcentajeRecomendado}%
               </div>
               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">Recomienda</div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
-                <UsersIcon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                <UsersIcon className="w-4 h-4 text-ipn-guinda-500 dark:text-ipn-guinda-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-xl sm:text-2xl font-bold text-ipn-guinda-700 dark:text-ipn-guinda-400">
                 {stats.profesoresUnicos}
               </div>
               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">Profesores</div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
-                <BookIcon className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                <BookIcon className="w-4 h-4 text-ipn-guinda-400 dark:text-ipn-guinda-500" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div className="text-xl sm:text-2xl font-bold text-ipn-guinda-600 dark:text-ipn-guinda-400">
                 {stats.materias}
               </div>
               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">Materias</div>
@@ -313,7 +313,7 @@ const ProfilePage = () => {
                   Aún no tienes evaluaciones
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Evalúa a tus profesores y gana 5 diamantes por cada evaluación
+                  Evalúa a tus profesores y gana 3-5 diamantes por cada evaluación
                 </p>
                 <Link
                   to="/evaluar"
@@ -351,16 +351,16 @@ const ProfilePage = () => {
                       )}
                       <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
                         {ev.recomendado ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-ipn-guinda-100 dark:bg-ipn-guinda-900/30 text-ipn-guinda-900 dark:text-ipn-guinda-300">
                             <ThumbUpIcon className="w-3 h-3" /> Recomendado
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
                             <ThumbDownIcon className="w-3 h-3" /> No recomendado
                           </span>
                         )}
                         {ev.calificacion_obtenida && (
-                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-ipn-guinda-50 dark:bg-ipn-guinda-950/20 text-ipn-guinda-700 dark:text-ipn-guinda-400">
                             <ChartIcon className="w-3 h-3" /> Obtuve: {ev.calificacion_obtenida}
                           </span>
                         )}

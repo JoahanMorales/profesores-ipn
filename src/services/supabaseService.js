@@ -17,6 +17,9 @@ export const obtenerTodosLosProfesores = async () => {
       return handleSupabaseSuccess(cached, 'Profesores (desde caché)');
     }
 
+    // Verificar si hay datos expirados para stale-while-revalidate
+    const staleData = CacheManager.getStale(CACHE_KEYS.TODOS_PROFESORES);
+
     // Traer todos los profesores ordenados por evaluaciones (solo campos necesarios para búsqueda)
     const { data, error } = await supabase
       .from('ranking_profesores')
@@ -24,7 +27,13 @@ export const obtenerTodosLosProfesores = async () => {
       .order('total_evaluaciones', { ascending: false })
       .order('calificacion_promedio', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      // Si falló el fetch pero hay datos stale, usarlos como fallback
+      if (staleData) {
+        return handleSupabaseSuccess(staleData, 'Profesores (datos anteriores)');
+      }
+      throw error;
+    }
 
     const result = data || [];
     // Cachear por 30 minutos
@@ -366,6 +375,13 @@ export const obtenerEvaluacionesProfesor = async (profesorId) => {
  */
 export const obtenerEstadisticasProfesor = async (profesorId) => {
   try {
+    // Verificar caché (5 min)
+    const cacheKey = `${CACHE_KEYS.PROFESOR_STATS}${profesorId}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Estadísticas (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('evaluaciones')
       .select('calificacion, recomendado, asistencia_obligatoria')
@@ -387,6 +403,7 @@ export const obtenerEstadisticasProfesor = async (profesorId) => {
         : 0
     };
 
+    CacheManager.set(cacheKey, estadisticas, CACHE_EXPIRATION.PROFESOR_STATS);
     return handleSupabaseSuccess(estadisticas, 'Estadísticas calculadas');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEstadisticasProfesor');
@@ -404,6 +421,14 @@ export const autocompletarProfesores = async (query) => {
   if (!query || query.length < 2) return { success: true, data: [] };
 
   try {
+    // Caché de autocompletado (2 min por query)
+    const normalizedQuery = query.trim().toLowerCase();
+    const cacheKey = `${CACHE_KEYS.AUTOCOMPLETE}${normalizedQuery}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Autocompletado (caché)');
+    }
+
     const { data, error } = await supabase
       .from('profesores')
       .select('id, nombre_completo')
@@ -412,6 +437,7 @@ export const autocompletarProfesores = async (query) => {
 
     if (error) throw error;
 
+    CacheManager.set(cacheKey, data, CACHE_EXPIRATION.AUTOCOMPLETE);
     return handleSupabaseSuccess(data, 'Autocompletado');
   } catch (error) {
     return handleSupabaseError(error, 'autocompletarProfesores');
@@ -453,6 +479,13 @@ export const verificarUsuario = async (username, cancionFavorita, captchaToken) 
  */
 export const obtenerPerfilUsuario = async (usuarioId) => {
   try {
+    // Verificar caché (2 min)
+    const cacheKey = `${CACHE_KEYS.USER_PERFIL}${usuarioId}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Perfil de usuario (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('usuarios')
       .select('id, username, monedas, total_evaluaciones, created_at')
@@ -461,6 +494,7 @@ export const obtenerPerfilUsuario = async (usuarioId) => {
 
     if (error) throw error;
 
+    CacheManager.set(cacheKey, data, CACHE_EXPIRATION.USER_PERFIL);
     return handleSupabaseSuccess(data, 'Perfil de usuario cargado');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerPerfilUsuario');
@@ -598,6 +632,13 @@ export const obtenerEventos = async () => {
  */
 export const obtenerEventoPorSlug = async (slug) => {
   try {
+    // Verificar caché (15 min)
+    const cacheKey = `${CACHE_KEYS.EVENTO_SLUG}${slug}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Evento (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('eventos')
       .select('*')
@@ -607,6 +648,7 @@ export const obtenerEventoPorSlug = async (slug) => {
 
     if (error) throw error;
 
+    CacheManager.set(cacheKey, data, CACHE_EXPIRATION.EVENTO_SLUG);
     return handleSupabaseSuccess(data, 'Evento encontrado');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerEventoPorSlug');
@@ -650,6 +692,13 @@ export const obtenerArticulos = async () => {
  */
 export const obtenerArticuloPorSlug = async (slug) => {
   try {
+    // Verificar caché (15 min)
+    const cacheKey = `${CACHE_KEYS.ARTICULO_SLUG}${slug}`;
+    const cached = CacheManager.get(cacheKey);
+    if (cached) {
+      return handleSupabaseSuccess(cached, 'Artículo (desde caché)');
+    }
+
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
@@ -659,6 +708,7 @@ export const obtenerArticuloPorSlug = async (slug) => {
 
     if (error) throw error;
 
+    CacheManager.set(cacheKey, data, CACHE_EXPIRATION.ARTICULO_SLUG);
     return handleSupabaseSuccess(data, 'Artículo encontrado');
   } catch (error) {
     return handleSupabaseError(error, 'obtenerArticuloPorSlug');

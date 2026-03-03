@@ -27,6 +27,11 @@ const CACHE_KEYS = {
   LIKES_BATCH: `${CACHE_PREFIX}likes_`,
   MIS_LIKES: `${CACHE_PREFIX}mislikes_`,
   USER_EVALUACIONES: `${CACHE_PREFIX}user_evals_`,
+  USER_PERFIL: `${CACHE_PREFIX}user_perfil_`,
+  PROFESOR_STATS: `${CACHE_PREFIX}profesor_stats_`,
+  AUTOCOMPLETE: `${CACHE_PREFIX}autocomplete_`,
+  EVENTO_SLUG: `${CACHE_PREFIX}evento_`,
+  ARTICULO_SLUG: `${CACHE_PREFIX}articulo_`,
 };
 
 const CACHE_EXPIRATION = {
@@ -43,6 +48,11 @@ const CACHE_EXPIRATION = {
   LIKES_BATCH: 5 * 60 * 1000, // 5 minutos
   MIS_LIKES: 10 * 60 * 1000, // 10 minutos
   USER_EVALUACIONES: 5 * 60 * 1000, // 5 minutos
+  USER_PERFIL: 2 * 60 * 1000, // 2 minutos
+  PROFESOR_STATS: 5 * 60 * 1000, // 5 minutos (mismo que evaluaciones)
+  AUTOCOMPLETE: 2 * 60 * 1000, // 2 minutos
+  EVENTO_SLUG: 15 * 60 * 1000, // 15 minutos
+  ARTICULO_SLUG: 15 * 60 * 1000, // 15 minutos
 };
 
 class CacheManager {
@@ -95,6 +105,21 @@ class CacheManager {
    */
   static has(key) {
     return this.get(key) !== null;
+  }
+
+  /**
+   * Obtener datos del caché incluso si han expirado (para stale-while-revalidate)
+   * Retorna null solo si no existen datos en absoluto
+   */
+  static getStale(key) {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+      const cacheItem = JSON.parse(cached);
+      return cacheItem.data || null;
+    } catch (error) {
+      return null;
+    }
   }
 
   /**

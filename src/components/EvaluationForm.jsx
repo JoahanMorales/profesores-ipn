@@ -326,6 +326,10 @@ const EvaluationForm = () => {
         updateMonedas(evaluacionResult.data.monedas);
       }
 
+      // Usar diamantes ganados del servidor (5 nuevo, 3 existente)
+      const diamantesGanados = evaluacionResult.data?.diamantes_ganados || 5;
+      setCoinsEarned(diamantesGanados);
+
       // Guardar escuela y carrera para autocompletar la próxima vez
       if (formData.escuelaId) localStorage.setItem('ipn_last_escuela', formData.escuelaId);
       if (formData.carreraId) localStorage.setItem('ipn_last_carrera', formData.carreraId);
@@ -397,8 +401,8 @@ const EvaluationForm = () => {
                 <div className="flex items-start gap-2">
                   <span className="text-lg">💎</span>
                   <div className="text-xs">
-                    <p className="font-semibold text-purple-900 dark:text-purple-300 mb-1">Gana 5 Monedas Premium</p>
-                    <p className="text-gray-600 dark:text-gray-400">Por cada evaluación ganas monedas que podrás usar para funciones exclusivas como generación automática de horarios con los mejores profesores.</p>
+                    <p className="font-semibold text-purple-900 dark:text-purple-300 mb-1">Gana Diamantes Premium</p>
+                    <p className="text-gray-600 dark:text-gray-400"><span className="font-semibold">5 💎</span> si agregas un profesor nuevo · <span className="font-semibold">3 💎</span> si ya existe. Úsalos para funciones exclusivas como generación automática de horarios.</p>
                   </div>
                 </div>
               </div>
