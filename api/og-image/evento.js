@@ -2,8 +2,17 @@ import { ImageResponse } from '@vercel/og';
 
 export const config = { runtime: 'edge' };
 
+const interBold = fetch(
+  'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZhrib2Bg-4.ttf'
+).then((res) => res.arrayBuffer());
+
+const interRegular = fetch(
+  'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf'
+).then((res) => res.arrayBuffer());
+
 export default async function handler(request) {
   try {
+    const [boldFont, regularFont] = await Promise.all([interBold, interRegular]);
     const { searchParams } = new URL(request.url);
 
     const titulo = searchParams.get('titulo') || 'Evento';
@@ -29,7 +38,7 @@ export default async function handler(request) {
             width: '100%',
             height: '100%',
             backgroundColor: '#ffffff',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Inter',
           },
           children: [
             // Left guinda accent bar
@@ -72,8 +81,8 @@ export default async function handler(request) {
                           props: {
                             style: {
                               display: 'flex',
-                              fontSize: '28px',
-                              fontWeight: 800,
+                              fontSize: '32px',
+                              fontWeight: 700,
                               color: '#6C1458',
                               letterSpacing: '-0.5px',
                             },
@@ -96,7 +105,7 @@ export default async function handler(request) {
                                       props: {
                                         style: {
                                           display: 'flex',
-                                          fontSize: '14px',
+                                          fontSize: '18px',
                                           fontWeight: 700,
                                           color: '#d97706',
                                           backgroundColor: '#fffbeb',
@@ -115,13 +124,13 @@ export default async function handler(request) {
                                 props: {
                                   style: {
                                     display: 'flex',
-                                    fontSize: '16px',
-                                    fontWeight: 600,
+                                    fontSize: '20px',
+                                    fontWeight: 700,
                                     color: '#6C1458',
                                     backgroundColor: '#fdf4f7',
-                                    padding: '8px 20px',
+                                    padding: '10px 24px',
                                     borderRadius: '999px',
-                                    border: '1.5px solid #fad1e3',
+                                    border: '2px solid #fad1e3',
                                   },
                                   children: categoria,
                                 },
@@ -151,11 +160,11 @@ export default async function handler(request) {
                           props: {
                             style: {
                               display: 'flex',
-                              fontSize: titulo.length > 45 ? '44px' : '58px',
-                              fontWeight: 800,
+                              fontSize: titulo.length > 45 ? '52px' : '68px',
+                              fontWeight: 700,
                               color: '#111827',
-                              lineHeight: 1.1,
-                              letterSpacing: '-2px',
+                              lineHeight: 1.05,
+                              letterSpacing: '-3px',
                             },
                             children: titulo,
                           },
@@ -189,7 +198,7 @@ export default async function handler(request) {
                                           props: {
                                             style: {
                                               display: 'flex',
-                                              fontSize: '13px',
+                                              fontSize: '16px',
                                               fontWeight: 700,
                                               color: '#6C1458',
                                               letterSpacing: '1.5px',
@@ -202,8 +211,8 @@ export default async function handler(request) {
                                           props: {
                                             style: {
                                               display: 'flex',
-                                              fontSize: '20px',
-                                              fontWeight: 600,
+                                              fontSize: '24px',
+                                              fontWeight: 700,
                                               color: '#374151',
                                             },
                                             children: card.value,
@@ -226,11 +235,11 @@ export default async function handler(request) {
                     props: {
                       style: {
                         display: 'flex',
-                        borderTop: '1.5px solid #e5e7eb',
-                        paddingTop: '18px',
-                        fontSize: '18px',
-                        color: '#9ca3af',
-                        fontWeight: 500,
+                        borderTop: '2px solid #e5e7eb',
+                        paddingTop: '20px',
+                        fontSize: '24px',
+                        color: '#6b7280',
+                        fontWeight: 400,
                       },
                       children: 'Eventos de la comunidad politécnica del IPN · ipnprofes.com',
                     },
@@ -241,7 +250,14 @@ export default async function handler(request) {
           ],
         },
       },
-      { width: 1200, height: 630 }
+      {
+        width: 1200,
+        height: 630,
+        fonts: [
+          { name: 'Inter', data: boldFont, weight: 700, style: 'normal' },
+          { name: 'Inter', data: regularFont, weight: 400, style: 'normal' },
+        ],
+      }
     );
   } catch (err) {
     return new Response('Error generando imagen', { status: 500 });
