@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     });
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+    res.setHeader('Cache-Control', 'public, s-maxage=2592000, stale-while-revalidate=604800, max-age=0');
     return res.status(200).send(html);
   } catch (err) {
     return serveFallbackHTML(res, slug);
@@ -78,7 +78,7 @@ function serveFallbackHTML(res, slug) {
   });
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
+  res.setHeader('Cache-Control', 'public, s-maxage=2592000, stale-while-revalidate=604800, max-age=0');
   return res.status(200).send(html);
 }
 

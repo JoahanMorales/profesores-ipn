@@ -6,13 +6,9 @@ const interBold = fetch(
   'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZhrib2Bg-4.ttf'
 ).then((res) => res.arrayBuffer());
 
-const interRegular = fetch(
-  'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf'
-).then((res) => res.arrayBuffer());
-
 export default async function handler(request) {
   try {
-    const [boldFont, regularFont] = await Promise.all([interBold, interRegular]);
+    const boldFont = await interBold;
     const { searchParams } = new URL(request.url);
 
     const titulo = searchParams.get('titulo') || 'Artículo';
@@ -139,7 +135,7 @@ export default async function handler(request) {
                                   style: {
                                     display: 'flex',
                                     fontSize: '26px',
-                                    fontWeight: 400,
+                                    fontWeight: 700,
                                     color: '#6b7280',
                                     lineHeight: 1.45,
                                   },
@@ -182,7 +178,7 @@ export default async function handler(request) {
                             style: {
                               display: 'flex',
                               fontSize: '24px',
-                              fontWeight: 400,
+                              fontWeight: 700,
                               color: '#6b7280',
                             },
                             children: `${tiempo} de lectura · ipnprofes.com`,
@@ -200,9 +196,12 @@ export default async function handler(request) {
       {
         width: 1200,
         height: 630,
+        headers: {
+          'Cache-Control': 'public, s-maxage=2592000, stale-while-revalidate=604800, max-age=0',
+          'CDN-Cache-Control': 'public, s-maxage=2592000',
+        },
         fonts: [
           { name: 'Inter', data: boldFont, weight: 700, style: 'normal' },
-          { name: 'Inter', data: regularFont, weight: 400, style: 'normal' },
         ],
       }
     );
