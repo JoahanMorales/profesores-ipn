@@ -5,6 +5,39 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/profesor/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|Discordbot|Slackbot|LinkedInBot|Googlebot|Bingbot|yandex|PinterestBot|redditbot|Applebot|crawler|spider|prerender|Embedly).*"
+        }
+      ],
+      "destination": "/api/meta/profesor?slug=:slug"
+    },
+    {
+      "source": "/blog/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|Discordbot|Slackbot|LinkedInBot|Googlebot|Bingbot|yandex|PinterestBot|redditbot|Applebot|crawler|spider|prerender|Embedly).*"
+        }
+      ],
+      "destination": "/api/meta/blog?slug=:slug"
+    },
+    {
+      "source": "/eventos/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|WhatsApp|TelegramBot|Discordbot|Slackbot|LinkedInBot|Googlebot|Bingbot|yandex|PinterestBot|redditbot|Applebot|crawler|spider|prerender|Embedly).*"
+        }
+      ],
+      "destination": "/api/meta/evento?slug=:slug"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

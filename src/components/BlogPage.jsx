@@ -215,7 +215,12 @@ const BlogArticle = ({ slug }) => {
   useSEO(
     articulo ? `${articulo.titulo} | Blog ip` : 'Artículo | Blog ip',
     articulo?.resumen || '',
-    'blog IPN, artículo IPN'
+    'blog IPN, artículo IPN',
+    articulo ? {
+      ogImage: `https://ipnprofes.com/api/og-image/blog?titulo=${encodeURIComponent(articulo.titulo)}&resumen=${encodeURIComponent(articulo.resumen || '')}&categoria=${encodeURIComponent(articulo.categoria || 'General')}&autor=${encodeURIComponent(articulo.autor || 'IPNProfes')}&tiempo=${encodeURIComponent(articulo.tiempo_lectura || '5 min')}`,
+      ogUrl: `https://ipnprofes.com/blog/${slug}`,
+      ogType: 'article',
+    } : {}
   );
 
   useEffect(() => {

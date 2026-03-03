@@ -40,7 +40,12 @@ const EventoDetalle = ({ slug }) => {
   useSEO(
     evento ? `${evento.titulo} | Eventos ip` : 'Evento | ip',
     evento?.descripcion || 'Evento de la comunidad politécnica del IPN.',
-    'eventos IPN, comunidad politécnica, actividades IPN'
+    'eventos IPN, comunidad politécnica, actividades IPN',
+    evento ? {
+      ogImage: `https://ipnprofes.com/api/og-image/evento?titulo=${encodeURIComponent(evento.titulo)}&fecha=${encodeURIComponent(evento.fecha_inicio || '')}&lugar=${encodeURIComponent(evento.lugar || '')}&hora=${encodeURIComponent(evento.hora || '')}&categoria=${encodeURIComponent(evento.categoria || 'General')}&destacado=${evento.destacado ? 'true' : 'false'}`,
+      ogUrl: `https://ipnprofes.com/eventos/${slug}`,
+      ogType: 'event',
+    } : {}
   );
 
   useEffect(() => {

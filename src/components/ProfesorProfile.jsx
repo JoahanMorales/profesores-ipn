@@ -35,7 +35,12 @@ const ProfesorProfile = () => {
     profesor
       ? `Evaluaciones y opiniones de ${profesor.nombre_completo}. Calificación promedio: ${(profesor.calificacion_promedio || 0).toFixed(1)}/10 basada en ${profesor.total_evaluaciones || 0} evaluaciones de estudiantes del IPN.`
       : 'Cargando información del profesor...',
-    profesor ? `${profesor.nombre_completo}, profesor IPN, calificaciones, evaluaciones, opiniones estudiantes` : ''
+    profesor ? `${profesor.nombre_completo}, profesor IPN, calificaciones, evaluaciones, opiniones estudiantes` : '',
+    profesor ? {
+      ogImage: `https://ipnprofes.com/api/og-image/profesor?nombre=${encodeURIComponent(profesor.nombre_completo)}&calificacion=${(profesor.calificacion_promedio || 0).toFixed(1)}&evaluaciones=${profesor.total_evaluaciones || 0}&recomendacion=${Math.round(profesor.porcentaje_recomendacion || 0)}`,
+      ogUrl: `https://ipnprofes.com/profesor/${slug}`,
+      ogType: 'profile',
+    } : {}
   );
 
   useEffect(() => {
